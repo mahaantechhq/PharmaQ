@@ -1,3 +1,4 @@
+import { cache } from "react";
 import { createClient } from "@/lib/supabase/server";
 import type { Business, BusinessOwner } from "@/lib/types/database";
 
@@ -7,30 +8,33 @@ export interface CurrentBusinessContext {
   business: Business;
 }
 
-export async function getCurrentBusiness(): Promise<CurrentBusinessContext | null> {
+// cache() memoizes this per request — the (site) layout and most pages
+// each call it, so this avoids repeating the round-trips on every render.
+//
+// Uses getSession() rather than getUser() — middleware already verifies the
+// token with Supabase Auth and refreshes the cookie on every request, so
+// re-verifying again here is a redundant network round-trip. Every actual
+// table query still goes through RLS with this session's JWT, which is the
+// real enforcement boundary.
+export const getCurrentBusiness = cache(async (): Promise<CurrentBusinessContext | null> => {
   const supabase = await createClient();
 
   const {
-    data: { user },
-  } = await supabase.auth.getUser();
+    data: { session },
+  } = await supabase.auth.getSession();
+  const user = session?.user;
 
   if (!user) return null;
 
   const { data: owner } = await supabase
     .from("business_owners")
-    .select("*")
+    .select("*, businesses(*)")
     .eq("id", user.id)
     .single();
 
-  if (!owner) return null;
+  if (!owner || !owner.businesses) return null;
 
-  const { data: business } = await supabase
-    .from("businesses")
-    .select("*")
-    .eq("id", owner.business_id)
-    .single();
+  const { businesses: business, ...ownerFields } = owner as BusinessOwner & { businesses: Business };
 
-  if (!business) return null;
-
-  return { ownerId: user.id, owner, business };
-}
+  return { ownerId: user.id, owner: ownerFields as BusinessOwner, business };
+});

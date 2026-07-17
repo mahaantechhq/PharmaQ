@@ -29,16 +29,27 @@ export async function updateSession(request: NextRequest) {
     data: { user },
   } = await supabase.auth.getUser();
 
+  // The Business Dashboard, Controller, and Marketplace share one Supabase
+  // project, so they share the same auth cookie name — a logged-in business
+  // owner's session is visible here too. Having *a* session isn't enough;
+  // only redirect based on actual super_admins membership, otherwise a
+  // non-admin session bounces between /login and /dashboard forever.
+  let isAdmin = false;
+  if (user) {
+    const { data: admin } = await supabase.from("super_admins").select("id").eq("id", user.id).maybeSingle();
+    isAdmin = !!admin;
+  }
+
   const { pathname } = request.nextUrl;
   const isPublicPath = PUBLIC_PATHS.some((path) => pathname.startsWith(path));
 
-  if (!user && !isPublicPath) {
+  if (!isAdmin && !isPublicPath) {
     const url = request.nextUrl.clone();
     url.pathname = "/login";
     return NextResponse.redirect(url);
   }
 
-  if (user && pathname === "/login") {
+  if (isAdmin && pathname === "/login") {
     const url = request.nextUrl.clone();
     url.pathname = "/dashboard";
     return NextResponse.redirect(url);

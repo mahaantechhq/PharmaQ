@@ -16,13 +16,10 @@ export interface HomepageStats {
   cityCount: number;
 }
 
-async function toListings(products: any[]): Promise<ProductListing[]> {
-  const supabase = await createClient();
-  const productIds = products.map((p) => p.id);
-  const { data: batches } = productIds.length
-    ? await supabase.from("product_batches").select("product_id, stock_qty, selling_price, expiry_date").in("product_id", productIds).gt("stock_qty", 0)
-    : { data: [] };
+const PRODUCT_SELECT =
+  "id, name, composition, pack_size, gst_rate, created_at, business_id, businesses:business_id(name, city), categories:category_id(name), brands:brand_id(name)";
 
+function buildListings(products: any[], batches: any[]): ProductListing[] {
   const today = new Date().toISOString().slice(0, 10);
   const stockByProduct = new Map<string, { stock: number; minPrice: number | null }>();
   for (const b of batches ?? []) {
@@ -55,12 +52,17 @@ export async function getFeaturedProducts(limit = 8): Promise<ProductListing[]> 
   const supabase = await createClient();
   const { data: products } = await supabase
     .from("products")
-    .select("id, name, composition, pack_size, gst_rate, created_at, business_id, businesses:business_id(name, city), categories:category_id(name), brands:brand_id(name)")
+    .select(PRODUCT_SELECT)
     .eq("status", "active")
     .order("created_at", { ascending: false })
     .limit(limit);
 
-  return toListings(products ?? []);
+  const productIds = (products ?? []).map((p) => p.id);
+  const { data: batches } = productIds.length
+    ? await supabase.from("product_batches").select("product_id, stock_qty, selling_price, expiry_date").in("product_id", productIds).gt("stock_qty", 0)
+    : { data: [] };
+
+  return buildListings(products ?? [], batches ?? []);
 }
 
 export async function getTrendingProducts(limit = 8): Promise<ProductListing[]> {
@@ -77,23 +79,23 @@ export async function getTrendingProducts(limit = 8): Promise<ProductListing[]> 
 
   if (topIds.length === 0) return getFeaturedProducts(limit);
 
-  const { data: products } = await supabase
-    .from("products")
-    .select("id, name, composition, pack_size, gst_rate, created_at, business_id, businesses:business_id(name, city), categories:category_id(name), brands:brand_id(name)")
-    .in("id", topIds)
-    .eq("status", "active");
+  // Products and batches both only depend on topIds, so fetch in parallel
+  // instead of waiting for products before looking up their batches.
+  const [{ data: products }, { data: batches }] = await Promise.all([
+    supabase.from("products").select(PRODUCT_SELECT).in("id", topIds).eq("status", "active"),
+    supabase.from("product_batches").select("product_id, stock_qty, selling_price, expiry_date").in("product_id", topIds).gt("stock_qty", 0),
+  ]);
 
-  return toListings(products ?? []);
+  return buildListings(products ?? [], batches ?? []);
 }
 
 export async function getTopSuppliers(limit = 6): Promise<SupplierSummary[]> {
   const supabase = await createClient();
-  const { data: businesses } = await supabase
-    .from("businesses")
-    .select("id, name, city, state")
-    .eq("status", "approved");
 
-  const { data: products } = await supabase.from("products").select("business_id").eq("status", "active");
+  const [{ data: businesses }, { data: products }] = await Promise.all([
+    supabase.from("businesses").select("id, name, city, state").eq("status", "approved"),
+    supabase.from("products").select("business_id").eq("status", "active"),
+  ]);
 
   const counts = new Map<string, number>();
   for (const p of products ?? []) counts.set(p.business_id, (counts.get(p.business_id) ?? 0) + 1);
