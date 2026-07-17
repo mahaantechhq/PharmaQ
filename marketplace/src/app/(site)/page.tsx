@@ -1,5 +1,4 @@
 import { createClient } from "@/lib/supabase/server";
-import { requireCurrentBusiness } from "@/lib/supabase/require-business";
 import { getFeaturedProducts, getTrendingProducts, getTopSuppliers, getHomepageStats } from "@/lib/homepage";
 import { Hero } from "@/components/home/Hero";
 import { CategoryGrid } from "@/components/home/CategoryGrid";
@@ -11,7 +10,6 @@ import { TestimonialsAndFaq } from "@/components/home/TestimonialsAndFaq";
 import { DownloadAndContact } from "@/components/home/DownloadAndContact";
 
 export default async function HomePage() {
-  await requireCurrentBusiness("/");
   const supabase = await createClient();
 
   const [{ data: categories }, featured, trending, suppliers, stats] = await Promise.all([
