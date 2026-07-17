@@ -15,13 +15,15 @@ export default async function ReportsPage() {
 
   const businessNames = new Map((businesses ?? []).map((b) => [b.id, b.name]));
 
+  // Keyed by "YYYY-MM" so it sorts chronologically; formatted for display
+  // only after sorting.
   const salesByMonth = new Map<string, number>();
   const statusCounts: Record<string, number> = {};
   const gmvByBusiness = new Map<string, number>();
 
   for (const o of orders ?? []) {
-    const month = new Date(o.created_at).toLocaleDateString("en-IN", { month: "short", year: "2-digit" });
-    salesByMonth.set(month, (salesByMonth.get(month) ?? 0) + Number(o.grand_total));
+    const monthKey = o.created_at.slice(0, 7);
+    salesByMonth.set(monthKey, (salesByMonth.get(monthKey) ?? 0) + Number(o.grand_total));
 
     const label = o.status.charAt(0).toUpperCase() + o.status.slice(1);
     statusCounts[label] = (statusCounts[label] ?? 0) + 1;
@@ -30,7 +32,12 @@ export default async function ReportsPage() {
     gmvByBusiness.set(name, (gmvByBusiness.get(name) ?? 0) + Number(o.grand_total));
   }
 
-  const salesData = Array.from(salesByMonth.entries()).map(([date, total]) => ({ date, total }));
+  const salesData = Array.from(salesByMonth.entries())
+    .sort(([a], [b]) => a.localeCompare(b))
+    .map(([monthKey, total]) => ({
+      date: new Date(`${monthKey}-01`).toLocaleDateString("en-IN", { month: "short", year: "2-digit" }),
+      total,
+    }));
   const statusData = Object.entries(statusCounts).map(([name, value]) => ({ name, value }));
   const topBusinesses = Array.from(gmvByBusiness.entries())
     .map(([name, revenue]) => ({ name, revenue }))

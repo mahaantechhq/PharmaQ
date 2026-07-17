@@ -18,7 +18,7 @@ export async function updateOrderStatus(
 
   const { data: order, error: fetchError } = await supabase
     .from("supplier_orders")
-    .select("*")
+    .select("status")
     .eq("id", supplierOrderId)
     .eq("supplier_business_id", ctx.business.id)
     .single();
@@ -29,49 +29,22 @@ export async function updateOrderStatus(
     throw new Error(`Cannot move order from ${order.status} to ${nextStatus}`);
   }
 
-  // Accepting the order commits stock via FIFO deduction.
-  if (nextStatus === "accepted") {
-    const { data: items } = await supabase
-      .from("supplier_order_items")
-      .select("product_id, quantity")
-      .eq("supplier_order_id", supplierOrderId);
+  // Both RPCs re-check the expected current status under a row lock and do
+  // the status update + history insert (+ FIFO stock deduction, + invoice
+  // upsert) in one transaction — see 0008_security_and_atomicity_fixes.sql.
+  // This is what actually prevents a double "Accept" click (or two tabs)
+  // from deducting stock twice, which a plain client-side check can't.
+  const { error } =
+    nextStatus === "accepted"
+      ? await supabase.rpc("accept_supplier_order", { p_supplier_order_id: supplierOrderId })
+      : await supabase.rpc("transition_supplier_order_status", {
+          p_supplier_order_id: supplierOrderId,
+          p_expected_status: order.status,
+          p_next_status: nextStatus,
+          p_note: note || null,
+        });
 
-    for (const item of items ?? []) {
-      const { error: fifoError } = await supabase.rpc("deduct_stock_fifo", {
-        p_product_id: item.product_id,
-        p_qty: item.quantity,
-      });
-      if (fifoError) throw new Error(`Stock error: ${fifoError.message}`);
-    }
-  }
-
-  const { error: updateError } = await supabase
-    .from("supplier_orders")
-    .update({ status: nextStatus, updated_at: new Date().toISOString() })
-    .eq("id", supplierOrderId);
-
-  if (updateError) throw new Error(updateError.message);
-
-  await supabase.from("order_status_history").insert({
-    supplier_order_id: supplierOrderId,
-    status: nextStatus,
-    note: note || null,
-    changed_by: ctx.ownerId,
-  });
-
-  if (nextStatus === "invoiced") {
-    const invoiceNumber = `INV-${order.order_number}`;
-    await supabase.from("invoices").upsert(
-      {
-        supplier_order_id: supplierOrderId,
-        invoice_number: invoiceNumber,
-        subtotal: order.subtotal,
-        tax_total: order.tax_total,
-        grand_total: order.grand_total,
-      },
-      { onConflict: "supplier_order_id" },
-    );
-  }
+  if (error) throw new Error(error.message);
 
   revalidatePath("/orders");
   revalidatePath(`/orders/${supplierOrderId}`);

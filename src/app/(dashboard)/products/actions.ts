@@ -151,16 +151,33 @@ export async function bulkImportProducts(rows: BulkProductRow[]) {
 
   const supabase = await createClient();
   let created = 0;
+  let skipped = 0;
   const errors: string[] = [];
 
-  const { data: categories } = await supabase.from("categories").select("id, name");
+  const [{ data: categories }, { data: existingProducts }] = await Promise.all([
+    supabase.from("categories").select("id, name"),
+    supabase.from("products").select("name").eq("business_id", ctx.business.id),
+  ]);
   const categoryMap = new Map((categories ?? []).map((c) => [c.name.toLowerCase(), c.id]));
+  // Re-uploading the same CSV (or overlapping rows across two uploads)
+  // would otherwise create full duplicate products every time, since the
+  // slug is always unique (name + timestamp + row index) and never
+  // collides with the existing row. Skip names this business already has.
+  const existingNames = new Set((existingProducts ?? []).map((p) => p.name.trim().toLowerCase()));
 
   for (const [index, row] of rows.entries()) {
     if (!row.name?.trim()) {
       errors.push(`Row ${index + 2}: missing product name`);
       continue;
     }
+
+    const normalizedName = row.name.trim().toLowerCase();
+    if (existingNames.has(normalizedName)) {
+      skipped++;
+      errors.push(`Row ${index + 2}: "${row.name.trim()}" already exists — skipped`);
+      continue;
+    }
+    existingNames.add(normalizedName);
 
     const { data: product, error: productError } = await supabase
       .from("products")
@@ -202,5 +219,5 @@ export async function bulkImportProducts(rows: BulkProductRow[]) {
   revalidatePath("/products");
   revalidatePath("/inventory");
 
-  return { created, errors };
+  return { created, skipped, errors };
 }

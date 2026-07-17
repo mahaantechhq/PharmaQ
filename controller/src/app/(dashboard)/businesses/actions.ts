@@ -34,53 +34,45 @@ export async function createBusiness(values: CreateBusinessFormValues) {
   });
   if (authError) throw new Error(authError.message);
 
-  const { data: business, error: bizError } = await adminClient
-    .from("businesses")
-    .insert({
-      name: parsed.name,
-      slug: `${slugify(parsed.name)}-${Date.now().toString(36)}`,
-      status: "approved",
-      approved_at: new Date().toISOString(),
-      email: parsed.email,
-      phone: parsed.phone || null,
-      gstin: parsed.gstin || null,
-      drug_license_no: parsed.drug_license_no || null,
-      address_line1: parsed.address_line1 || null,
-      city: parsed.city || null,
-      state: parsed.state || null,
-      pincode: parsed.pincode || null,
-    })
-    .select()
-    .single();
-  if (bizError) throw new Error(bizError.message);
-
-  const { error: ownerError } = await adminClient.from("business_owners").insert({
-    id: authUser.user.id,
-    business_id: business.id,
-    full_name: parsed.ownerName,
-    phone: parsed.phone || null,
+  // business + business_owner + wallet are one transaction inside this RPC
+  // (see 0008_security_and_atomicity_fixes.sql). The auth user above is a
+  // separate service (Supabase Auth, not this database) and can never be
+  // part of that transaction — if the RPC fails, clean it up here so the
+  // admin can retry with the same email instead of hitting "already
+  // registered" on a phantom account with no business attached.
+  const supabase = await createClient();
+  const { data: businessId, error: provisionError } = await supabase.rpc("provision_business", {
+    p_owner_id: authUser.user.id,
+    p_name: parsed.name,
+    p_slug: `${slugify(parsed.name)}-${Date.now().toString(36)}`,
+    p_owner_name: parsed.ownerName,
+    p_email: parsed.email,
+    p_phone: parsed.phone || null,
+    p_gstin: parsed.gstin || null,
+    p_drug_license_no: parsed.drug_license_no || null,
+    p_address_line1: parsed.address_line1 || null,
+    p_city: parsed.city || null,
+    p_state: parsed.state || null,
+    p_pincode: parsed.pincode || null,
   });
-  if (ownerError) throw new Error(ownerError.message);
 
-  const { error: walletError } = await adminClient.from("wallets").insert({
-    business_id: business.id,
-    balance: 0,
-    credit_limit: 0,
-  });
-  if (walletError) throw new Error(walletError.message);
+  if (provisionError) {
+    await adminClient.auth.admin.deleteUser(authUser.user.id);
+    throw new Error(provisionError.message);
+  }
 
   await logAudit({
     actorId: admin.adminId,
     action: "business.create",
     entityType: "business",
-    entityId: business.id,
+    entityId: businessId as string,
     metadata: { name: parsed.name, email: parsed.email },
   });
 
   revalidatePath("/businesses");
   revalidatePath("/dashboard");
 
-  return { businessId: business.id as string, email: parsed.email, password: parsed.password };
+  return { businessId: businessId as string, email: parsed.email, password: parsed.password };
 }
 
 export async function updateBusinessStatus(businessId: string, status: BusinessStatus) {

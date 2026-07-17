@@ -23,11 +23,11 @@ export async function placeOrder(couponCode?: string) {
   if (insufficient) throw new Error(`${insufficient.productName} only has ${insufficient.availableStock} units available`);
 
   let discount = 0;
-  let appliedCoupon: { id: string; usedCount: number } | null = null;
+  let appliedCouponId: string | null = null;
   if (couponCode) {
     const result = await validateCoupon(couponCode, summary.subtotal);
     discount = result.discount;
-    appliedCoupon = { id: result.coupon.id, usedCount: result.coupon.used_count };
+    appliedCouponId = result.coupon.id;
   }
 
   const bySupplier = new Map<string, { businessId: string; businessName: string; lines: CartLine[] }>();
@@ -37,29 +37,18 @@ export async function placeOrder(couponCode?: string) {
     bySupplier.set(line.businessId, existing);
   }
   const supplierGroups = Array.from(bySupplier.values());
-
   const grandTotalBeforeDiscount = summary.grandTotal;
-  const finalGrandTotal = Math.round((grandTotalBeforeDiscount - discount) * 100) / 100;
 
-  const masterOrderNumber = orderNumber();
-
-  const { data: masterOrder, error: orderError } = await supabase
-    .from("orders")
-    .insert({
-      order_number: masterOrderNumber,
-      buyer_business_id: ctx.business.id,
-      subtotal: summary.subtotal,
-      tax_total: summary.taxTotal,
-      grand_total: finalGrandTotal,
-    })
-    .select("id")
-    .single();
-  if (orderError) throw new Error(orderError.message);
-
+  // Split subtotal/tax/discount per supplier, with the last group absorbing
+  // any rounding remainder — then derive the MASTER totals as the sum of
+  // these already-rounded group figures (not recomputed independently from
+  // all lines), so the master order's totals always reconcile exactly with
+  // the sum of its supplier orders instead of drifting by a paisa.
   let discountRemaining = discount;
+  let masterSubtotal = 0;
+  let masterTax = 0;
 
-  for (let i = 0; i < supplierGroups.length; i++) {
-    const group = supplierGroups[i];
+  const supplierOrderPayload = supplierGroups.map((group, i) => {
     const isLast = i === supplierGroups.length - 1;
 
     const groupSubtotal = Math.round(group.lines.reduce((sum, l) => sum + l.lineTotal, 0) * 100) / 100;
@@ -71,53 +60,47 @@ export async function placeOrder(couponCode?: string) {
     discountRemaining = Math.round((discountRemaining - groupDiscount) * 100) / 100;
     const groupGrandTotal = Math.round((groupTotal - groupDiscount) * 100) / 100;
 
-    const { data: supplierOrder, error: soError } = await supabase
-      .from("supplier_orders")
-      .insert({
-        order_id: masterOrder.id,
-        order_number: masterOrderNumber,
-        supplier_business_id: group.businessId,
-        buyer_business_id: ctx.business.id,
-        status: "placed",
-        subtotal: groupSubtotal,
-        tax_total: groupTax,
-        grand_total: groupGrandTotal,
-      })
-      .select("id")
-      .single();
-    if (soError) throw new Error(soError.message);
+    masterSubtotal += groupSubtotal;
+    masterTax += groupTax;
 
-    const items = group.lines.map((l) => ({
-      supplier_order_id: supplierOrder.id,
-      product_id: l.productId,
-      batch_id: l.batchId,
-      product_name: l.productName,
-      batch_number: l.batchNumber,
-      quantity: l.quantity,
-      unit_price: l.unitPrice,
-      gst_rate: l.gstRate,
-      line_total: l.lineTotal,
-    }));
-    const { error: itemsError } = await supabase.from("supplier_order_items").insert(items);
-    if (itemsError) throw new Error(itemsError.message);
+    return {
+      supplierBusinessId: group.businessId,
+      subtotal: groupSubtotal,
+      taxTotal: groupTax,
+      grandTotal: groupGrandTotal,
+      notificationMessage: `${ctx.business.name} placed a new order worth ₹${groupGrandTotal.toLocaleString("en-IN")}.`,
+      items: group.lines.map((l) => ({
+        productId: l.productId,
+        batchId: l.batchId,
+        productName: l.productName,
+        batchNumber: l.batchNumber,
+        quantity: l.quantity,
+        unitPrice: l.unitPrice,
+        gstRate: l.gstRate,
+        lineTotal: l.lineTotal,
+      })),
+    };
+  });
 
-    const { error: historyError } = await supabase.from("order_status_history").insert({
-      supplier_order_id: supplierOrder.id,
-      status: "placed",
-    });
-    if (historyError) throw new Error(historyError.message);
+  const masterGrandTotal = Math.round((masterSubtotal + masterTax - discount) * 100) / 100;
+  const masterOrderNumber = orderNumber();
 
-    const { error: notifError } = await supabase.from("notifications").insert({
-      business_id: group.businessId,
-      title: "New order received",
-      message: `${ctx.business.name} placed a new order (${masterOrderNumber}) worth ₹${groupGrandTotal.toLocaleString("en-IN")}.`,
-      type: "order",
-    });
-    if (notifError) throw new Error(notifError.message);
-  }
+  // One transaction: master order + every supplier order + items + status
+  // history + notifications. A failure partway through now rolls back
+  // everything instead of leaving orphaned rows and an uncleared cart that
+  // would duplicate on retry — see 0008_security_and_atomicity_fixes.sql.
+  const { data: orderId, error } = await supabase.rpc("create_order_with_splits", {
+    p_order_number: masterOrderNumber,
+    p_buyer_business_id: ctx.business.id,
+    p_subtotal: Math.round(masterSubtotal * 100) / 100,
+    p_tax_total: Math.round(masterTax * 100) / 100,
+    p_grand_total: masterGrandTotal,
+    p_supplier_orders: supplierOrderPayload,
+  });
+  if (error) throw new Error(error.message);
 
-  if (appliedCoupon) {
-    await supabase.from("coupons").update({ used_count: appliedCoupon.usedCount + 1 }).eq("id", appliedCoupon.id);
+  if (appliedCouponId) {
+    await supabase.rpc("increment_coupon_usage", { p_coupon_id: appliedCouponId });
   }
 
   await supabase.from("cart_items").delete().eq("buyer_business_id", ctx.business.id);
@@ -125,5 +108,5 @@ export async function placeOrder(couponCode?: string) {
   revalidatePath("/cart");
   revalidatePath("/orders");
 
-  return { orderId: masterOrder.id as string, orderNumber: masterOrderNumber };
+  return { orderId: orderId as string, orderNumber: masterOrderNumber };
 }

@@ -12,30 +12,17 @@ export async function adjustWallet(businessId: string, type: "credit" | "debit",
 
   const supabase = await createClient();
 
-  const { data: wallet, error: walletError } = await supabase
-    .from("wallets")
-    .select("*")
-    .eq("business_id", businessId)
-    .single();
-  if (walletError || !wallet) throw new Error("Wallet not found");
-
-  const newBalance = type === "credit" ? Number(wallet.balance) + amount : Number(wallet.balance) - amount;
-  if (newBalance < 0) throw new Error("Insufficient balance for this debit");
-
-  const { error: updateError } = await supabase
-    .from("wallets")
-    .update({ balance: newBalance, updated_at: new Date().toISOString() })
-    .eq("id", wallet.id);
-  if (updateError) throw new Error(updateError.message);
-
-  const { error: txnError } = await supabase.from("wallet_transactions").insert({
-    wallet_id: wallet.id,
-    type,
-    amount,
-    reference_type: "admin_adjustment",
-    description: description || `Manual ${type} by super admin`,
+  // Locks the wallet row and does the balance check + update + transaction
+  // log in one transaction, so two concurrent adjustments against the same
+  // wallet can't read-then-write over each other — see
+  // 0008_security_and_atomicity_fixes.sql.
+  const { error: adjustError } = await supabase.rpc("adjust_wallet_balance", {
+    p_business_id: businessId,
+    p_type: type,
+    p_amount: amount,
+    p_description: description || null,
   });
-  if (txnError) throw new Error(txnError.message);
+  if (adjustError) throw new Error(adjustError.message);
 
   await supabase.from("notifications").insert({
     business_id: businessId,
@@ -48,7 +35,7 @@ export async function adjustWallet(businessId: string, type: "credit" | "debit",
     actorId: admin.adminId,
     action: `wallet.${type}`,
     entityType: "wallet",
-    entityId: wallet.id,
+    entityId: businessId,
     metadata: { businessId, amount, description },
   });
 

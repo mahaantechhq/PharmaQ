@@ -38,7 +38,7 @@ function downloadTemplate() {
 export function BulkUploadClient() {
   const [rows, setRows] = useState<Record<string, string>[]>([]);
   const [fileName, setFileName] = useState<string | null>(null);
-  const [result, setResult] = useState<{ created: number; errors: string[] } | null>(null);
+  const [result, setResult] = useState<{ created: number; skipped: number; errors: string[] } | null>(null);
   const [loading, setLoading] = useState(false);
   const inputRef = useRef<HTMLInputElement>(null);
   const router = useRouter();
@@ -125,6 +125,7 @@ export function BulkUploadClient() {
             <div className="mt-4 space-y-2">
               <div className="flex items-center gap-2 rounded-lg bg-success-50 px-3 py-2 text-sm text-success-600">
                 <CheckCircle2 className="h-4 w-4" /> {result.created} products imported successfully
+                {result.skipped > 0 && ` (${result.skipped} skipped — already exists)`}
               </div>
               {result.errors.map((e, i) => (
                 <div key={i} className="flex items-center gap-2 rounded-lg bg-danger-50 px-3 py-2 text-sm text-danger-600">

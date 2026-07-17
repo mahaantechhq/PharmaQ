@@ -31,12 +31,20 @@ export default async function DashboardPage() {
     .filter((o) => o.status === "completed" || o.status === "delivered")
     .reduce((sum, o) => sum + Number(o.grand_total), 0);
 
+  // Keyed by ISO date so it sorts correctly regardless of query order;
+  // formatted for display only after sorting.
   const salesByDate = new Map<string, number>();
   for (const o of allOrders) {
-    const date = new Date(o.created_at).toLocaleDateString("en-IN", { day: "2-digit", month: "short" });
-    salesByDate.set(date, (salesByDate.get(date) ?? 0) + Number(o.grand_total));
+    const isoDate = o.created_at.slice(0, 10);
+    salesByDate.set(isoDate, (salesByDate.get(isoDate) ?? 0) + Number(o.grand_total));
   }
-  const salesData = Array.from(salesByDate.entries()).map(([date, total]) => ({ date, total })).slice(-14);
+  const salesData = Array.from(salesByDate.entries())
+    .sort(([a], [b]) => a.localeCompare(b))
+    .slice(-14)
+    .map(([isoDate, total]) => ({
+      date: new Date(isoDate).toLocaleDateString("en-IN", { day: "2-digit", month: "short" }),
+      total,
+    }));
 
   const statusCounts: Record<string, number> = {};
   for (const o of allOrders) {
