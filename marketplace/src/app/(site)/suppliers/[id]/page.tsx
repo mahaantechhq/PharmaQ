@@ -1,13 +1,11 @@
 import { notFound } from "next/navigation";
 import { Building2, MapPin, ShieldCheck } from "lucide-react";
 import { createClient } from "@/lib/supabase/server";
-import { requireCurrentBusiness } from "@/lib/supabase/require-business";
 import { ProductCard } from "@/components/products/ProductCard";
 import type { ProductListing } from "@/lib/marketplace";
 
 export default async function SupplierProfilePage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
-  await requireCurrentBusiness(`/suppliers/${id}`);
   const supabase = await createClient();
 
   const { data: business } = await supabase
