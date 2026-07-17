@@ -27,7 +27,7 @@ export function Topbar({ email, pendingApprovals = 0 }: { email: string; pending
         />
       </div>
 
-      <div className="flex items-center gap-2">
+      <div className="ml-auto flex items-center gap-2">
         <Link
           href="/businesses?status=pending"
           className="relative flex h-10 w-10 items-center justify-center rounded-lg text-slate-500 hover:bg-slate-50"
