@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import Image from "next/image";
 import { usePathname } from "next/navigation";
 import { useState } from "react";
 import { PanelLeftClose, PanelLeftOpen, ShieldCheck } from "lucide-react";
@@ -19,9 +20,7 @@ export function Sidebar() {
       )}
     >
       <div className="flex h-16 items-center gap-2.5 border-b border-white/10 px-4">
-        <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-primary-500 text-sm font-bold text-white">
-          PQ
-        </div>
+        <Image src="/logo-icon.png" alt="Pharma Q" width={36} height={36} className="shrink-0 rounded-lg" priority />
         {!collapsed && (
           <div className="min-w-0">
             <p className="truncate text-sm font-semibold text-white">Pharma Q</p>

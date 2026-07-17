@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import Image from "next/image";
 import { usePathname } from "next/navigation";
 import { useState } from "react";
 import { PanelLeftClose, PanelLeftOpen } from "lucide-react";
@@ -20,14 +21,10 @@ export function Sidebar({ business }: { business: Business }) {
       )}
     >
       <div className="flex h-16 items-center gap-2.5 border-b border-slate-100 px-4">
-        <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-primary-600 text-sm font-bold text-white">
-          PQ
-        </div>
-        {!collapsed && (
-          <div className="min-w-0">
-            <p className="truncate text-sm font-semibold text-slate-900">Pharma Q</p>
-            <p className="truncate text-xs text-slate-400">Business</p>
-          </div>
+        {collapsed ? (
+          <Image src="/logo-icon.png" alt="Pharma Q" width={36} height={36} className="rounded-lg" />
+        ) : (
+          <Image src="/logo.png" alt="Pharma Q" width={140} height={38} priority />
         )}
       </div>
 

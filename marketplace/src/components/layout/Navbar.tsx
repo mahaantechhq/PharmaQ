@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import Image from "next/image";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useRef, useState } from "react";
 import { Search, ShoppingCart, Heart, Bell, User, LogOut, Package, LayoutGrid } from "lucide-react";
@@ -40,11 +41,9 @@ export function Navbar({
   return (
     <header className={cn("sticky top-0 z-40 border-b border-slate-100 bg-white/90 backdrop-blur")}>
       <div className="mx-auto flex h-16 max-w-7xl items-center gap-4 px-4 sm:px-6">
-        <Link href="/" className="flex shrink-0 items-center gap-2">
-          <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-primary-600 text-sm font-bold text-white">
-            PQ
-          </div>
-          <span className="hidden text-lg font-semibold text-slate-900 sm:block">Pharma Q</span>
+        <Link href="/" className="flex shrink-0 items-center">
+          <Image src="/logo-icon.png" alt="Pharma Q" width={36} height={36} className="rounded-lg sm:hidden" priority />
+          <Image src="/logo.png" alt="Pharma Q" width={130} height={35} className="hidden sm:block" priority />
         </Link>
 
         <Link href={CATEGORIES_LINK} className="hidden shrink-0 items-center gap-1.5 text-sm font-medium text-slate-600 hover:text-primary-600 lg:flex">

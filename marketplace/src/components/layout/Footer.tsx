@@ -1,4 +1,5 @@
 import Link from "next/link";
+import Image from "next/image";
 import { Mail, Phone, MapPin } from "lucide-react";
 
 const LINK_GROUPS = [
@@ -32,11 +33,8 @@ export function Footer() {
     <footer className="mt-16 border-t border-slate-100 bg-slate-50">
       <div className="mx-auto grid max-w-7xl grid-cols-2 gap-8 px-4 py-12 sm:px-6 md:grid-cols-4">
         <div className="col-span-2 md:col-span-1">
-          <div className="mb-3 flex items-center gap-2">
-            <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-primary-600 text-sm font-bold text-white">
-              PQ
-            </div>
-            <span className="text-lg font-semibold text-slate-900">Pharma Q</span>
+          <div className="mb-3">
+            <Image src="/logo.png" alt="Pharma Q" width={130} height={35} />
           </div>
           <p className="text-sm text-slate-500">
             The B2B marketplace connecting pharma businesses across India.

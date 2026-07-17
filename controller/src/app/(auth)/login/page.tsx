@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, type FormEvent } from "react";
+import Image from "next/image";
 import { useRouter } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
 import { Button } from "@/components/ui/Button";
@@ -49,9 +50,7 @@ export default function LoginPage() {
     <div className="flex min-h-screen flex-1 items-center justify-center bg-gradient-to-br from-navy-900 via-navy-800 to-primary-700 p-4">
       <div className="w-full max-w-md">
         <div className="mb-8 flex flex-col items-center text-white">
-          <div className="mb-3 flex h-14 w-14 items-center justify-center rounded-2xl bg-white/10 text-2xl font-bold backdrop-blur">
-            PQ
-          </div>
+          <Image src="/logo-icon.png" alt="Pharma Q" width={64} height={64} className="mb-3 rounded-2xl" priority />
           <h1 className="text-xl font-semibold">Pharma Q Controller</h1>
           <p className="mt-1 text-sm text-primary-100">Super Admin access only</p>
         </div>

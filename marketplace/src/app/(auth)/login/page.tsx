@@ -3,6 +3,7 @@
 import { Suspense, useState, type FormEvent } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import Link from "next/link";
+import Image from "next/image";
 import { createClient } from "@/lib/supabase/client";
 import { Button } from "@/components/ui/Button";
 import { Input } from "@/components/ui/Input";
@@ -38,9 +39,7 @@ function LoginForm() {
     <div className="flex min-h-screen flex-1 items-center justify-center bg-gradient-to-br from-primary-900 via-primary-700 to-primary-500 p-4">
       <div className="w-full max-w-md">
         <Link href="/" className="mb-8 flex flex-col items-center text-white">
-          <div className="mb-3 flex h-14 w-14 items-center justify-center rounded-2xl bg-white/10 text-2xl font-bold backdrop-blur">
-            PQ
-          </div>
+          <Image src="/logo-icon.png" alt="Pharma Q" width={64} height={64} className="mb-3 rounded-2xl" priority />
           <h1 className="text-xl font-semibold">Pharma Q</h1>
           <p className="mt-1 text-sm text-primary-100">B2B Pharma Marketplace</p>
         </Link>
