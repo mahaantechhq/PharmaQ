@@ -40,9 +40,9 @@ export function Footer() {
             The B2B marketplace connecting pharma businesses across India.
           </p>
           <div className="mt-4 flex flex-col gap-2 text-sm text-slate-500">
-            <span className="flex items-center gap-2"><Mail className="h-4 w-4" /> support@pharmaq.in</span>
-            <span className="flex items-center gap-2"><Phone className="h-4 w-4" /> 1800-123-4567</span>
-            <span className="flex items-center gap-2"><MapPin className="h-4 w-4" /> Mumbai, India</span>
+            <span className="flex items-center gap-2"><Mail className="h-4 w-4" /> mahaantech26@gmail.com</span>
+            <span className="flex items-center gap-2"><Phone className="h-4 w-4" /> +91 82200 65565</span>
+            <span className="flex items-center gap-2"><MapPin className="h-4 w-4" /> Trichy, Tamil Nadu, India</span>
           </div>
         </div>
 

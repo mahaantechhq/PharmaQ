@@ -1,4 +1,4 @@
-import { Smartphone, Mail, Phone, ArrowRight } from "lucide-react";
+import { Smartphone, Mail, Phone, MapPin, ArrowRight } from "lucide-react";
 
 export function DownloadAndContact() {
   return (
@@ -31,30 +31,39 @@ export function DownloadAndContact() {
             <p className="mt-2 max-w-sm text-sm text-slate-500">Our team can help onboard your business onto Pharma Q.</p>
           </div>
           <div className="flex flex-col gap-4">
-            <a href="mailto:support@pharmaq.in" className="group flex items-center justify-between gap-3 rounded-2xl border border-slate-100 bg-white p-5 shadow-[var(--shadow-card)] transition-colors hover:border-primary-200">
+            <a href="mailto:mahaantech26@gmail.com" className="group flex items-center justify-between gap-3 rounded-2xl border border-slate-100 bg-white p-5 shadow-[var(--shadow-card)] transition-colors hover:border-primary-200">
               <span className="flex items-center gap-3">
                 <span className="flex h-10 w-10 items-center justify-center rounded-xl bg-primary-50 text-primary-600">
                   <Mail className="h-4 w-4" />
                 </span>
                 <span>
                   <p className="text-xs text-slate-400">Email us</p>
-                  <p className="text-sm font-semibold text-slate-800">support@pharmaq.in</p>
+                  <p className="text-sm font-semibold text-slate-800">mahaantech26@gmail.com</p>
                 </span>
               </span>
               <ArrowRight className="h-4 w-4 text-slate-300 transition-transform group-hover:translate-x-1 group-hover:text-primary-600" />
             </a>
-            <a href="tel:18001234567" className="group flex items-center justify-between gap-3 rounded-2xl border border-slate-100 bg-white p-5 shadow-[var(--shadow-card)] transition-colors hover:border-primary-200">
+            <a href="tel:+918220065565" className="group flex items-center justify-between gap-3 rounded-2xl border border-slate-100 bg-white p-5 shadow-[var(--shadow-card)] transition-colors hover:border-primary-200">
               <span className="flex items-center gap-3">
                 <span className="flex h-10 w-10 items-center justify-center rounded-xl bg-primary-50 text-primary-600">
                   <Phone className="h-4 w-4" />
                 </span>
                 <span>
                   <p className="text-xs text-slate-400">Call us</p>
-                  <p className="text-sm font-semibold text-slate-800">1800-123-4567</p>
+                  <p className="text-sm font-semibold text-slate-800">+91 82200 65565</p>
                 </span>
               </span>
               <ArrowRight className="h-4 w-4 text-slate-300 transition-transform group-hover:translate-x-1 group-hover:text-primary-600" />
             </a>
+            <div className="flex items-center gap-3 rounded-2xl border border-slate-100 bg-white p-5 shadow-[var(--shadow-card)]">
+              <span className="flex h-10 w-10 items-center justify-center rounded-xl bg-primary-50 text-primary-600">
+                <MapPin className="h-4 w-4" />
+              </span>
+              <span>
+                <p className="text-xs text-slate-400">Find us</p>
+                <p className="text-sm font-semibold text-slate-800">Trichy, Tamil Nadu, India</p>
+              </span>
+            </div>
           </div>
         </div>
       </section>
