@@ -1,6 +1,7 @@
 import { Suspense } from "react";
 import { SearchX } from "lucide-react";
 import { createClient } from "@/lib/supabase/server";
+import { requireCurrentBusiness } from "@/lib/supabase/require-business";
 import { searchProducts } from "@/lib/marketplace";
 import { ProductCard } from "@/components/products/ProductCard";
 import { SearchFilters } from "@/components/search/SearchFilters";
@@ -11,6 +12,7 @@ interface SearchPageProps {
 
 export default async function SearchPage({ searchParams }: SearchPageProps) {
   const params = await searchParams;
+  await requireCurrentBusiness("/search");
   const supabase = await createClient();
 
   const [{ data: categories }, { data: brands }, { data: manufacturers }, products] = await Promise.all([
