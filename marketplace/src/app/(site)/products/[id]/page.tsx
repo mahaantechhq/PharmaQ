@@ -2,7 +2,7 @@ import { notFound } from "next/navigation";
 import Link from "next/link";
 import { Pill, MapPin, ShieldCheck } from "lucide-react";
 import { createClient } from "@/lib/supabase/server";
-import { getCurrentBusiness } from "@/lib/supabase/current-business";
+import { requireCurrentBusiness } from "@/lib/supabase/require-business";
 import { Badge } from "@/components/ui/Badge";
 import { Card, CardBody } from "@/components/ui/Card";
 import { AddToCart } from "@/components/products/AddToCart";
@@ -10,8 +10,8 @@ import { formatCurrency } from "@/lib/format";
 
 export default async function ProductDetailPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
+  const ctx = await requireCurrentBusiness(`/products/${id}`);
   const supabase = await createClient();
-  const ctx = await getCurrentBusiness();
 
   const { data: product } = await supabase
     .from("products")
@@ -33,16 +33,13 @@ export default async function ProductDetailPage({ params }: { params: Promise<{ 
   const totalStock = (batches ?? []).reduce((sum, b) => sum + b.stock_qty, 0);
   const cheapest = batches?.[0];
 
-  let wishlisted = false;
-  if (ctx) {
-    const { data } = await supabase
-      .from("wishlist_items")
-      .select("id")
-      .eq("business_id", ctx.business.id)
-      .eq("product_id", id)
-      .maybeSingle();
-    wishlisted = !!data;
-  }
+  const { data: wishlistItem } = await supabase
+    .from("wishlist_items")
+    .select("id")
+    .eq("business_id", ctx.business.id)
+    .eq("product_id", id)
+    .maybeSingle();
+  const wishlisted = !!wishlistItem;
 
   const business = (product as any).businesses;
 
@@ -80,7 +77,7 @@ export default async function ProductDetailPage({ params }: { params: Promise<{ 
           <p className="mt-1 text-xs text-slate-400">Inclusive of {Number(product.gst_rate)}% GST · {totalStock} units available</p>
 
           <div className="mt-6">
-            <AddToCart productId={product.id} maxQty={totalStock} isLoggedIn={!!ctx} initialWishlisted={wishlisted} />
+            <AddToCart productId={product.id} maxQty={totalStock} isLoggedIn initialWishlisted={wishlisted} />
           </div>
 
           <Card className="mt-6">
