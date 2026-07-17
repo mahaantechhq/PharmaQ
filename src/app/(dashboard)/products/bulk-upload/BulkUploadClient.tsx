@@ -1,0 +1,140 @@
+"use client";
+
+import { useRef, useState } from "react";
+import { useRouter } from "next/navigation";
+import Papa from "papaparse";
+import { Download, Upload, CheckCircle2, AlertCircle } from "lucide-react";
+import { Button } from "@/components/ui/Button";
+import { Card, CardBody, CardHeader } from "@/components/ui/Card";
+import { useToast } from "@/components/ui/Toast";
+import { bulkImportProducts } from "@/app/(dashboard)/products/actions";
+
+const TEMPLATE_HEADERS = [
+  "name",
+  "category",
+  "composition",
+  "pack_size",
+  "hsn_code",
+  "gst_rate",
+  "batch_number",
+  "expiry_date",
+  "mrp",
+  "selling_price",
+  "stock_qty",
+];
+
+function downloadTemplate() {
+  const csv = TEMPLATE_HEADERS.join(",") + "\n" +
+    "Paracetamol 650mg,Analgesics,Paracetamol 650mg,Strip of 15,3004,12,B-001,2027-01-01,45,40,200\n";
+  const blob = new Blob([csv], { type: "text/csv" });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement("a");
+  a.href = url;
+  a.download = "pharmaq-products-template.csv";
+  a.click();
+  URL.revokeObjectURL(url);
+}
+
+export function BulkUploadClient() {
+  const [rows, setRows] = useState<Record<string, string>[]>([]);
+  const [fileName, setFileName] = useState<string | null>(null);
+  const [result, setResult] = useState<{ created: number; errors: string[] } | null>(null);
+  const [loading, setLoading] = useState(false);
+  const inputRef = useRef<HTMLInputElement>(null);
+  const router = useRouter();
+  const { toast } = useToast();
+
+  const handleFile = (file: File) => {
+    setFileName(file.name);
+    setResult(null);
+    Papa.parse<Record<string, string>>(file, {
+      header: true,
+      skipEmptyLines: true,
+      complete: (res) => setRows(res.data),
+      error: () => toast("Failed to parse CSV", "error"),
+    });
+  };
+
+  const handleImport = async () => {
+    if (rows.length === 0) return;
+    setLoading(true);
+    try {
+      const res = await bulkImportProducts(rows as any);
+      setResult(res);
+      if (res.created > 0) toast(`Imported ${res.created} products`, "success");
+      router.refresh();
+    } catch (err) {
+      toast(err instanceof Error ? err.message : "Import failed", "error");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  return (
+    <div className="flex flex-col gap-6">
+      <Card>
+        <CardHeader
+          title="1. Download the template"
+          description="Fill in your product and batch details following this format."
+        />
+        <CardBody>
+          <Button variant="outline" onClick={downloadTemplate}>
+            <Download className="h-4 w-4" /> Download CSV template
+          </Button>
+        </CardBody>
+      </Card>
+
+      <Card>
+        <CardHeader title="2. Upload your file" description="CSV files only." />
+        <CardBody>
+          <div
+            onClick={() => inputRef.current?.click()}
+            onDragOver={(e) => e.preventDefault()}
+            onDrop={(e) => {
+              e.preventDefault();
+              const file = e.dataTransfer.files?.[0];
+              if (file) handleFile(file);
+            }}
+            className="flex cursor-pointer flex-col items-center justify-center gap-2 rounded-xl border-2 border-dashed border-slate-200 bg-slate-50 py-10 text-center hover:border-primary-300"
+          >
+            <Upload className="h-6 w-6 text-slate-400" />
+            <p className="text-sm text-slate-500">
+              {fileName ? <span className="font-medium text-slate-700">{fileName}</span> : "Click to browse or drag & drop your CSV file"}
+            </p>
+            <input
+              ref={inputRef}
+              type="file"
+              accept=".csv"
+              className="hidden"
+              onChange={(e) => e.target.files?.[0] && handleFile(e.target.files[0])}
+            />
+          </div>
+
+          {rows.length > 0 && (
+            <div className="mt-4">
+              <p className="mb-2 text-sm text-slate-600">
+                {rows.length} row{rows.length !== 1 && "s"} ready to import.
+              </p>
+              <Button onClick={handleImport} loading={loading}>
+                Import {rows.length} products
+              </Button>
+            </div>
+          )}
+
+          {result && (
+            <div className="mt-4 space-y-2">
+              <div className="flex items-center gap-2 rounded-lg bg-success-50 px-3 py-2 text-sm text-success-600">
+                <CheckCircle2 className="h-4 w-4" /> {result.created} products imported successfully
+              </div>
+              {result.errors.map((e, i) => (
+                <div key={i} className="flex items-center gap-2 rounded-lg bg-danger-50 px-3 py-2 text-sm text-danger-600">
+                  <AlertCircle className="h-4 w-4" /> {e}
+                </div>
+              ))}
+            </div>
+          )}
+        </CardBody>
+      </Card>
+    </div>
+  );
+}
