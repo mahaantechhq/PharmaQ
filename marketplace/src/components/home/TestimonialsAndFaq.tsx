@@ -28,7 +28,7 @@ export function TestimonialsAndFaq() {
 
   return (
     <>
-      <section className="mx-auto max-w-7xl px-4 py-16 sm:px-6">
+      <section id="testimonials" className="mx-auto max-w-7xl px-4 py-16 sm:px-6">
         <div className="mb-12 text-center">
           <p className="text-xs font-bold uppercase tracking-widest text-primary-600">Testimonials</p>
           <h2 className="mt-2 font-display text-2xl font-semibold text-slate-900 sm:text-3xl">What businesses are saying</h2>

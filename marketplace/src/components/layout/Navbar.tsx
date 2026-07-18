@@ -2,14 +2,18 @@
 
 import Link from "next/link";
 import Image from "next/image";
-import { useRouter, useSearchParams } from "next/navigation";
-import { useRef, useState } from "react";
-import { Search, ShoppingCart, Heart, Bell, User, LogOut, Package, LayoutGrid } from "lucide-react";
+import { useRouter } from "next/navigation";
+import { ShoppingCart, Heart, Bell, User, LogOut, Package } from "lucide-react";
 import { createClient } from "@/lib/supabase/client";
 import { Dropdown, DropdownItem } from "@/components/ui/Dropdown";
-import { cn } from "@/lib/cn";
 
-const CATEGORIES_LINK = "/search";
+const NAV_LINKS = [
+  { label: "Home", href: "/" },
+  { label: "How it works", href: "/#how-it-works" },
+  { label: "Testimonials", href: "/#testimonials" },
+  { label: "FAQ", href: "/#faq" },
+  { label: "Contact", href: "/#contact" },
+];
 
 export function Navbar({
   businessName,
@@ -21,16 +25,7 @@ export function Navbar({
   unreadCount?: number;
 }) {
   const router = useRouter();
-  const searchParams = useSearchParams();
   const supabase = createClient();
-  const inputRef = useRef<HTMLInputElement>(null);
-  const [scrolled, setScrolled] = useState(false);
-
-  const handleSearch = (e: React.FormEvent) => {
-    e.preventDefault();
-    const q = inputRef.current?.value.trim();
-    router.push(q ? `/search?q=${encodeURIComponent(q)}` : "/search");
-  };
 
   const handleLogout = async () => {
     await supabase.auth.signOut();
@@ -39,30 +34,22 @@ export function Navbar({
   };
 
   return (
-    <header className={cn("sticky top-0 z-40 border-b border-slate-100 bg-white/90 backdrop-blur")}>
-      <div className="mx-auto flex h-16 max-w-7xl items-center gap-4 px-4 sm:px-6">
+    <header className="sticky top-0 z-40 border-b border-slate-100 bg-white/90 backdrop-blur">
+      <div className="mx-auto flex h-16 max-w-7xl items-center gap-6 px-4 sm:px-6">
         <Link href="/" className="flex shrink-0 items-center">
           <Image src="/logo-icon.png" alt="Pharma Q" width={36} height={36} className="rounded-lg sm:hidden" priority />
           <Image src="/logo.png" alt="Pharma Q" width={130} height={35} className="hidden sm:block" priority />
         </Link>
 
-        <Link href={CATEGORIES_LINK} className="hidden shrink-0 items-center gap-1.5 text-sm font-medium text-slate-600 hover:text-primary-600 lg:flex">
-          <LayoutGrid className="h-4 w-4" /> Categories
-        </Link>
+        <nav className="hidden items-center gap-7 lg:flex">
+          {NAV_LINKS.map((link) => (
+            <Link key={link.label} href={link.href} className="text-sm font-medium text-slate-600 transition-colors hover:text-primary-600">
+              {link.label}
+            </Link>
+          ))}
+        </nav>
 
-        <form onSubmit={handleSearch} className="relative flex-1">
-          <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
-          <input
-            ref={inputRef}
-            type="search"
-            name="q"
-            defaultValue={searchParams.get("q") ?? ""}
-            placeholder="Search for medicines, brands, suppliers..."
-            className="h-10 w-full rounded-lg border border-slate-200 bg-slate-50 pl-9 pr-3 text-sm text-slate-700 placeholder:text-slate-400 focus:bg-white focus:outline-none focus:ring-2 focus:ring-primary-300 focus:border-primary-400"
-          />
-        </form>
-
-        <div className="flex shrink-0 items-center gap-1">
+        <div className="ml-auto flex shrink-0 items-center gap-1">
           {businessName ? (
             <>
               <Link href="/wishlist" className="hidden h-10 w-10 items-center justify-center rounded-lg text-slate-500 hover:bg-slate-50 sm:flex">
