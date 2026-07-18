@@ -41,7 +41,7 @@ export function Navbar({
           <Image src="/logo.png" alt="Pharma Q" width={130} height={35} className="hidden sm:block" priority />
         </Link>
 
-        <nav className="hidden items-center gap-7 lg:flex">
+        <nav className="hidden flex-1 items-center justify-center gap-7 lg:flex">
           {NAV_LINKS.map((link) => (
             <Link key={link.label} href={link.href} className="text-sm font-medium text-slate-600 transition-colors hover:text-primary-600">
               {link.label}
