@@ -1,4 +1,5 @@
 import { createClient } from "@/lib/supabase/server";
+import { getCurrentBusiness } from "@/lib/supabase/current-business";
 
 export interface ProductListing {
   id: string;
@@ -27,6 +28,7 @@ export interface ProductSearchFilters {
 
 export async function searchProducts(filters: ProductSearchFilters): Promise<ProductListing[]> {
   const supabase = await createClient();
+  const ctx = await getCurrentBusiness();
 
   let query = supabase
     .from("products")
@@ -34,6 +36,11 @@ export async function searchProducts(filters: ProductSearchFilters): Promise<Pro
       "id, name, composition, pack_size, gst_rate, created_at, business_id, category_id, brand_id, manufacturer_id, businesses:business_id(name, city), categories:category_id(name), brands:brand_id(name)",
     )
     .eq("status", "active");
+
+  // A business shouldn't see its own listings when browsing to buy — it
+  // can't order from itself, and supplier_orders has no self-order guard,
+  // so filtering it out of discovery here is the simplest way to prevent it.
+  if (ctx) query = query.neq("business_id", ctx.business.id);
 
   if (filters.q) query = query.ilike("name", `%${filters.q}%`);
   if (filters.category) query = query.eq("category_id", filters.category);
