@@ -36,18 +36,27 @@ export function Navbar({
   return (
     <header className="sticky top-0 z-40 border-b border-slate-100 bg-white/90 backdrop-blur">
       <div className="mx-auto flex h-16 max-w-7xl items-center gap-6 px-4 sm:px-6">
-        <Link href="/" className="flex shrink-0 items-center">
-          <Image src="/logo-icon.png" alt="Pharma Q" width={36} height={36} className="rounded-lg sm:hidden" priority />
-          <Image src="/logo.png" alt="Pharma Q" width={130} height={35} className="hidden sm:block" priority />
-        </Link>
-
-        <nav className="hidden flex-1 items-center justify-center gap-7 lg:flex">
-          {NAV_LINKS.map((link) => (
-            <Link key={link.label} href={link.href} className="text-sm font-medium text-slate-600 transition-colors hover:text-primary-600">
-              {link.label}
+        {businessName ? (
+          <Link href="/" className="flex flex-1 items-center justify-center">
+            <Image src="/logo-icon.png" alt="Pharma Q" width={36} height={36} className="rounded-lg sm:hidden" priority />
+            <Image src="/logo.png" alt="Pharma Q" width={130} height={35} className="hidden sm:block" priority />
+          </Link>
+        ) : (
+          <>
+            <Link href="/" className="flex shrink-0 items-center">
+              <Image src="/logo-icon.png" alt="Pharma Q" width={36} height={36} className="rounded-lg sm:hidden" priority />
+              <Image src="/logo.png" alt="Pharma Q" width={130} height={35} className="hidden sm:block" priority />
             </Link>
-          ))}
-        </nav>
+
+            <nav className="hidden flex-1 items-center justify-center gap-7 lg:flex">
+              {NAV_LINKS.map((link) => (
+                <Link key={link.label} href={link.href} className="text-sm font-medium text-slate-600 transition-colors hover:text-primary-600">
+                  {link.label}
+                </Link>
+              ))}
+            </nav>
+          </>
+        )}
 
         <div className="ml-auto flex shrink-0 items-center gap-1">
           {businessName ? (
