@@ -35,9 +35,9 @@ export function Navbar({
 
   return (
     <header className="sticky top-0 z-40 border-b border-slate-100 bg-white/90 backdrop-blur">
-      <div className="mx-auto flex h-16 max-w-7xl items-center gap-6 px-4 sm:px-6">
+      <div className="relative mx-auto flex h-16 max-w-7xl items-center gap-6 px-4 sm:px-6">
         {businessName ? (
-          <Link href="/" className="flex flex-1 items-center justify-center">
+          <Link href="/" className="absolute left-1/2 top-1/2 flex -translate-x-1/2 -translate-y-1/2 items-center">
             <Image src="/logo-icon.png" alt="Pharma Q" width={36} height={36} className="rounded-lg sm:hidden" priority />
             <Image src="/logo.png" alt="Pharma Q" width={130} height={35} className="hidden sm:block" priority />
           </Link>
