@@ -4,6 +4,7 @@ import { createClient } from "@/lib/supabase/server";
 import { Sidebar } from "@/components/layout/Sidebar";
 import { Topbar } from "@/components/layout/Topbar";
 import { ToastProvider } from "@/components/ui/Toast";
+import { IdleLogout } from "@/components/auth/IdleLogout";
 
 export default async function DashboardLayout({
   children,
@@ -25,6 +26,7 @@ export default async function DashboardLayout({
 
   return (
     <ToastProvider>
+      <IdleLogout />
       <div className="flex min-h-screen bg-background">
         <Sidebar business={ctx.business} />
         <div className="flex-1 min-w-0">

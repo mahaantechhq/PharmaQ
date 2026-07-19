@@ -3,6 +3,7 @@ import { createClient } from "@/lib/supabase/server";
 import { Navbar } from "@/components/layout/Navbar";
 import { Footer } from "@/components/layout/Footer";
 import { ToastProvider } from "@/components/ui/Toast";
+import { IdleLogout } from "@/components/auth/IdleLogout";
 
 export default async function SiteLayout({ children }: { children: React.ReactNode }) {
   const ctx = await getCurrentBusiness();
@@ -22,6 +23,7 @@ export default async function SiteLayout({ children }: { children: React.ReactNo
 
   return (
     <ToastProvider>
+      <IdleLogout enabled={!!ctx} />
       <Navbar businessName={ctx?.business.name ?? null} cartCount={cartCount} unreadCount={unreadCount} />
       <main className="flex-1">{children}</main>
       <Footer />
