@@ -36,7 +36,7 @@ export default async function SearchPage({ searchParams }: SearchPageProps) {
         <p className="mt-1 text-sm text-slate-500">
           {products.length} listing{products.length !== 1 && "s"} from independent suppliers
         </p>
-        <div className="mt-4 max-w-xl">
+        <div className="mx-auto mt-4 max-w-xl">
           <Suspense>
             <SearchBox />
           </Suspense>
