@@ -1,8 +1,6 @@
 import { createServerClient } from "@supabase/ssr";
 import { NextResponse, type NextRequest } from "next/server";
 
-const PUBLIC_PATHS = ["/login"];
-
 export async function updateSession(request: NextRequest) {
   let response = NextResponse.next({ request });
 
@@ -25,34 +23,33 @@ export async function updateSession(request: NextRequest) {
     },
   );
 
+  // This call's real job is refreshing the access token and writing the
+  // rotated cookies onto `response` above -- every page under (dashboard)
+  // already enforces its own auth redirect server-side via
+  // getCurrentAdmin() in layout.tsx, so that's the actual security
+  // boundary, not this. Middleware used to *also* redirect non-admin
+  // requests to /login (checking super_admins membership on every single
+  // request), but that duplicate check raced against this same refresh
+  // under concurrent requests (a reload, or multiple tabs): one request's
+  // rotated refresh token would invalidate the other's, `user` would come
+  // back null for the loser, and it would redirect to /login even though
+  // the browser already had a valid session from the winner -- bouncing
+  // forever between /login and /dashboard (ERR_TOO_MANY_REDIRECTS).
   const {
     data: { user },
   } = await supabase.auth.getUser();
 
-  // The Business Dashboard, Controller, and Marketplace share one Supabase
-  // project, so they share the same auth cookie name — a logged-in business
-  // owner's session is visible here too. Having *a* session isn't enough;
-  // only redirect based on actual super_admins membership, otherwise a
-  // non-admin session bounces between /login and /dashboard forever.
-  let isAdmin = false;
-  if (user) {
-    const { data: admin } = await supabase.from("super_admins").select("id").eq("id", user.id).maybeSingle();
-    isAdmin = !!admin;
-  }
-
   const { pathname } = request.nextUrl;
-  const isPublicPath = PUBLIC_PATHS.some((path) => pathname.startsWith(path));
 
-  if (!isAdmin && !isPublicPath) {
-    const url = request.nextUrl.clone();
-    url.pathname = "/login";
-    return NextResponse.redirect(url);
-  }
-
-  if (isAdmin && pathname === "/login") {
-    const url = request.nextUrl.clone();
-    url.pathname = "/dashboard";
-    return NextResponse.redirect(url);
+  // Only worth the extra super_admins round trip when it actually changes
+  // behavior (bouncing an already-logged-in admin off the login page).
+  if (user && pathname === "/login") {
+    const { data: admin } = await supabase.from("super_admins").select("id").eq("id", user.id).maybeSingle();
+    if (admin) {
+      const url = request.nextUrl.clone();
+      url.pathname = "/dashboard";
+      return NextResponse.redirect(url);
+    }
   }
 
   return response;
