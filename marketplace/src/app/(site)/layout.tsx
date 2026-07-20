@@ -25,7 +25,7 @@ export default async function SiteLayout({ children }: { children: React.ReactNo
   return (
     <ToastProvider>
       <IdleLogout enabled={!!ctx} />
-      <AnnouncementBar />
+      {!ctx && <AnnouncementBar />}
       <Navbar businessName={ctx?.business.name ?? null} cartCount={cartCount} unreadCount={unreadCount} />
       <main className="flex-1">{children}</main>
       <Footer />
