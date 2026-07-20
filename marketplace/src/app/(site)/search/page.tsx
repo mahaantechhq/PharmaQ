@@ -29,20 +29,13 @@ export default async function SearchPage({ searchParams }: SearchPageProps) {
 
   return (
     <div className="mx-auto max-w-7xl px-4 py-8 sm:px-6">
-      <div className="mb-6 flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
-        <div>
-          <h1 className="text-2xl font-semibold text-slate-900">
-            {params.q ? `Results for "${params.q}"` : "All products"}
-          </h1>
-          <p className="mt-1 text-sm text-slate-500">
-            {products.length} listing{products.length !== 1 && "s"} from independent suppliers
-          </p>
-        </div>
-        <div className="w-full sm:max-w-sm">
-          <Suspense>
-            <SearchBox />
-          </Suspense>
-        </div>
+      <div className="mb-6">
+        <h1 className="text-2xl font-semibold text-slate-900">
+          {params.q ? `Results for "${params.q}"` : "All products"}
+        </h1>
+        <p className="mt-1 text-sm text-slate-500">
+          {products.length} listing{products.length !== 1 && "s"} from independent suppliers
+        </p>
       </div>
 
       <div className="grid grid-cols-1 gap-6 lg:grid-cols-[240px_1fr]">
@@ -57,6 +50,12 @@ export default async function SearchPage({ searchParams }: SearchPageProps) {
         </aside>
 
         <div>
+          <div className="mb-6">
+            <Suspense>
+              <SearchBox />
+            </Suspense>
+          </div>
+
           {products.length === 0 ? (
             <div className="flex flex-col items-center gap-2 py-24 text-slate-400">
               <SearchX className="h-8 w-8" />
