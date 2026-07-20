@@ -3,6 +3,7 @@ import { createClient } from "@/lib/supabase/server";
 import { Navbar } from "@/components/layout/Navbar";
 import { Footer } from "@/components/layout/Footer";
 import { AnnouncementBar } from "@/components/layout/AnnouncementBar";
+import { TrustBadges } from "@/components/layout/TrustBadges";
 import { ToastProvider } from "@/components/ui/Toast";
 import { IdleLogout } from "@/components/auth/IdleLogout";
 
@@ -28,6 +29,7 @@ export default async function SiteLayout({ children }: { children: React.ReactNo
       {!ctx && <AnnouncementBar />}
       <Navbar businessName={ctx?.business.name ?? null} cartCount={cartCount} unreadCount={unreadCount} />
       <main className="flex-1">{children}</main>
+      <TrustBadges />
       <Footer />
     </ToastProvider>
   );

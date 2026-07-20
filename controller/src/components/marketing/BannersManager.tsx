@@ -4,7 +4,7 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { Plus, Trash2, ImageOff } from "lucide-react";
+import { Plus, Trash2, ImageOff, Upload, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/Button";
 import { Modal } from "@/components/ui/Modal";
 import { Field } from "@/components/ui/Field";
@@ -12,30 +12,59 @@ import { Input } from "@/components/ui/Input";
 import { Select } from "@/components/ui/Select";
 import { Badge } from "@/components/ui/Badge";
 import { useToast } from "@/components/ui/Toast";
+import { createClient } from "@/lib/supabase/client";
 import { bannerSchema, type BannerFormValues } from "@/lib/validations/marketing";
 import { createBanner, deleteBanner, toggleBannerStatus } from "@/app/(dashboard)/marketing/actions";
 import type { Banner } from "@/lib/types/database";
 
 export function BannersManager({ banners }: { banners: Banner[] }) {
   const [open, setOpen] = useState(false);
+  const [uploading, setUploading] = useState(false);
+  const [preview, setPreview] = useState<string | null>(null);
   const router = useRouter();
   const { toast } = useToast();
+  const supabase = createClient();
 
   const {
     register,
     handleSubmit,
     reset,
+    setValue,
+    watch,
     formState: { errors, isSubmitting },
   } = useForm<BannerFormValues>({
     resolver: zodResolver(bannerSchema),
-    defaultValues: { position: "hero", status: "active", sort_order: 0 },
+    defaultValues: { position: "hero", status: "active", sort_order: 0, image_url: "" },
   });
+
+  const imageUrl = watch("image_url");
+
+  const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    setUploading(true);
+    try {
+      const path = `${Date.now()}-${file.name.replace(/[^a-zA-Z0-9._-]/g, "_")}`;
+      const { error } = await supabase.storage.from("banners").upload(path, file, { upsert: true });
+      if (error) throw error;
+
+      const { data } = supabase.storage.from("banners").getPublicUrl(path);
+      setValue("image_url", data.publicUrl, { shouldValidate: true });
+      setPreview(data.publicUrl);
+    } catch (err) {
+      toast(err instanceof Error ? err.message : "Failed to upload image", "error");
+    } finally {
+      setUploading(false);
+    }
+  };
 
   const onSubmit = async (values: BannerFormValues) => {
     try {
       await createBanner(values);
       toast("Banner created", "success");
       reset();
+      setPreview(null);
       setOpen(false);
       router.refresh();
     } catch (err) {
@@ -113,8 +142,36 @@ export function BannersManager({ banners }: { banners: Banner[] }) {
           <Field label="Title" htmlFor="title" required error={errors.title?.message}>
             <Input id="title" {...register("title")} />
           </Field>
-          <Field label="Image URL" htmlFor="image_url" required error={errors.image_url?.message} hint="Paste a hosted image URL">
-            <Input id="image_url" placeholder="https://..." {...register("image_url")} />
+          <Field label="Banner image" htmlFor="image_upload" required error={errors.image_url?.message} hint="PNG or JPG, ideally 3:1 aspect ratio">
+            <input type="hidden" {...register("image_url")} />
+            {(preview || imageUrl) && (
+              <div className="mb-2 flex h-28 items-center justify-center overflow-hidden rounded-lg border border-slate-100 bg-slate-50">
+                {/* eslint-disable-next-line @next/next/no-img-element */}
+                <img src={preview || imageUrl} alt="Banner preview" className="h-full w-full object-cover" />
+              </div>
+            )}
+            <label
+              htmlFor="image_upload"
+              className="flex h-11 cursor-pointer items-center justify-center gap-2 rounded-lg border border-dashed border-slate-300 text-sm font-medium text-slate-600 hover:border-primary-400 hover:text-primary-600"
+            >
+              {uploading ? (
+                <>
+                  <Loader2 className="h-4 w-4 animate-spin" /> Uploading...
+                </>
+              ) : (
+                <>
+                  <Upload className="h-4 w-4" /> {imageUrl ? "Replace image" : "Upload image"}
+                </>
+              )}
+            </label>
+            <input
+              id="image_upload"
+              type="file"
+              accept="image/*"
+              className="hidden"
+              onChange={handleFileChange}
+              disabled={uploading}
+            />
           </Field>
           <Field label="Link URL" htmlFor="link_url">
             <Input id="link_url" placeholder="https://..." {...register("link_url")} />
@@ -148,7 +205,7 @@ export function BannersManager({ banners }: { banners: Banner[] }) {
         </form>
         <div className="mt-4 flex justify-end gap-2">
           <Button variant="outline" onClick={() => setOpen(false)}>Cancel</Button>
-          <Button form="banner-form" type="submit" loading={isSubmitting}>Create banner</Button>
+          <Button form="banner-form" type="submit" loading={isSubmitting} disabled={uploading || !imageUrl}>Create banner</Button>
         </div>
       </Modal>
     </div>
