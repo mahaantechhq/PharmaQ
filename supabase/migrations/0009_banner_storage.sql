@@ -7,8 +7,10 @@ insert into storage.buckets (id, name, public)
 values ('banners', 'banners', true)
 on conflict (id) do nothing;
 
-create policy banners_bucket_public_read on storage.objects
-  for select using (bucket_id = 'banners');
+-- No SELECT policy: the bucket itself is public, so GET-by-known-URL
+-- already works without one. A SELECT policy on storage.objects would
+-- additionally let anyone list/enumerate every file in the bucket, which
+-- a public bucket doesn't need (flagged by Supabase's own security lint).
 
 create policy banners_bucket_admin_insert on storage.objects
   for insert with check (bucket_id = 'banners' and is_super_admin());
