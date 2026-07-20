@@ -36,11 +36,6 @@ export default async function SearchPage({ searchParams }: SearchPageProps) {
         <p className="mt-1 text-sm text-slate-500">
           {products.length} listing{products.length !== 1 && "s"} from independent suppliers
         </p>
-        <div className="mx-auto mt-4 max-w-xl">
-          <Suspense>
-            <SearchBox />
-          </Suspense>
-        </div>
       </div>
 
       <div className="grid grid-cols-1 gap-6 lg:grid-cols-[240px_1fr]">
@@ -55,6 +50,12 @@ export default async function SearchPage({ searchParams }: SearchPageProps) {
         </aside>
 
         <div>
+          <div className="mb-6">
+            <Suspense>
+              <SearchBox />
+            </Suspense>
+          </div>
+
           {products.length === 0 ? (
             <div className="flex flex-col items-center gap-2 py-24 text-slate-400">
               <SearchX className="h-8 w-8" />
