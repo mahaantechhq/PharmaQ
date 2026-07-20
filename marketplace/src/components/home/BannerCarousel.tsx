@@ -21,7 +21,7 @@ export function BannerCarousel({ banners }: { banners: Banner[] }) {
 
   const banner = banners[index];
   const slide = (
-    <div className="relative aspect-[21/9] w-full overflow-hidden rounded-2xl bg-slate-100 sm:aspect-[3/1]">
+    <div className="relative aspect-[4/3] w-full overflow-hidden rounded-2xl bg-slate-100 sm:aspect-[16/9]">
       <Image src={banner.image_url} alt={banner.title} fill className="object-cover" priority={index === 0} />
     </div>
   );

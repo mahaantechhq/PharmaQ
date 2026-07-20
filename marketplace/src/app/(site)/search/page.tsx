@@ -4,6 +4,7 @@ import { createClient } from "@/lib/supabase/server";
 import { searchProducts } from "@/lib/marketplace";
 import { ProductCard } from "@/components/products/ProductCard";
 import { SearchFilters } from "@/components/search/SearchFilters";
+import { SearchBox } from "@/components/search/SearchBox";
 
 interface SearchPageProps {
   searchParams: Promise<{ q?: string; category?: string; brand?: string; manufacturer?: string; sort?: string }>;
@@ -35,6 +36,11 @@ export default async function SearchPage({ searchParams }: SearchPageProps) {
         <p className="mt-1 text-sm text-slate-500">
           {products.length} listing{products.length !== 1 && "s"} from independent suppliers
         </p>
+        <div className="mt-4 max-w-xl">
+          <Suspense>
+            <SearchBox />
+          </Suspense>
+        </div>
       </div>
 
       <div className="grid grid-cols-1 gap-6 lg:grid-cols-[240px_1fr]">
