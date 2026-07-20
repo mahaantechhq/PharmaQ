@@ -11,18 +11,20 @@ export interface CurrentBusinessContext {
 // cache() memoizes this per request — the (site) layout and most pages
 // each call it, so this avoids repeating the round-trips on every render.
 //
-// Uses getSession() rather than getUser() — middleware already verifies the
-// token with Supabase Auth and refreshes the cookie on every request, so
-// re-verifying again here is a redundant network round-trip. Every actual
-// table query still goes through RLS with this session's JWT, which is the
-// real enforcement boundary.
+// Uses getUser() (a network round-trip that re-verifies the token with
+// Supabase Auth), not getSession() (which only decodes the local cookie
+// without checking it's still valid). This is called from Server Actions
+// (checkout, cart, wallet, etc.) that can fire well after the page's
+// initial middleware pass refreshed the cookie, once the access token has
+// gone stale again — getSession() would then wrongly treat a real,
+// logged-in business as unauthenticated instead of re-verifying and
+// finding the session is still valid.
 export const getCurrentBusiness = cache(async (): Promise<CurrentBusinessContext | null> => {
   const supabase = await createClient();
 
   const {
-    data: { session },
-  } = await supabase.auth.getSession();
-  const user = session?.user;
+    data: { user },
+  } = await supabase.auth.getUser();
 
   if (!user) return null;
 

@@ -10,18 +10,20 @@ export interface CurrentAdminContext {
 // layout and most pages, so this avoids repeating the auth + admin-lookup
 // round-trips on every render.
 //
-// Uses getSession() rather than getUser() — middleware already verifies
-// the token with Supabase Auth and refreshes the cookie on every request,
-// so re-verifying again here is a redundant network round-trip. Every
-// actual table query still goes through RLS with this session's JWT, which
-// is the real enforcement boundary.
+// Uses getUser() (a network round-trip that re-verifies the token with
+// Supabase Auth), not getSession() (which only decodes the local cookie
+// without checking it's still valid). This is called from Server Actions
+// like createBusiness -- those can fire well after the page's initial
+// middleware pass refreshed the cookie, once the access token has gone
+// stale again, and getSession() would then wrongly treat a real admin as
+// unauthenticated ("Not authenticated as super admin") instead of
+// re-verifying and finding they're still valid.
 export const getCurrentAdmin = cache(async (): Promise<CurrentAdminContext | null> => {
   const supabase = await createClient();
 
   const {
-    data: { session },
-  } = await supabase.auth.getSession();
-  const user = session?.user;
+    data: { user },
+  } = await supabase.auth.getUser();
 
   if (!user) return null;
 

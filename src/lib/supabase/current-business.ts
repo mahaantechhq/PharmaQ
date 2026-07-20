@@ -12,20 +12,19 @@ export interface CurrentBusinessContext {
 // its page (a common pattern here) only hits the network once instead of
 // twice — each call was 3 sequential round-trips to Supabase.
 //
-// Uses getSession() (reads the already-verified JWT from the cookie) rather
-// than getUser() (a second network round-trip to re-verify with Supabase
-// Auth) — middleware already calls getUser() and refreshes the cookie on
-// every request before this ever runs, so the session reaching here has
-// already been server-verified. Any forged/stale token still can't read or
-// write real data: every table query goes through RLS with this same JWT,
-// which is the actual enforcement boundary, not this lookup.
+// Uses getUser() (a network round-trip that re-verifies the token with
+// Supabase Auth), not getSession() (which only decodes the local cookie
+// without checking it's still valid). This is called from Server Actions
+// that can fire well after the page's initial middleware pass refreshed
+// the cookie, once the access token has gone stale again — getSession()
+// would then wrongly treat a real, logged-in business as unauthenticated
+// instead of re-verifying and finding the session is still valid.
 export const getCurrentBusiness = cache(async (): Promise<CurrentBusinessContext | null> => {
   const supabase = await createClient();
 
   const {
-    data: { session },
-  } = await supabase.auth.getSession();
-  const user = session?.user;
+    data: { user },
+  } = await supabase.auth.getUser();
 
   if (!user) return null;
 
