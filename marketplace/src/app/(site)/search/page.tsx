@@ -50,7 +50,7 @@ export default async function SearchPage({ searchParams }: SearchPageProps) {
         </aside>
 
         <div>
-          <div className="mb-6">
+          <div className="mb-6 w-1/2 -mt-[30px]">
             <Suspense>
               <SearchBox />
             </Suspense>
