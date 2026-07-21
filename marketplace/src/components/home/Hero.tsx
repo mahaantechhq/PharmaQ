@@ -1,3 +1,7 @@
+"use client";
+
+import { useRef } from "react";
+import { useRouter } from "next/navigation";
 import { Search, ShieldCheck, FileCheck2, MapPinned, Building2, Package, TrendingUp } from "lucide-react";
 import { Button } from "@/components/ui/Button";
 
@@ -8,6 +12,15 @@ const TRUST_POINTS = [
 ];
 
 export function Hero() {
+  const router = useRouter();
+  const inputRef = useRef<HTMLInputElement>(null);
+
+  const handleSearch = (e: React.FormEvent) => {
+    e.preventDefault();
+    const q = inputRef.current?.value.trim();
+    router.push(q ? `/search?q=${encodeURIComponent(q)}` : "/search");
+  };
+
   return (
     <section className="relative overflow-hidden bg-gradient-to-br from-primary-900 via-primary-700 to-primary-500">
       <div className="pointer-events-none absolute inset-0 bg-dot-grid opacity-40" />
@@ -28,18 +41,18 @@ export function Hero() {
             Compare prices across suppliers, order from multiple businesses in one cart, and manage everything in one place.
           </p>
 
-          <div className="mt-9 flex max-w-xl gap-2 rounded-2xl bg-white p-2 shadow-[var(--shadow-glow)]">
+          <form onSubmit={handleSearch} className="mt-9 flex max-w-xl gap-2 rounded-2xl bg-white p-2 shadow-[var(--shadow-glow)]">
             <div className="relative flex-1">
               <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
               <input
+                ref={inputRef}
                 type="search"
-                disabled
                 placeholder="Search for Paracetamol, Insulin, Vitamin C..."
-                className="h-12 w-full cursor-not-allowed rounded-xl pl-9 pr-3 text-sm text-slate-700 placeholder:text-slate-400 focus:outline-none"
+                className="h-12 w-full rounded-xl pl-9 pr-3 text-sm text-slate-700 placeholder:text-slate-400 focus:outline-none"
               />
             </div>
-            <Button size="lg" className="rounded-xl" disabled>Search</Button>
-          </div>
+            <Button type="submit" size="lg" className="rounded-xl">Search</Button>
+          </form>
 
           <div className="mt-8 flex flex-wrap items-center gap-x-6 gap-y-3">
             {TRUST_POINTS.map((t) => (
