@@ -31,7 +31,7 @@ export function Hero() {
         <div className="max-w-2xl">
           <span className="inline-flex items-center gap-2 rounded-full border border-white/15 bg-white/10 px-3.5 py-1.5 text-xs font-semibold uppercase tracking-wider text-primary-100">
             <span className="h-1.5 w-1.5 rounded-full bg-accent-400" />
-            India&apos;s B2B Pharma Marketplace
+            Tamil Nadu&apos;s B2B Pharma Marketplace
           </span>
           <h1 className="mt-5 font-display text-4xl font-semibold leading-[1.08] tracking-tight text-white sm:text-6xl">
             Source pharma products
