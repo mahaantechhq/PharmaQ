@@ -47,7 +47,7 @@ export default async function SearchPage({ searchParams }: SearchPageProps) {
 
   return (
     <div className="mx-auto max-w-7xl px-4 py-8 sm:px-6">
-      <div className="mb-6 grid grid-cols-1 items-start gap-4 sm:grid-cols-3">
+      <div className="mb-6 flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
         <div>
           <h1 className="text-2xl font-semibold text-slate-900">
             {params.q ? `Results for "${params.q}"` : "All products"}
@@ -56,7 +56,7 @@ export default async function SearchPage({ searchParams }: SearchPageProps) {
             {products.length} listing{products.length !== 1 && "s"} from independent suppliers
           </p>
         </div>
-        <div className="w-full">
+        <div className="relative left-[-200px] w-full sm:max-w-sm">
           <Suspense>
             <SearchBox />
           </Suspense>
