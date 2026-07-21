@@ -58,7 +58,7 @@ export default async function SearchPage({ searchParams }: SearchPageProps) {
         </div>
         <div className="relative left-[-500px] w-full sm:w-[calc(24rem+70px)] sm:max-w-none">
           <Suspense>
-            <SearchBox />
+            <SearchBox isLoggedIn={!!ctx} />
           </Suspense>
         </div>
       </div>
