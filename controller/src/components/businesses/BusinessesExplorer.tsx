@@ -9,6 +9,7 @@ import { DataTable } from "@/components/ui/DataTable";
 import { Input } from "@/components/ui/Input";
 import { Select } from "@/components/ui/Select";
 import { BusinessStatusBadge } from "@/components/businesses/BusinessStatusBadge";
+import { formatDate } from "@/lib/format";
 import type { Business } from "@/lib/types/database";
 
 export function BusinessesExplorer({ businesses }: { businesses: Business[] }) {
@@ -43,7 +44,7 @@ export function BusinessesExplorer({ businesses }: { businesses: Business[] }) {
     {
       accessorKey: "created_at",
       header: "Joined",
-      cell: ({ row }) => new Date(row.original.created_at).toLocaleDateString("en-IN", { day: "2-digit", month: "short", year: "numeric" }),
+      cell: ({ row }) => formatDate(row.original.created_at),
     },
     { accessorKey: "status", header: "Status", cell: ({ row }) => <BusinessStatusBadge status={row.original.status} /> },
   ];

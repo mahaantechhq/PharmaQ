@@ -2,6 +2,7 @@ import { createClient } from "@/lib/supabase/server";
 import { PageHeader } from "@/components/layout/PageHeader";
 import { Card, CardHeader, CardBody } from "@/components/ui/Card";
 import { BroadcastComposer } from "@/components/notifications/BroadcastComposer";
+import { formatDateTime } from "@/lib/format";
 
 export default async function NotificationsPage() {
   const supabase = await createClient();
@@ -40,7 +41,7 @@ export default async function NotificationsPage() {
                     <div className="flex items-center justify-between">
                       <p className="text-sm font-medium text-slate-800">{n.title}</p>
                       <span className="text-xs text-slate-400">
-                        {new Date(n.created_at).toLocaleString("en-IN", { day: "2-digit", month: "short", hour: "2-digit", minute: "2-digit" })}
+                        {formatDateTime(n.created_at, { day: "2-digit", month: "short", hour: "2-digit", minute: "2-digit" })}
                       </span>
                     </div>
                     <p className="mt-0.5 text-sm text-slate-500">{n.message}</p>

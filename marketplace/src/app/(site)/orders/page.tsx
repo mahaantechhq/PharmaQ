@@ -4,7 +4,7 @@ import { requireCurrentBusiness } from "@/lib/supabase/require-business";
 import { createClient } from "@/lib/supabase/server";
 import { OrdersHero } from "@/components/orders/OrdersHero";
 import { StatusBadge } from "@/components/ui/StatusBadge";
-import { formatCurrency } from "@/lib/format";
+import { formatCurrency, formatDate } from "@/lib/format";
 
 export default async function OrdersPage({
   searchParams,
@@ -59,7 +59,7 @@ export default async function OrdersPage({
                   <div>
                     <p className="text-sm font-semibold text-slate-800">{o.order_number}</p>
                     <p className="text-xs text-slate-400">
-                      {new Date(o.created_at).toLocaleDateString("en-IN", { day: "2-digit", month: "short", year: "numeric" })} · {suppliers.length} supplier{suppliers.length !== 1 && "s"}
+                      {formatDate(o.created_at)} · {suppliers.length} supplier{suppliers.length !== 1 && "s"}
                     </p>
                     <div className="mt-2 flex flex-wrap gap-1.5">
                       {suppliers.map((s, i) => (

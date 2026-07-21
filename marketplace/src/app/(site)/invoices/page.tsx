@@ -1,7 +1,7 @@
 import { FileText } from "lucide-react";
 import { requireCurrentBusiness } from "@/lib/supabase/require-business";
 import { createClient } from "@/lib/supabase/server";
-import { formatCurrency } from "@/lib/format";
+import { formatCurrency, formatDate } from "@/lib/format";
 
 export default async function InvoicesPage() {
   const ctx = await requireCurrentBusiness("/invoices");
@@ -49,7 +49,7 @@ export default async function InvoicesPage() {
                   <td className="px-4 py-3 font-medium text-slate-700">{inv.invoice_number}</td>
                   <td className="px-4 py-3 text-slate-500">{inv.supplier_orders?.order_number}</td>
                   <td className="px-4 py-3 text-slate-500">{inv.supplier_orders?.businesses?.name ?? "—"}</td>
-                  <td className="px-4 py-3 text-slate-500">{new Date(inv.invoice_date).toLocaleDateString("en-IN")}</td>
+                  <td className="px-4 py-3 text-slate-500">{formatDate(inv.invoice_date)}</td>
                   <td className="px-4 py-3 font-medium text-slate-700">{formatCurrency(Number(inv.grand_total))}</td>
                 </tr>
               ))}

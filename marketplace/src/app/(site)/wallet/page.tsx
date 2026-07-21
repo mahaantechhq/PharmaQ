@@ -2,7 +2,7 @@ import { ArrowDownLeft, ArrowUpRight, CreditCard, Wallet as WalletIcon } from "l
 import { requireCurrentBusiness } from "@/lib/supabase/require-business";
 import { createClient } from "@/lib/supabase/server";
 import { Card, CardHeader, CardBody } from "@/components/ui/Card";
-import { formatCurrency } from "@/lib/format";
+import { formatCurrency, formatDateTime } from "@/lib/format";
 import type { WalletTransaction } from "@/lib/types/database";
 
 export default async function WalletPage() {
@@ -56,7 +56,7 @@ export default async function WalletPage() {
                     <div>
                       <p className="text-sm font-medium text-slate-800">{t.description ?? (t.type === "credit" ? "Credit" : "Debit")}</p>
                       <p className="text-xs text-slate-400">
-                        {new Date(t.created_at).toLocaleString("en-IN", { day: "2-digit", month: "short", year: "numeric", hour: "2-digit", minute: "2-digit" })}
+                        {formatDateTime(t.created_at)}
                       </p>
                     </div>
                   </div>

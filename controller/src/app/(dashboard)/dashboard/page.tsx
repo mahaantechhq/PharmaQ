@@ -8,7 +8,7 @@ import { StatCard } from "@/components/dashboard/StatCard";
 import { SalesChart } from "@/components/dashboard/SalesChart";
 import { OrderStatusChart } from "@/components/dashboard/OrderStatusChart";
 import { Badge } from "@/components/ui/Badge";
-import { formatCurrency, formatNumber } from "@/lib/format";
+import { formatCurrency, formatNumber, formatDate } from "@/lib/format";
 import type { Business, SupplierOrder } from "@/lib/types/database";
 
 export default async function DashboardPage() {
@@ -35,14 +35,14 @@ export default async function DashboardPage() {
   // formatted for display only after sorting.
   const salesByDate = new Map<string, number>();
   for (const o of allOrders) {
-    const isoDate = o.created_at.slice(0, 10);
+    const isoDate = new Date(o.created_at).toLocaleDateString("en-CA", { timeZone: "Asia/Kolkata" });
     salesByDate.set(isoDate, (salesByDate.get(isoDate) ?? 0) + Number(o.grand_total));
   }
   const salesData = Array.from(salesByDate.entries())
     .sort(([a], [b]) => a.localeCompare(b))
     .slice(-14)
     .map(([isoDate, total]) => ({
-      date: new Date(isoDate).toLocaleDateString("en-IN", { day: "2-digit", month: "short" }),
+      date: formatDate(isoDate, { day: "2-digit", month: "short" }),
       total,
     }));
 

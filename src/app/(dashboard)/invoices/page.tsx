@@ -5,7 +5,7 @@ import { getCurrentBusiness } from "@/lib/supabase/current-business";
 import { PageHeader } from "@/components/layout/PageHeader";
 import { Card, CardBody } from "@/components/ui/Card";
 import { Button } from "@/components/ui/Button";
-import { formatCurrency } from "@/lib/format";
+import { formatCurrency, formatDate } from "@/lib/format";
 
 export default async function InvoicesPage() {
   const ctx = await getCurrentBusiness();
@@ -54,7 +54,7 @@ export default async function InvoicesPage() {
                       <td className="px-3 py-3 font-medium text-slate-700">{inv.invoice_number}</td>
                       <td className="px-3 py-3 text-slate-500">{inv.supplier_orders?.order_number}</td>
                       <td className="px-3 py-3 text-slate-500">{inv.supplier_orders?.businesses?.name ?? "—"}</td>
-                      <td className="px-3 py-3 text-slate-500">{new Date(inv.invoice_date).toLocaleDateString("en-IN")}</td>
+                      <td className="px-3 py-3 text-slate-500">{formatDate(inv.invoice_date)}</td>
                       <td className="px-3 py-3 font-medium text-slate-700">{formatCurrency(Number(inv.grand_total))}</td>
                       <td className="px-3 py-3">
                         <Link href={`/invoices/${inv.id}/pdf`} target="_blank">

@@ -7,7 +7,7 @@ import { BusinessStatusBadge } from "@/components/businesses/BusinessStatusBadge
 import { BusinessActions } from "@/components/businesses/BusinessActions";
 import { BusinessProfileForm } from "@/components/businesses/BusinessProfileForm";
 import { Package, ShoppingCart, Wallet } from "lucide-react";
-import { formatCurrency, formatNumber } from "@/lib/format";
+import { formatCurrency, formatNumber, formatDate } from "@/lib/format";
 import type { Business } from "@/lib/types/database";
 
 export default async function BusinessDetailPage({ params }: { params: Promise<{ id: string }> }) {
@@ -29,7 +29,7 @@ export default async function BusinessDetailPage({ params }: { params: Promise<{
     <div>
       <PageHeader
         title={b.name}
-        description={`Joined ${new Date(b.created_at).toLocaleDateString("en-IN", { day: "2-digit", month: "long", year: "numeric" })}`}
+        description={`Joined ${formatDate(b.created_at, { day: "2-digit", month: "long", year: "numeric" })}`}
         action={
           <div className="flex items-center gap-3">
             <BusinessStatusBadge status={b.status} />

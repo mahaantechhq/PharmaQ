@@ -4,6 +4,7 @@ import { useRouter } from "next/navigation";
 import { Bell, CheckCheck, CreditCard, Package, ShoppingBag } from "lucide-react";
 import { Button } from "@/components/ui/Button";
 import { markAllNotificationsRead, markNotificationRead } from "@/app/(site)/notifications/actions";
+import { formatDateTime } from "@/lib/format";
 import type { Notification, NotificationType } from "@/lib/types/database";
 
 const ICONS: Record<NotificationType, typeof Bell> = {
@@ -62,7 +63,7 @@ export function NotificationList({ notifications }: { notifications: Notificatio
                   </div>
                   <p className="mt-0.5 text-sm text-slate-500">{n.message}</p>
                   <p className="mt-1 text-xs text-slate-400">
-                    {new Date(n.created_at).toLocaleString("en-IN", { day: "2-digit", month: "short", hour: "2-digit", minute: "2-digit" })}
+                    {formatDateTime(n.created_at, { day: "2-digit", month: "short", hour: "2-digit", minute: "2-digit" })}
                   </p>
                 </div>
               </button>

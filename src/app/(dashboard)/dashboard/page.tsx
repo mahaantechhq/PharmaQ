@@ -10,7 +10,7 @@ import { SalesChart } from "@/components/dashboard/SalesChart";
 import { OrderStatusChart } from "@/components/dashboard/OrderStatusChart";
 import { ExpiryAlertList } from "@/components/dashboard/ExpiryAlertList";
 import { StatusBadge } from "@/components/ui/StatusBadge";
-import { formatCurrency, formatNumber } from "@/lib/format";
+import { formatCurrency, formatNumber, formatDate } from "@/lib/format";
 import type { SupplierOrder, SupplierOrderStatus } from "@/lib/types/database";
 
 const ACTIVE_STATUSES: SupplierOrderStatus[] = ["placed", "accepted", "invoiced", "packed", "shipped"];
@@ -56,14 +56,16 @@ export default async function DashboardPage() {
   // orders list below); formatted for display only after sorting.
   const salesByDate = new Map<string, number>();
   for (const o of allOrders) {
-    const isoDate = o.created_at.slice(0, 10);
+    // created_at is UTC; slicing it directly would bucket late-night IST
+    // orders under the wrong (previous) calendar day. en-CA gives YYYY-MM-DD.
+    const isoDate = new Date(o.created_at).toLocaleDateString("en-CA", { timeZone: "Asia/Kolkata" });
     salesByDate.set(isoDate, (salesByDate.get(isoDate) ?? 0) + Number(o.grand_total));
   }
   const salesData = Array.from(salesByDate.entries())
     .sort(([a], [b]) => a.localeCompare(b))
     .slice(-14)
     .map(([isoDate, total]) => ({
-      date: new Date(isoDate).toLocaleDateString("en-IN", { day: "2-digit", month: "short" }),
+      date: formatDate(isoDate, { day: "2-digit", month: "short" }),
       total,
     }));
 
@@ -153,7 +155,7 @@ export default async function DashboardPage() {
                     <div>
                       <p className="text-sm font-medium text-slate-800">{o.order_number}</p>
                       <p className="text-xs text-slate-400">
-                        {new Date(o.created_at).toLocaleDateString("en-IN", { day: "2-digit", month: "short", year: "numeric" })}
+                        {formatDate(o.created_at)}
                       </p>
                     </div>
                     <div className="flex items-center gap-3">

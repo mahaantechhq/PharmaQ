@@ -9,7 +9,7 @@ import { StatusBadge } from "@/components/ui/StatusBadge";
 import { Button } from "@/components/ui/Button";
 import { OrderActions } from "@/components/orders/OrderActions";
 import { StatusTimeline } from "@/components/orders/StatusTimeline";
-import { formatCurrency } from "@/lib/format";
+import { formatCurrency, formatDate } from "@/lib/format";
 import type { OrderStatusHistory, SupplierOrderItem } from "@/lib/types/database";
 
 export default async function OrderDetailPage({ params }: { params: Promise<{ id: string }> }) {
@@ -39,7 +39,7 @@ export default async function OrderDetailPage({ params }: { params: Promise<{ id
     <div>
       <PageHeader
         title={order.order_number}
-        description={`Placed on ${new Date(order.created_at).toLocaleDateString("en-IN", { day: "2-digit", month: "long", year: "numeric" })}`}
+        description={`Placed on ${formatDate(order.created_at, { day: "2-digit", month: "long", year: "numeric" })}`}
         action={
           <div className="flex items-center gap-3">
             <StatusBadge status={order.status} />

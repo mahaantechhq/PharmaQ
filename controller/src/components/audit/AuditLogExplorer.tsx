@@ -4,6 +4,7 @@ import { useMemo, useState } from "react";
 import { Search } from "lucide-react";
 import { Input } from "@/components/ui/Input";
 import { Badge } from "@/components/ui/Badge";
+import { formatDateTime } from "@/lib/format";
 import type { AuditLog } from "@/lib/types/database";
 
 export function AuditLogExplorer({ logs }: { logs: AuditLog[] }) {
@@ -51,7 +52,7 @@ export function AuditLogExplorer({ logs }: { logs: AuditLog[] }) {
                     {log.metadata ? JSON.stringify(log.metadata) : "—"}
                   </td>
                   <td className="px-3 py-3 text-slate-500">
-                    {new Date(log.created_at).toLocaleString("en-IN", { day: "2-digit", month: "short", year: "numeric", hour: "2-digit", minute: "2-digit" })}
+                    {formatDateTime(log.created_at)}
                   </td>
                 </tr>
               ))}

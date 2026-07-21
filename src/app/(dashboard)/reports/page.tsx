@@ -5,6 +5,7 @@ import { Card, CardHeader, CardBody } from "@/components/ui/Card";
 import { SalesChart } from "@/components/dashboard/SalesChart";
 import { OrderStatusChart } from "@/components/dashboard/OrderStatusChart";
 import { TopProductsChart } from "@/components/dashboard/TopProductsChart";
+import { formatDate } from "@/lib/format";
 
 export default async function ReportsPage() {
   const ctx = await getCurrentBusiness();
@@ -28,7 +29,7 @@ export default async function ReportsPage() {
   const salesByMonth = new Map<string, number>();
   const statusCounts: Record<string, number> = {};
   for (const o of orders ?? []) {
-    const monthKey = o.created_at.slice(0, 7);
+    const monthKey = new Date(o.created_at).toLocaleDateString("en-CA", { timeZone: "Asia/Kolkata" }).slice(0, 7);
     salesByMonth.set(monthKey, (salesByMonth.get(monthKey) ?? 0) + Number(o.grand_total));
     const label = o.status.charAt(0).toUpperCase() + o.status.slice(1);
     statusCounts[label] = (statusCounts[label] ?? 0) + 1;
@@ -36,7 +37,7 @@ export default async function ReportsPage() {
   const salesData = Array.from(salesByMonth.entries())
     .sort(([a], [b]) => a.localeCompare(b))
     .map(([monthKey, total]) => ({
-      date: new Date(`${monthKey}-01`).toLocaleDateString("en-IN", { month: "short", year: "2-digit" }),
+      date: formatDate(`${monthKey}-01`, { month: "short", year: "2-digit" }),
       total,
     }));
   const statusData = Object.entries(statusCounts).map(([name, value]) => ({ name, value }));

@@ -5,7 +5,7 @@ import { createClient } from "@/lib/supabase/server";
 import { Card, CardHeader, CardBody } from "@/components/ui/Card";
 import { StatusBadge } from "@/components/ui/StatusBadge";
 import { StatusTimeline } from "@/components/orders/StatusTimeline";
-import { formatCurrency } from "@/lib/format";
+import { formatCurrency, formatDate } from "@/lib/format";
 import type { OrderStatusHistory, SupplierOrderItem } from "@/lib/types/database";
 
 export default async function OrderDetailPage({ params }: { params: Promise<{ id: string }> }) {
@@ -41,7 +41,7 @@ export default async function OrderDetailPage({ params }: { params: Promise<{ id
     <div className="mx-auto max-w-4xl px-4 py-8 sm:px-6">
       <h1 className="mb-1 text-2xl font-semibold text-slate-900">{order.order_number}</h1>
       <p className="mb-6 text-sm text-slate-500">
-        Placed on {new Date(order.created_at).toLocaleDateString("en-IN", { day: "2-digit", month: "long", year: "numeric" })} · {formatCurrency(Number(order.grand_total))} total
+        Placed on {formatDate(order.created_at, { day: "2-digit", month: "long", year: "numeric" })} · {formatCurrency(Number(order.grand_total))} total
       </p>
 
       <div className="flex flex-col gap-6">

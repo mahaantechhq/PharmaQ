@@ -1,5 +1,6 @@
 import { CheckCircle2 } from "lucide-react";
 import { StatusBadge } from "@/components/ui/StatusBadge";
+import { formatDateTime } from "@/lib/format";
 import type { OrderStatusHistory } from "@/lib/types/database";
 
 export function StatusTimeline({ history }: { history: OrderStatusHistory[] }) {
@@ -23,7 +24,7 @@ export function StatusTimeline({ history }: { history: OrderStatusHistory[] }) {
             <div className="flex items-center gap-2">
               <StatusBadge status={h.status} />
               <span className="text-xs text-slate-400">
-                {new Date(h.changed_at).toLocaleString("en-IN", { day: "2-digit", month: "short", year: "numeric", hour: "2-digit", minute: "2-digit" })}
+                {formatDateTime(h.changed_at)}
               </span>
             </div>
             {h.note && <p className="mt-1 text-sm text-slate-600">{h.note}</p>}

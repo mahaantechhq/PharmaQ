@@ -3,7 +3,7 @@ import { createClient } from "@/lib/supabase/server";
 import { getCurrentBusiness } from "@/lib/supabase/current-business";
 import { PageHeader } from "@/components/layout/PageHeader";
 import { Card, CardBody } from "@/components/ui/Card";
-import { formatCurrency, formatNumber } from "@/lib/format";
+import { formatCurrency, formatNumber, formatDate } from "@/lib/format";
 
 export default async function CustomersPage() {
   const ctx = await getCurrentBusiness();
@@ -44,7 +44,7 @@ export default async function CustomersPage() {
                       <td className="px-3 py-3">{formatNumber(c.total_orders)}</td>
                       <td className="px-3 py-3 font-medium text-slate-700">{formatCurrency(Number(c.total_spent))}</td>
                       <td className="px-3 py-3 text-slate-500">
-                        {new Date(c.last_order_at).toLocaleDateString("en-IN", { day: "2-digit", month: "short", year: "numeric" })}
+                        {formatDate(c.last_order_at)}
                       </td>
                     </tr>
                   ))}

@@ -1,4 +1,5 @@
 import { Document, Page, Text, View, StyleSheet } from "@react-pdf/renderer";
+import { formatDate } from "@/lib/format";
 import type { Invoice, SupplierOrderItem, Business } from "@/lib/types/database";
 
 const styles = StyleSheet.create({
@@ -44,7 +45,7 @@ export function InvoiceDocument({ invoice, orderNumber, items, supplier, buyer }
           <View style={{ alignItems: "flex-end" }}>
             <Text style={styles.title}>Tax Invoice</Text>
             <Text style={styles.muted}>{invoice.invoice_number}</Text>
-            <Text style={styles.muted}>{new Date(invoice.invoice_date).toLocaleDateString("en-IN")}</Text>
+            <Text style={styles.muted}>{formatDate(invoice.invoice_date)}</Text>
           </View>
         </View>
 

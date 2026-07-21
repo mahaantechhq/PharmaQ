@@ -15,6 +15,7 @@ import { Badge } from "@/components/ui/Badge";
 import { useToast } from "@/components/ui/Toast";
 import { offerSchema, type OfferFormValues } from "@/lib/validations/offer";
 import { createOffer, deleteOffer, toggleOfferStatus } from "@/app/(dashboard)/offers/actions";
+import { formatDate } from "@/lib/format";
 import type { Offer } from "@/lib/types/database";
 
 function formatDiscount(offer: Offer) {
@@ -99,7 +100,7 @@ export function OffersManager({ offers }: { offers: Offer[] }) {
               <p className="mt-0.5 line-clamp-2 text-xs text-slate-500">{o.display_text}</p>
               <p className="mt-2 text-sm font-medium text-primary-600">{formatDiscount(o)}</p>
               <p className="mt-1 text-xs text-slate-400">
-                Min order ₹{Number(o.min_order_amount)} · Expires {new Date(o.expires_at).toLocaleDateString("en-IN", { day: "2-digit", month: "short", year: "numeric" })}
+                Min order ₹{Number(o.min_order_amount)} · Expires {formatDate(o.expires_at)}
               </p>
               <div className="mt-3">
                 <button onClick={() => handleToggle(o)}>

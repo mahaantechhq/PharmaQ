@@ -8,7 +8,7 @@ import { DataTable } from "@/components/ui/DataTable";
 import { Input } from "@/components/ui/Input";
 import { Select } from "@/components/ui/Select";
 import { StatusBadge } from "@/components/ui/StatusBadge";
-import { formatCurrency } from "@/lib/format";
+import { formatCurrency, formatDate } from "@/lib/format";
 import type { SupplierOrderStatus } from "@/lib/types/database";
 
 export interface OrderRow {
@@ -48,7 +48,7 @@ export function OrdersExplorer({ orders }: { orders: OrderRow[] }) {
     {
       accessorKey: "createdAt",
       header: "Date",
-      cell: ({ row }) => new Date(row.original.createdAt).toLocaleDateString("en-IN", { day: "2-digit", month: "short", year: "numeric" }),
+      cell: ({ row }) => formatDate(row.original.createdAt),
     },
     { accessorKey: "grandTotal", header: "Amount", cell: ({ row }) => formatCurrency(row.original.grandTotal) },
     { accessorKey: "status", header: "Status", cell: ({ row }) => <StatusBadge status={row.original.status} /> },
