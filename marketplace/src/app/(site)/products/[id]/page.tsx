@@ -3,6 +3,7 @@ import Link from "next/link";
 import { Pill, MapPin, ShieldCheck } from "lucide-react";
 import { createClient } from "@/lib/supabase/server";
 import { getCurrentBusiness } from "@/lib/supabase/current-business";
+import { getActiveOffersByBusiness } from "@/lib/offers";
 import { Badge } from "@/components/ui/Badge";
 import { Card, CardBody } from "@/components/ui/Card";
 import { AddToCart } from "@/components/products/AddToCart";
@@ -45,6 +46,8 @@ export default async function ProductDetailPage({ params }: { params: Promise<{ 
   }
 
   const business = (product as any).businesses;
+  const offersByBusiness = await getActiveOffersByBusiness([business.id]);
+  const offer = offersByBusiness.get(business.id) ?? null;
 
   return (
     <div className="mx-auto max-w-6xl px-4 py-8 sm:px-6">
@@ -78,6 +81,13 @@ export default async function ProductDetailPage({ params }: { params: Promise<{ 
             )}
           </div>
           <p className="mt-1 text-xs text-slate-400">Inclusive of {Number(product.gst_rate)}% GST · {totalStock} units available</p>
+
+          {offer && (
+            <div className="mt-4 flex items-center gap-2 rounded-xl bg-accent-50 px-4 py-3 text-sm font-medium text-accent-700">
+              <Badge tone="warning">{offer.discountType === "percentage" ? `${offer.discountValue}% OFF` : `₹${offer.discountValue} OFF`}</Badge>
+              {offer.displayText}
+            </div>
+          )}
 
           <div className="mt-6">
             <AddToCart productId={product.id} maxQty={totalStock} isLoggedIn={!!ctx} initialWishlisted={wishlisted} />

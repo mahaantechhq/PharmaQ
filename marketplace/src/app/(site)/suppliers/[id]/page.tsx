@@ -1,6 +1,7 @@
 import { notFound } from "next/navigation";
 import { Building2, MapPin, ShieldCheck } from "lucide-react";
 import { createClient } from "@/lib/supabase/server";
+import { getActiveOffersByBusiness } from "@/lib/offers";
 import { ProductCard } from "@/components/products/ProductCard";
 import type { ProductListing } from "@/lib/marketplace";
 
@@ -39,6 +40,9 @@ export default async function SupplierProfilePage({ params }: { params: Promise<
     stockByProduct.set(b.product_id, existing);
   }
 
+  const offersByBusiness = await getActiveOffersByBusiness([business.id]);
+  const offer = offersByBusiness.get(business.id) ?? null;
+
   const listings: ProductListing[] = (products ?? []).map((p: any) => ({
     id: p.id,
     name: p.name,
@@ -54,6 +58,7 @@ export default async function SupplierProfilePage({ params }: { params: Promise<
     minPrice: stockByProduct.get(p.id)?.minPrice ?? null,
     mrp: null,
     createdAt: p.created_at,
+    offer,
   }));
 
   return (
@@ -71,6 +76,11 @@ export default async function SupplierProfilePage({ params }: { params: Promise<
             <MapPin className="h-3.5 w-3.5" /> {[business.city, business.state].filter(Boolean).join(", ") || "Location not specified"}
           </p>
           <p className="mt-2 text-sm text-slate-500">{listings.length} products listed</p>
+          {offer && (
+            <p className="mt-2 inline-flex items-center gap-1.5 rounded-full bg-accent-50 px-3 py-1 text-xs font-semibold text-accent-600">
+              {offer.discountType === "percentage" ? `${offer.discountValue}% OFF` : `₹${offer.discountValue} OFF`} — {offer.displayText}
+            </p>
+          )}
         </div>
       </div>
 

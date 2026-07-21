@@ -193,3 +193,21 @@ export interface BusinessCustomer {
   total_spent: number;
   last_order_at: string;
 }
+
+export type OfferDiscountType = "flat" | "percentage";
+export type OfferStatus = "active" | "inactive";
+
+export interface Offer {
+  id: string;
+  business_id: string;
+  name: string;
+  display_text: string;
+  discount_type: OfferDiscountType;
+  discount_value: number;
+  min_order_amount: number;
+  max_order_amount: number | null;
+  starts_at: string | null;
+  expires_at: string;
+  status: OfferStatus;
+  created_at: string;
+}

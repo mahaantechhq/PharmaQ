@@ -3,6 +3,7 @@ import {
   Package,
   Boxes,
   Tags,
+  Percent,
   ShoppingCart,
   FileText,
   Users,
@@ -42,6 +43,7 @@ export const NAV_GROUPS: NavGroup[] = [
       { label: "Orders Received", href: "/orders", icon: ShoppingCart },
       { label: "Invoices", href: "/invoices", icon: FileText },
       { label: "Customers", href: "/customers", icon: Users },
+      { label: "Offers", href: "/offers", icon: Percent },
     ],
   },
   {

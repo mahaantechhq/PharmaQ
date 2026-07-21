@@ -1,5 +1,6 @@
 import { createClient } from "@/lib/supabase/server";
 import { getCurrentBusiness } from "@/lib/supabase/current-business";
+import { getActiveOffersByBusiness, type OfferSummary } from "@/lib/offers";
 
 export interface ProductListing {
   id: string;
@@ -16,6 +17,7 @@ export interface ProductListing {
   minPrice: number | null;
   mrp: number | null;
   createdAt: string;
+  offer?: OfferSummary | null;
 }
 
 export interface ProductSearchFilters {
@@ -72,6 +74,9 @@ export async function searchProducts(filters: ProductSearchFilters): Promise<Pro
     stockByProduct.set(b.product_id, existing);
   }
 
+  const businessIds = Array.from(new Set(products.map((p) => p.business_id)));
+  const offersByBusiness = await getActiveOffersByBusiness(businessIds);
+
   let listings: ProductListing[] = products.map((p: any) => ({
     id: p.id,
     name: p.name,
@@ -87,6 +92,7 @@ export async function searchProducts(filters: ProductSearchFilters): Promise<Pro
     minPrice: stockByProduct.get(p.id)?.minPrice ?? null,
     mrp: stockByProduct.get(p.id)?.mrp ?? null,
     createdAt: p.created_at,
+    offer: offersByBusiness.get(p.business_id) ?? null,
   }));
 
   if (filters.sort === "price_low") {
