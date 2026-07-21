@@ -21,12 +21,19 @@ export default async function ProductsPage() {
       .order("created_at", { ascending: false }),
     supabase
       .from("product_batches")
-      .select("product_id, stock_qty, selling_price")
+      .select("product_id, stock_qty, selling_price, expiry_date")
       .eq("business_id", ctx.business.id),
   ]);
 
+  // Match what the marketplace actually treats as sellable (searchProducts()
+  // in the marketplace app excludes expired batches too) -- otherwise this
+  // list shows stock/price from batches that can't actually be ordered,
+  // making a product look in-stock here while showing "Out of stock" to
+  // buyers.
+  const today = new Date().toISOString().slice(0, 10);
   const stockByProduct = new Map<string, { stock: number; minPrice: number | null }>();
   for (const b of batches ?? []) {
+    if (b.expiry_date < today) continue;
     const existing = stockByProduct.get(b.product_id) ?? { stock: 0, minPrice: null };
     existing.stock += b.stock_qty;
     if (b.stock_qty > 0) {
