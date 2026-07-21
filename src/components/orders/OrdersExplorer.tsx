@@ -2,12 +2,16 @@
 
 import { useMemo, useState } from "react";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import type { ColumnDef } from "@tanstack/react-table";
-import { Search } from "lucide-react";
+import { Search, Check, X } from "lucide-react";
 import { DataTable } from "@/components/ui/DataTable";
 import { Input } from "@/components/ui/Input";
 import { Select } from "@/components/ui/Select";
+import { Button } from "@/components/ui/Button";
 import { StatusBadge } from "@/components/ui/StatusBadge";
+import { useToast } from "@/components/ui/Toast";
+import { updateOrderStatus } from "@/app/(dashboard)/orders/actions";
 import { formatCurrency, formatDate } from "@/lib/format";
 import type { SupplierOrderStatus } from "@/lib/types/database";
 
@@ -23,6 +27,9 @@ export interface OrderRow {
 export function OrdersExplorer({ orders }: { orders: OrderRow[] }) {
   const [search, setSearch] = useState("");
   const [status, setStatus] = useState<string>("all");
+  const [pendingId, setPendingId] = useState<string | null>(null);
+  const router = useRouter();
+  const { toast } = useToast();
 
   const filtered = useMemo(() => {
     return orders.filter((o) => {
@@ -33,6 +40,19 @@ export function OrdersExplorer({ orders }: { orders: OrderRow[] }) {
       return matchesSearch && matchesStatus;
     });
   }, [orders, search, status]);
+
+  const handleDecision = async (orderId: string, decision: "accepted" | "rejected") => {
+    setPendingId(orderId);
+    try {
+      await updateOrderStatus(orderId, decision);
+      toast(decision === "accepted" ? "Order accepted" : "Order rejected", "success");
+      router.refresh();
+    } catch (err) {
+      toast(err instanceof Error ? err.message : "Failed to update order", "error");
+    } finally {
+      setPendingId(null);
+    }
+  };
 
   const columns: ColumnDef<OrderRow, any>[] = [
     {
@@ -52,6 +72,30 @@ export function OrdersExplorer({ orders }: { orders: OrderRow[] }) {
     },
     { accessorKey: "grandTotal", header: "Amount", cell: ({ row }) => formatCurrency(row.original.grandTotal) },
     { accessorKey: "status", header: "Status", cell: ({ row }) => <StatusBadge status={row.original.status} /> },
+    {
+      id: "actions",
+      header: "",
+      cell: ({ row }) =>
+        row.original.status === "placed" ? (
+          <div className="flex gap-2">
+            <Button
+              size="sm"
+              onClick={() => handleDecision(row.original.id, "accepted")}
+              loading={pendingId === row.original.id}
+            >
+              <Check className="h-3.5 w-3.5" /> Accept
+            </Button>
+            <Button
+              variant="danger"
+              size="sm"
+              onClick={() => handleDecision(row.original.id, "rejected")}
+              loading={pendingId === row.original.id}
+            >
+              <X className="h-3.5 w-3.5" /> Reject
+            </Button>
+          </div>
+        ) : null,
+    },
   ];
 
   return (
