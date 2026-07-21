@@ -56,7 +56,7 @@ export default async function SearchPage({ searchParams }: SearchPageProps) {
             {products.length} listing{products.length !== 1 && "s"} from independent suppliers
           </p>
         </div>
-        <div className="relative left-[-400px] w-full sm:max-w-sm">
+        <div className="relative left-[-700px] w-full sm:w-[calc(24rem+70px)] sm:max-w-none">
           <Suspense>
             <SearchBox />
           </Suspense>
