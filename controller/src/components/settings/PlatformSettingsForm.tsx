@@ -19,6 +19,10 @@ export function PlatformSettingsForm({ defaultValues }: { defaultValues: Platfor
   } = useForm<PlatformSettingsValues>({ defaultValues });
 
   const onSubmit = async (values: PlatformSettingsValues) => {
+    if (Number.isNaN(values.default_commission_percent)) {
+      toast("Default commission is required", "error");
+      return;
+    }
     try {
       await updatePlatformSettings({
         ...values,
@@ -39,7 +43,7 @@ export function PlatformSettingsForm({ defaultValues }: { defaultValues: Platfor
           <Input id="site_name" {...register("site_name")} />
         </Field>
         <Field label="Default commission (%)" htmlFor="default_commission_percent">
-          <Input id="default_commission_percent" type="number" step="0.01" {...register("default_commission_percent", { valueAsNumber: true })} />
+          <Input id="default_commission_percent" type="number" step="0.01" min="0" max="100" required {...register("default_commission_percent", { valueAsNumber: true })} />
         </Field>
         <Field label="Support email" htmlFor="support_email">
           <Input id="support_email" type="email" {...register("support_email")} />

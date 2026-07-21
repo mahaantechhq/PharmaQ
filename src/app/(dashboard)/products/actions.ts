@@ -90,6 +90,39 @@ export async function deleteProduct(productId: string) {
   revalidatePath("/products");
 }
 
+export async function bulkDeleteProducts(productIds: string[]) {
+  const ctx = await getCurrentBusiness();
+  if (!ctx) throw new Error("Not authenticated");
+  if (productIds.length === 0) return;
+
+  const supabase = await createClient();
+  const { error } = await supabase
+    .from("products")
+    .delete()
+    .in("id", productIds)
+    .eq("business_id", ctx.business.id);
+
+  if (error) throw new Error(error.message);
+  revalidatePath("/products");
+  revalidatePath("/inventory");
+}
+
+export async function bulkUpdateProductStatus(productIds: string[], status: "draft" | "active" | "inactive") {
+  const ctx = await getCurrentBusiness();
+  if (!ctx) throw new Error("Not authenticated");
+  if (productIds.length === 0) return;
+
+  const supabase = await createClient();
+  const { error } = await supabase
+    .from("products")
+    .update({ status, updated_at: new Date().toISOString() })
+    .in("id", productIds)
+    .eq("business_id", ctx.business.id);
+
+  if (error) throw new Error(error.message);
+  revalidatePath("/products");
+}
+
 export async function addBatch(productId: string, values: BatchFormValues) {
   const ctx = await getCurrentBusiness();
   if (!ctx) throw new Error("Not authenticated");

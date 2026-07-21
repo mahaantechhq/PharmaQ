@@ -17,6 +17,10 @@ export async function updatePlatformSettings(values: PlatformSettingsValues) {
   const admin = await getCurrentAdmin();
   if (!admin) throw new Error("Not authenticated as super admin");
 
+  if (typeof values.default_commission_percent !== "number" || Number.isNaN(values.default_commission_percent)) {
+    throw new Error("Default commission must be a number");
+  }
+
   const supabase = await createClient();
 
   const rows = Object.entries(values).map(([key, value]) => ({

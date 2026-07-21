@@ -8,11 +8,12 @@ import { MoreVertical, Pencil, Search, Trash2 } from "lucide-react";
 import { DataTable } from "@/components/ui/DataTable";
 import { Input } from "@/components/ui/Input";
 import { Select } from "@/components/ui/Select";
+import { Button } from "@/components/ui/Button";
 import { ProductStatusBadge } from "@/components/products/ProductStatusBadge";
 import { Dropdown, DropdownItem } from "@/components/ui/Dropdown";
 import { formatCurrency } from "@/lib/format";
 import { useToast } from "@/components/ui/Toast";
-import { deleteProduct } from "@/app/(dashboard)/products/actions";
+import { deleteProduct, bulkDeleteProducts, bulkUpdateProductStatus } from "@/app/(dashboard)/products/actions";
 import type { ProductStatus } from "@/lib/types/database";
 
 export interface ProductRow {
@@ -29,6 +30,8 @@ export interface ProductRow {
 export function ProductsExplorer({ products }: { products: ProductRow[] }) {
   const [search, setSearch] = useState("");
   const [status, setStatus] = useState<string>("all");
+  const [selected, setSelected] = useState<Set<string>>(new Set());
+  const [bulkLoading, setBulkLoading] = useState(false);
   const router = useRouter();
   const { toast } = useToast();
 
@@ -39,6 +42,26 @@ export function ProductsExplorer({ products }: { products: ProductRow[] }) {
       return matchesSearch && matchesStatus;
     });
   }, [products, search, status]);
+
+  const allFilteredSelected = filtered.length > 0 && filtered.every((p) => selected.has(p.id));
+
+  const toggleAll = () => {
+    setSelected((prev) => {
+      if (allFilteredSelected) return new Set();
+      const next = new Set(prev);
+      filtered.forEach((p) => next.add(p.id));
+      return next;
+    });
+  };
+
+  const toggleOne = (id: string) => {
+    setSelected((prev) => {
+      const next = new Set(prev);
+      if (next.has(id)) next.delete(id);
+      else next.add(id);
+      return next;
+    });
+  };
 
   const handleDelete = async (id: string) => {
     if (!confirm("Delete this product? This cannot be undone.")) return;
@@ -51,7 +74,59 @@ export function ProductsExplorer({ products }: { products: ProductRow[] }) {
     }
   };
 
+  const handleBulkDelete = async () => {
+    if (!confirm(`Delete ${selected.size} product${selected.size !== 1 ? "s" : ""}? This cannot be undone.`)) return;
+    setBulkLoading(true);
+    try {
+      await bulkDeleteProducts(Array.from(selected));
+      toast(`${selected.size} product${selected.size !== 1 ? "s" : ""} deleted`, "success");
+      setSelected(new Set());
+      router.refresh();
+    } catch (err) {
+      toast(err instanceof Error ? err.message : "Failed to delete", "error");
+    } finally {
+      setBulkLoading(false);
+    }
+  };
+
+  const handleBulkStatus = async (newStatus: ProductStatus) => {
+    setBulkLoading(true);
+    try {
+      await bulkUpdateProductStatus(Array.from(selected), newStatus);
+      toast(`${selected.size} product${selected.size !== 1 ? "s" : ""} updated`, "success");
+      setSelected(new Set());
+      router.refresh();
+    } catch (err) {
+      toast(err instanceof Error ? err.message : "Failed to update", "error");
+    } finally {
+      setBulkLoading(false);
+    }
+  };
+
   const columns: ColumnDef<ProductRow, any>[] = [
+    {
+      id: "select",
+      header: () => (
+        <input
+          type="checkbox"
+          checked={allFilteredSelected}
+          onChange={toggleAll}
+          className="h-4 w-4 rounded border-slate-300 text-primary-600 focus:ring-primary-300"
+          aria-label="Select all"
+        />
+      ),
+      cell: ({ row }) => (
+        <input
+          type="checkbox"
+          checked={selected.has(row.original.id)}
+          onChange={() => toggleOne(row.original.id)}
+          onClick={(e) => e.stopPropagation()}
+          className="h-4 w-4 rounded border-slate-300 text-primary-600 focus:ring-primary-300"
+          aria-label={`Select ${row.original.name}`}
+        />
+      ),
+      enableSorting: false,
+    },
     {
       accessorKey: "name",
       header: "Product",
@@ -139,6 +214,29 @@ export function ProductsExplorer({ products }: { products: ProductRow[] }) {
           <option value="inactive">Inactive</option>
         </Select>
       </div>
+
+      {selected.size > 0 && (
+        <div className="mb-4 flex flex-wrap items-center gap-3 rounded-lg bg-primary-50 px-4 py-2.5">
+          <span className="text-sm font-medium text-primary-700">{selected.size} selected</span>
+          <Select
+            value=""
+            onChange={(e) => e.target.value && handleBulkStatus(e.target.value as ProductStatus)}
+            className="w-44"
+            disabled={bulkLoading}
+          >
+            <option value="">Set status...</option>
+            <option value="active">Active</option>
+            <option value="draft">Draft</option>
+            <option value="inactive">Inactive</option>
+          </Select>
+          <Button variant="danger" size="sm" onClick={handleBulkDelete} loading={bulkLoading}>
+            <Trash2 className="h-4 w-4" /> Delete selected
+          </Button>
+          <button onClick={() => setSelected(new Set())} className="ml-auto text-xs text-primary-600 hover:underline">
+            Clear selection
+          </button>
+        </div>
+      )}
 
       <DataTable columns={columns} data={filtered} emptyLabel="No products found" pageSize={10} />
     </div>
