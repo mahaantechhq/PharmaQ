@@ -4,9 +4,18 @@ import { revalidatePath } from "next/cache";
 import { createClient } from "@/lib/supabase/server";
 import { getCurrentBusiness } from "@/lib/supabase/current-business";
 import { getCartSummary, type CartLine } from "@/lib/checkout";
+import type { SupabaseClient } from "@supabase/supabase-js";
 
-function orderNumber() {
-  return `PQ-${new Date().getFullYear()}-${Math.random().toString(36).slice(2, 8).toUpperCase()}`;
+// e.g. "Medwell Surgicals" + 5th order for that business -> "medwell-pq005".
+// The sequence is this buyer's own order count, not a global one.
+async function generateOrderNumber(supabase: SupabaseClient, buyerBusinessId: string, businessName: string, attempt: number) {
+  const firstWord = (businessName.trim().split(/\s+/)[0] || "business").toLowerCase().replace(/[^a-z0-9]/g, "");
+  const { count } = await supabase
+    .from("orders")
+    .select("id", { count: "exact", head: true })
+    .eq("buyer_business_id", buyerBusinessId);
+  const seq = (count ?? 0) + 1 + attempt;
+  return `${firstWord}-pq${String(seq).padStart(3, "0")}`;
 }
 
 export async function placeOrder() {
@@ -64,21 +73,36 @@ export async function placeOrder() {
   });
 
   const masterGrandTotal = Math.round((masterSubtotal + masterTax) * 100) / 100;
-  const masterOrderNumber = orderNumber();
 
   // One transaction: master order + every supplier order + items + status
   // history + notifications. A failure partway through now rolls back
   // everything instead of leaving orphaned rows and an uncleared cart that
   // would duplicate on retry — see 0008_security_and_atomicity_fixes.sql.
-  const { data: orderId, error } = await supabase.rpc("create_order_with_splits", {
-    p_order_number: masterOrderNumber,
-    p_buyer_business_id: ctx.business.id,
-    p_subtotal: Math.round(masterSubtotal * 100) / 100,
-    p_tax_total: Math.round(masterTax * 100) / 100,
-    p_grand_total: masterGrandTotal,
-    p_supplier_orders: supplierOrderPayload,
-  });
-  if (error) throw new Error(error.message);
+  //
+  // The order number is derived from this buyer's own order count, which
+  // isn't collision-proof under concurrent checkouts from the same
+  // business (two tabs, a double-click) -- retry a few times on a unique
+  // violation rather than letting a rare race fail the whole checkout.
+  let orderId: string | null = null;
+  let masterOrderNumber = "";
+  for (let attempt = 0; attempt < 5; attempt++) {
+    masterOrderNumber = await generateOrderNumber(supabase, ctx.business.id, ctx.business.name, attempt);
+
+    const { data, error } = await supabase.rpc("create_order_with_splits", {
+      p_order_number: masterOrderNumber,
+      p_buyer_business_id: ctx.business.id,
+      p_subtotal: Math.round(masterSubtotal * 100) / 100,
+      p_tax_total: Math.round(masterTax * 100) / 100,
+      p_grand_total: masterGrandTotal,
+      p_supplier_orders: supplierOrderPayload,
+    });
+
+    if (!error) {
+      orderId = data as string;
+      break;
+    }
+    if (error.code !== "23505" || attempt === 4) throw new Error(error.message);
+  }
 
   await supabase.from("cart_items").delete().eq("buyer_business_id", ctx.business.id);
 
