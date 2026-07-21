@@ -7,7 +7,7 @@ import { Button } from "@/components/ui/Button";
 import { useToast } from "@/components/ui/Toast";
 import { placeOrder } from "@/app/(site)/checkout/actions";
 
-export function CheckoutConfirm({ couponCode }: { couponCode?: string }) {
+export function CheckoutConfirm() {
   const [loading, setLoading] = useState(false);
   const router = useRouter();
   const { toast } = useToast();
@@ -15,7 +15,7 @@ export function CheckoutConfirm({ couponCode }: { couponCode?: string }) {
   const handleConfirm = async () => {
     setLoading(true);
     try {
-      const result = await placeOrder(couponCode);
+      const result = await placeOrder();
       toast(`Order ${result.orderNumber} placed successfully`, "success");
       router.push(`/orders/${result.orderId}`);
     } catch (err) {

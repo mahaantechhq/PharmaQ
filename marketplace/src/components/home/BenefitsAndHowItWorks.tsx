@@ -1,4 +1,4 @@
-import { ShieldCheck, TrendingDown, Truck, Users, Gift, Search, ShoppingCart, PackageCheck } from "lucide-react";
+import { ShieldCheck, TrendingDown, Truck, Users, Wallet, Search, ShoppingCart, PackageCheck } from "lucide-react";
 
 const BENEFITS = [
   {
@@ -10,12 +10,12 @@ const BENEFITS = [
   { icon: TrendingDown, title: "Compare prices instantly", description: "See every supplier's price for the same product side by side." },
   { icon: Truck, title: "One cart, many suppliers", description: "Order from multiple businesses in a single checkout — we split it for you." },
   { icon: Users, title: "Built for pharma businesses", description: "GST-ready invoices, batch tracking, and credit terms designed for the trade." },
-  { icon: Gift, title: "Offers & rewards", description: "Apply coupons at checkout and unlock savings as your order volume grows." },
+  { icon: Wallet, title: "Wallet & credit control", description: "Track balances, credit limits, and every transaction from one dashboard." },
 ];
 
 const STEPS = [
   { icon: Search, title: "Search & compare", description: "Find the product you need and compare prices across suppliers." },
-  { icon: ShoppingCart, title: "Add to cart & checkout", description: "Add from multiple suppliers, apply a coupon, and check out once." },
+  { icon: ShoppingCart, title: "Add to cart & checkout", description: "Add from multiple suppliers and check out once — we split it into separate orders for you." },
   { icon: PackageCheck, title: "Track & receive", description: "Each supplier fulfills their part independently — track every order." },
 ];
 

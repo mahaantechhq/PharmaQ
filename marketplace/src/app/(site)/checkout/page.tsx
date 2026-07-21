@@ -1,31 +1,16 @@
 import Link from "next/link";
 import { requireCurrentBusiness } from "@/lib/supabase/require-business";
 import { getCartSummary } from "@/lib/checkout";
-import { validateCoupon } from "@/lib/coupons";
 import { Card, CardHeader, CardBody } from "@/components/ui/Card";
 import { CheckoutConfirm } from "@/components/checkout/CheckoutConfirm";
 import { formatCurrency } from "@/lib/format";
 
-export default async function CheckoutPage({ searchParams }: { searchParams: Promise<{ coupon?: string }> }) {
-  const { coupon } = await searchParams;
+export default async function CheckoutPage() {
   const ctx = await requireCurrentBusiness("/checkout");
   const summary = await getCartSummary(ctx.business.id);
 
-  let discount = 0;
-  let couponError: string | null = null;
-  if (coupon) {
-    try {
-      const result = await validateCoupon(coupon, summary.subtotal);
-      discount = result.discount;
-    } catch (err) {
-      couponError = err instanceof Error ? err.message : "Invalid coupon";
-    }
-  }
-
   const supplierGroups = new Map<string, string>();
   for (const line of summary.lines) supplierGroups.set(line.businessId, line.businessName);
-
-  const finalTotal = Math.round((summary.grandTotal - discount) * 100) / 100;
 
   if (summary.lines.length === 0) {
     return (
@@ -71,21 +56,14 @@ export default async function CheckoutPage({ searchParams }: { searchParams: Pro
               <span>Tax</span>
               <span>{formatCurrency(summary.taxTotal)}</span>
             </div>
-            {coupon && !couponError && (
-              <div className="flex justify-between text-success-600">
-                <span>Coupon ({coupon.toUpperCase()})</span>
-                <span>-{formatCurrency(discount)}</span>
-              </div>
-            )}
-            {couponError && <p className="text-xs text-danger-500">{couponError} — proceeding without discount.</p>}
             <div className="flex justify-between border-t border-slate-100 pt-2 text-base font-semibold text-slate-900">
               <span>Total</span>
-              <span>{formatCurrency(finalTotal)}</span>
+              <span>{formatCurrency(summary.grandTotal)}</span>
             </div>
           </div>
 
           <div className="mt-6">
-            <CheckoutConfirm couponCode={couponError ? undefined : coupon} />
+            <CheckoutConfirm />
           </div>
         </CardBody>
       </Card>

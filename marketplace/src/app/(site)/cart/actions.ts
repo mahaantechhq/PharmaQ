@@ -3,8 +3,6 @@
 import { revalidatePath } from "next/cache";
 import { createClient } from "@/lib/supabase/server";
 import { getCurrentBusiness } from "@/lib/supabase/current-business";
-import { getCartSummary } from "@/lib/checkout";
-import { validateCoupon } from "@/lib/coupons";
 
 export async function addToCart(productId: string, quantity: number) {
   const ctx = await getCurrentBusiness();
@@ -68,13 +66,4 @@ export async function removeCartItem(cartItemId: string) {
   if (error) throw new Error(error.message);
 
   revalidatePath("/cart");
-}
-
-export async function previewCoupon(code: string) {
-  const ctx = await getCurrentBusiness();
-  if (!ctx) throw new Error("Not authenticated");
-
-  const summary = await getCartSummary(ctx.business.id);
-  const result = await validateCoupon(code, summary.subtotal);
-  return { discount: result.discount, code: result.coupon.code };
 }

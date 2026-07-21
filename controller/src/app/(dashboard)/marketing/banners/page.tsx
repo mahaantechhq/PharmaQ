@@ -11,7 +11,7 @@ export default async function BannersPage() {
 
   return (
     <div>
-      <PageHeader title="Marketing" description="Coupons and promotional banners for the marketplace." />
+      <PageHeader title="Marketing" description="Promotional banners for the marketplace." />
       <MarketingNav />
       <Card>
         <CardBody>

@@ -3,11 +3,10 @@
 import { useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { Minus, Plus, Trash2, Tag, ShoppingBag } from "lucide-react";
+import { Minus, Plus, Trash2, ShoppingBag } from "lucide-react";
 import { Button } from "@/components/ui/Button";
-import { Input } from "@/components/ui/Input";
 import { useToast } from "@/components/ui/Toast";
-import { updateCartItemQuantity, removeCartItem, previewCoupon } from "@/app/(site)/cart/actions";
+import { updateCartItemQuantity, removeCartItem } from "@/app/(site)/cart/actions";
 import { formatCurrency } from "@/lib/format";
 import type { CartLine } from "@/lib/checkout";
 
@@ -21,9 +20,6 @@ export function CartTable({ lines, subtotal, taxTotal, grandTotal, supplierCount
   const router = useRouter();
   const { toast } = useToast();
   const [pendingId, setPendingId] = useState<string | null>(null);
-  const [couponCode, setCouponCode] = useState("");
-  const [couponLoading, setCouponLoading] = useState(false);
-  const [appliedCoupon, setAppliedCoupon] = useState<{ code: string; discount: number } | null>(null);
 
   const handleQtyChange = async (cartItemId: string, quantity: number) => {
     setPendingId(cartItemId);
@@ -50,29 +46,12 @@ export function CartTable({ lines, subtotal, taxTotal, grandTotal, supplierCount
     }
   };
 
-  const handleApplyCoupon = async () => {
-    if (!couponCode.trim()) return;
-    setCouponLoading(true);
-    try {
-      const result = await previewCoupon(couponCode);
-      setAppliedCoupon(result);
-      toast(`Coupon applied — you save ${formatCurrency(result.discount)}`, "success");
-    } catch (err) {
-      setAppliedCoupon(null);
-      toast(err instanceof Error ? err.message : "Invalid coupon", "error");
-    } finally {
-      setCouponLoading(false);
-    }
-  };
-
   const bySupplier = new Map<string, { name: string; lines: CartLine[] }>();
   for (const line of lines) {
     const existing = bySupplier.get(line.businessId) ?? { name: line.businessName, lines: [] };
     existing.lines.push(line);
     bySupplier.set(line.businessId, existing);
   }
-
-  const finalTotal = appliedCoupon ? grandTotal - appliedCoupon.discount : grandTotal;
 
   if (lines.length === 0) {
     return (
@@ -140,19 +119,6 @@ export function CartTable({ lines, subtotal, taxTotal, grandTotal, supplierCount
       <div className="h-fit rounded-xl border border-slate-100 bg-white p-5">
         <p className="mb-4 text-sm font-semibold text-slate-800">Order summary</p>
 
-        <div className="mb-4 flex gap-2">
-          <div className="relative flex-1">
-            <Tag className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
-            <Input
-              placeholder="Coupon code"
-              className="pl-9"
-              value={couponCode}
-              onChange={(e) => setCouponCode(e.target.value)}
-            />
-          </div>
-          <Button variant="outline" onClick={handleApplyCoupon} loading={couponLoading}>Apply</Button>
-        </div>
-
         <div className="flex flex-col gap-2 text-sm">
           <div className="flex justify-between text-slate-500">
             <span>Subtotal ({lines.length} items)</span>
@@ -162,15 +128,9 @@ export function CartTable({ lines, subtotal, taxTotal, grandTotal, supplierCount
             <span>Tax</span>
             <span>{formatCurrency(taxTotal)}</span>
           </div>
-          {appliedCoupon && (
-            <div className="flex justify-between text-success-600">
-              <span>Coupon ({appliedCoupon.code})</span>
-              <span>-{formatCurrency(appliedCoupon.discount)}</span>
-            </div>
-          )}
           <div className="flex justify-between border-t border-slate-100 pt-2 text-base font-semibold text-slate-900">
             <span>Total</span>
-            <span>{formatCurrency(finalTotal)}</span>
+            <span>{formatCurrency(grandTotal)}</span>
           </div>
         </div>
 
@@ -178,7 +138,7 @@ export function CartTable({ lines, subtotal, taxTotal, grandTotal, supplierCount
           Splitting into {supplierCount} order{supplierCount !== 1 && "s"} across {supplierCount} supplier{supplierCount !== 1 && "s"}
         </p>
 
-        <Link href={appliedCoupon ? `/checkout?coupon=${encodeURIComponent(appliedCoupon.code)}` : "/checkout"} className="mt-4 block">
+        <Link href="/checkout" className="mt-4 block">
           <Button size="lg" className="w-full">Proceed to checkout</Button>
         </Link>
       </div>
