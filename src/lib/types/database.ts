@@ -110,6 +110,8 @@ export interface Order {
   created_at: string;
 }
 
+export type PaymentStatus = "paid" | "partial" | "unpaid";
+
 export interface SupplierOrder {
   id: string;
   order_id: string;
@@ -117,6 +119,8 @@ export interface SupplierOrder {
   supplier_business_id: string;
   buyer_business_id: string;
   status: SupplierOrderStatus;
+  payment_status: PaymentStatus;
+  amount_paid: number;
   subtotal: number;
   tax_total: number;
   grand_total: number;

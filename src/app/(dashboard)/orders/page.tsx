@@ -11,7 +11,7 @@ export default async function OrdersPage() {
   const supabase = await createClient();
   const { data: orders } = await supabase
     .from("supplier_orders")
-    .select("id, order_number, status, grand_total, created_at, businesses:buyer_business_id(name)")
+    .select("id, order_number, status, payment_status, amount_paid, grand_total, created_at, businesses:buyer_business_id(name)")
     .eq("supplier_business_id", ctx.business.id)
     .order("created_at", { ascending: false });
 
@@ -20,6 +20,8 @@ export default async function OrdersPage() {
     orderNumber: o.order_number,
     buyerName: o.businesses?.name ?? "Unknown buyer",
     status: o.status,
+    paymentStatus: o.payment_status,
+    amountPaid: Number(o.amount_paid),
     grandTotal: Number(o.grand_total),
     createdAt: o.created_at,
   }));

@@ -7,10 +7,10 @@ import {
   ShoppingCart,
   FileText,
   Users,
-  Wallet,
   BarChart3,
   Bell,
   Settings,
+  CreditCard,
   type LucideIcon,
 } from "lucide-react";
 
@@ -49,7 +49,7 @@ export const NAV_GROUPS: NavGroup[] = [
   {
     label: "Finance",
     items: [
-      { label: "Wallet", href: "/wallet", icon: Wallet },
+      { label: "Payments", href: "/payments", icon: CreditCard },
       { label: "Reports", href: "/reports", icon: BarChart3 },
     ],
   },
