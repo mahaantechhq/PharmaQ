@@ -124,11 +124,11 @@ export function OffersManager({ offers }: { offers: Offer[] }) {
                 <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-primary-50 text-primary-600">
                   <Percent className="h-4 w-4" />
                 </div>
-                <div className="flex shrink-0 gap-1">
-                  <button onClick={() => openEdit(o)} className="rounded-lg p-1 text-slate-400 hover:bg-primary-50 hover:text-primary-600">
+                <div className="flex shrink-0 gap-1.5">
+                  <button onClick={() => openEdit(o)} className="rounded-lg bg-primary-50 p-1.5 text-primary-600 hover:bg-primary-100">
                     <Pencil className="h-3.5 w-3.5" />
                   </button>
-                  <button onClick={() => handleDelete(o.id)} className="rounded-lg p-1 text-slate-400 hover:bg-danger-50 hover:text-danger-600">
+                  <button onClick={() => handleDelete(o.id)} className="rounded-lg bg-danger-50 p-1.5 text-danger-600 hover:bg-danger-100">
                     <Trash2 className="h-3.5 w-3.5" />
                   </button>
                 </div>
