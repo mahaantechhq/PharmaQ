@@ -27,6 +27,7 @@ export function LoggedInHero({ ownerName }: { ownerName: string }) {
             <input
               ref={inputRef}
               type="search"
+              onFocus={() => router.push("/search")}
               placeholder="Search for medicines, brands, suppliers..."
               className="h-11 w-full rounded-xl pl-9 pr-3 text-sm text-slate-700 placeholder:text-slate-400 focus:outline-none"
             />
