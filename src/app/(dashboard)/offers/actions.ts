@@ -29,6 +29,33 @@ export async function createOffer(values: OfferFormValues) {
   revalidatePath("/offers");
 }
 
+export async function updateOffer(offerId: string, values: OfferFormValues) {
+  const ctx = await getCurrentBusiness();
+  if (!ctx) throw new Error("Not authenticated");
+
+  const parsed = offerSchema.parse(values);
+  const supabase = await createClient();
+
+  const { error } = await supabase
+    .from("offers")
+    .update({
+      name: parsed.name,
+      display_text: parsed.display_text,
+      discount_type: parsed.discount_type,
+      discount_value: parsed.discount_value,
+      min_order_amount: parsed.min_order_amount,
+      max_order_amount: parsed.max_order_amount || null,
+      starts_at: parsed.starts_at || null,
+      expires_at: parsed.expires_at,
+      status: parsed.status,
+    })
+    .eq("id", offerId)
+    .eq("business_id", ctx.business.id);
+
+  if (error) throw new Error(error.message);
+  revalidatePath("/offers");
+}
+
 export async function deleteOffer(offerId: string) {
   const ctx = await getCurrentBusiness();
   if (!ctx) throw new Error("Not authenticated");

@@ -4,7 +4,7 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { Plus, Trash2, Percent } from "lucide-react";
+import { Plus, Pencil, Trash2, Percent } from "lucide-react";
 import { Button } from "@/components/ui/Button";
 import { Modal } from "@/components/ui/Modal";
 import { Field } from "@/components/ui/Field";
@@ -14,7 +14,7 @@ import { Textarea } from "@/components/ui/Textarea";
 import { Badge } from "@/components/ui/Badge";
 import { useToast } from "@/components/ui/Toast";
 import { offerSchema, type OfferFormValues } from "@/lib/validations/offer";
-import { createOffer, deleteOffer, toggleOfferStatus } from "@/app/(dashboard)/offers/actions";
+import { createOffer, updateOffer, deleteOffer, toggleOfferStatus } from "@/app/(dashboard)/offers/actions";
 import { formatDate } from "@/lib/format";
 import type { Offer } from "@/lib/types/database";
 
@@ -24,6 +24,7 @@ function formatDiscount(offer: Offer) {
 
 export function OffersManager({ offers }: { offers: Offer[] }) {
   const [open, setOpen] = useState(false);
+  const [editingId, setEditingId] = useState<string | null>(null);
   const [startsImmediately, setStartsImmediately] = useState(true);
   const router = useRouter();
   const { toast } = useToast();
@@ -41,16 +42,47 @@ export function OffersManager({ offers }: { offers: Offer[] }) {
 
   const discountType = watch("discount_type");
 
+  const openCreate = () => {
+    setEditingId(null);
+    reset({ discount_type: "flat", min_order_amount: 0, status: "active", name: "", display_text: "", discount_value: undefined, max_order_amount: undefined, starts_at: "", expires_at: "" });
+    setStartsImmediately(true);
+    setOpen(true);
+  };
+
+  const openEdit = (offer: Offer) => {
+    setEditingId(offer.id);
+    reset({
+      name: offer.name,
+      display_text: offer.display_text,
+      discount_type: offer.discount_type,
+      discount_value: Number(offer.discount_value),
+      min_order_amount: Number(offer.min_order_amount),
+      max_order_amount: offer.max_order_amount != null ? Number(offer.max_order_amount) : undefined,
+      starts_at: offer.starts_at ?? "",
+      expires_at: offer.expires_at,
+      status: offer.status,
+    });
+    setStartsImmediately(!offer.starts_at);
+    setOpen(true);
+  };
+
   const onSubmit = async (values: OfferFormValues) => {
+    const payload = { ...values, starts_at: startsImmediately ? undefined : values.starts_at };
     try {
-      await createOffer({ ...values, starts_at: startsImmediately ? undefined : values.starts_at });
-      toast("Offer created", "success");
+      if (editingId) {
+        await updateOffer(editingId, payload);
+        toast("Offer updated", "success");
+      } else {
+        await createOffer(payload);
+        toast("Offer created", "success");
+      }
       reset();
+      setEditingId(null);
       setStartsImmediately(true);
       setOpen(false);
       router.refresh();
     } catch (err) {
-      toast(err instanceof Error ? err.message : "Failed to create offer", "error");
+      toast(err instanceof Error ? err.message : "Failed to save offer", "error");
     }
   };
 
@@ -77,7 +109,7 @@ export function OffersManager({ offers }: { offers: Offer[] }) {
   return (
     <div>
       <div className="mb-4 flex justify-end">
-        <Button onClick={() => setOpen(true)}>
+        <Button onClick={openCreate}>
           <Plus className="h-4 w-4" /> Create offer
         </Button>
       </div>
@@ -92,9 +124,14 @@ export function OffersManager({ offers }: { offers: Offer[] }) {
                 <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-primary-50 text-primary-600">
                   <Percent className="h-4 w-4" />
                 </div>
-                <button onClick={() => handleDelete(o.id)} className="shrink-0 rounded-lg p-1 text-slate-400 hover:bg-danger-50 hover:text-danger-600">
-                  <Trash2 className="h-3.5 w-3.5" />
-                </button>
+                <div className="flex shrink-0 gap-1">
+                  <button onClick={() => openEdit(o)} className="rounded-lg p-1 text-slate-400 hover:bg-primary-50 hover:text-primary-600">
+                    <Pencil className="h-3.5 w-3.5" />
+                  </button>
+                  <button onClick={() => handleDelete(o.id)} className="rounded-lg p-1 text-slate-400 hover:bg-danger-50 hover:text-danger-600">
+                    <Trash2 className="h-3.5 w-3.5" />
+                  </button>
+                </div>
               </div>
               <p className="truncate text-sm font-semibold text-slate-800">{o.name}</p>
               <p className="mt-0.5 line-clamp-2 text-xs text-slate-500">{o.display_text}</p>
@@ -112,7 +149,7 @@ export function OffersManager({ offers }: { offers: Offer[] }) {
         </div>
       )}
 
-      <Modal open={open} onClose={() => setOpen(false)} title="Create offer" size="md">
+      <Modal open={open} onClose={() => setOpen(false)} title={editingId ? "Edit offer" : "Create offer"} size="md">
         <form id="offer-form" onSubmit={handleSubmit(onSubmit)} className="flex flex-col gap-5">
           <div>
             <p className="mb-3 text-sm font-semibold text-slate-800">Description</p>
@@ -185,7 +222,7 @@ export function OffersManager({ offers }: { offers: Offer[] }) {
         </form>
         <div className="mt-4 flex justify-end gap-2">
           <Button variant="outline" onClick={() => setOpen(false)}>Cancel</Button>
-          <Button form="offer-form" type="submit" loading={isSubmitting}>Create offer</Button>
+          <Button form="offer-form" type="submit" loading={isSubmitting}>{editingId ? "Save changes" : "Create offer"}</Button>
         </div>
       </Modal>
     </div>
