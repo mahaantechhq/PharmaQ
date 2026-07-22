@@ -42,6 +42,14 @@ export default async function CheckoutPage() {
                     <p className="text-sm font-medium text-slate-700">{formatCurrency(total)}</p>
                   </div>
                   <p className="text-xs text-slate-400">{lines.length} item{lines.length !== 1 && "s"}</p>
+                  <div className="mt-2 flex flex-col gap-1 rounded-lg bg-slate-50 px-3 py-2">
+                    {lines.map((l) => (
+                      <div key={l.cartItemId} className="flex items-center justify-between text-xs">
+                        <span className="text-slate-600">{l.productName} × {l.quantity}</span>
+                        <span className="font-medium text-slate-700">{formatCurrency(l.lineTotal)}</span>
+                      </div>
+                    ))}
+                  </div>
                 </div>
               );
             })}
