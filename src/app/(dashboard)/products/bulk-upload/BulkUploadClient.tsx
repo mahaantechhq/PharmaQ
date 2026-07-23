@@ -10,22 +10,36 @@ import { useToast } from "@/components/ui/Toast";
 import { bulkImportProducts } from "@/app/(dashboard)/products/actions";
 
 const TEMPLATE_HEADERS = [
-  "name",
-  "category",
-  "composition",
-  "pack_size",
-  "hsn_code",
-  "gst_rate",
-  "batch_number",
-  "expiry_date",
-  "mrp",
-  "selling_price",
-  "stock_qty",
+  "Name",
+  "Category",
+  "Composition",
+  "Pack_size",
+  "HSN_code",
+  "GST_rate",
+  "Batch_number",
+  "Expiry_date",
+  "Mrp",
+  "Selling_price",
+  "Scheme",
+  "Discount %",
+  "Stock_qty",
 ];
+
+// Maps a CSV header (any case) to the lowercase/snake_case field name
+// bulkImportProducts expects. "Discount %" has no direct snake_case
+// equivalent, so it needs an explicit entry rather than a generic transform.
+const HEADER_FIELD_MAP: Record<string, string> = {
+  "discount %": "discount_percent",
+};
+
+function normalizeHeader(header: string): string {
+  const key = header.trim().toLowerCase();
+  return HEADER_FIELD_MAP[key] ?? key.replace(/\s+/g, "_");
+}
 
 function downloadTemplate() {
   const csv = TEMPLATE_HEADERS.join(",") + "\n" +
-    "Paracetamol 650mg,Analgesics,Paracetamol 650mg,Strip of 15,3004,12,B-001,2027-01-01,45,40,200\n";
+    "Paracetamol 650mg,Analgesics,Paracetamol 650mg,Strip of 15,3004,5,B-001,01-01-2027,45,40,5+1,2,200\n";
   const blob = new Blob([csv], { type: "text/csv" });
   const url = URL.createObjectURL(blob);
   const a = document.createElement("a");
@@ -50,6 +64,7 @@ export function BulkUploadClient() {
     Papa.parse<Record<string, string>>(file, {
       header: true,
       skipEmptyLines: true,
+      transformHeader: normalizeHeader,
       complete: (res) => setRows(res.data),
       error: () => toast("Failed to parse CSV", "error"),
     });

@@ -4,10 +4,7 @@ import { getCurrentBusiness } from "@/lib/supabase/current-business";
 import { getCatalogMasters } from "@/lib/supabase/catalog";
 import { PageHeader } from "@/components/layout/PageHeader";
 import { Card, CardBody } from "@/components/ui/Card";
-import { Tabs } from "@/components/ui/Tabs";
 import { ProductForm } from "@/components/products/ProductForm";
-import { BatchTable } from "@/components/products/BatchTable";
-import type { ProductBatch } from "@/lib/types/database";
 
 export default async function ProductDetailPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
@@ -29,44 +26,40 @@ export default async function ProductDetailPage({ params }: { params: Promise<{ 
 
   if (!product) notFound();
 
+  const batch = batches?.[0];
+
   return (
     <div>
-      <PageHeader title={product.name} description="Manage product details and batch inventory." />
+      <PageHeader title={product.name} description="Manage product details, stock and pricing." />
 
       <Card>
         <CardBody>
-          <Tabs
-            tabs={[
-              {
-                key: "details",
-                label: "Details",
-                content: (
-                  <ProductForm
-                    productId={product.id}
-                    defaultValues={{
-                      name: product.name,
-                      category_id: product.category_id ?? "",
-                      brand_id: product.brand_id ?? "",
-                      manufacturer_id: product.manufacturer_id ?? "",
-                      composition: product.composition ?? "",
-                      pack_size: product.pack_size ?? "",
-                      hsn_code: product.hsn_code ?? "",
-                      gst_rate: Number(product.gst_rate),
-                      description: product.description ?? "",
-                      status: product.status,
-                    }}
-                    categories={catalog.categories}
-                    brands={catalog.brands}
-                    manufacturers={catalog.manufacturers}
-                  />
-                ),
-              },
-              {
-                key: "batches",
-                label: `Batches (${batches?.length ?? 0})`,
-                content: <BatchTable productId={product.id} batches={(batches ?? []) as ProductBatch[]} />,
-              },
-            ]}
+          <ProductForm
+            productId={product.id}
+            batchId={batch?.id}
+            defaultValues={{
+              name: product.name,
+              category_id: product.category_id ?? "",
+              brand_id: product.brand_id ?? "",
+              manufacturer_id: product.manufacturer_id ?? "",
+              composition: product.composition ?? "",
+              pack_size: product.pack_size ?? "",
+              hsn_code: product.hsn_code ?? "",
+              gst_rate: Number(product.gst_rate),
+              description: product.description ?? "",
+              status: product.status,
+              batch_number: batch?.batch_number ?? "",
+              mfg_date: batch?.mfg_date ?? "",
+              expiry_date: batch?.expiry_date ?? "",
+              mrp: batch ? Number(batch.mrp) : undefined,
+              selling_price: batch ? Number(batch.selling_price) : undefined,
+              scheme: batch?.scheme ?? "",
+              discount_percent: batch?.discount_percent != null ? Number(batch.discount_percent) : undefined,
+              stock_qty: batch ? batch.stock_qty : 0,
+            }}
+            categories={catalog.categories}
+            brands={catalog.brands}
+            manufacturers={catalog.manufacturers}
           />
         </CardBody>
       </Card>

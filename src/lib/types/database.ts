@@ -96,6 +96,8 @@ export interface ProductBatch {
   expiry_date: string;
   mrp: number;
   selling_price: number;
+  scheme: string | null;
+  discount_percent: number | null;
   stock_qty: number;
   created_at: string;
 }

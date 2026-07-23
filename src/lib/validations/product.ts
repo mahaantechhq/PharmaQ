@@ -11,17 +11,14 @@ export const productSchema = z.object({
   gst_rate: z.number().min(0).max(28),
   description: z.string().optional(),
   status: z.enum(["draft", "active", "inactive"]),
-});
-
-export type ProductFormValues = z.infer<typeof productSchema>;
-
-export const batchSchema = z.object({
   batch_number: z.string().min(1, "Batch number is required"),
   mfg_date: z.string().optional(),
   expiry_date: z.string().min(1, "Expiry date is required"),
   mrp: z.number().positive("MRP must be greater than 0"),
   selling_price: z.number().positive("Selling price must be greater than 0"),
+  scheme: z.string().optional(),
+  discount_percent: z.number().min(0).max(100).optional(),
   stock_qty: z.number().int().min(0, "Stock cannot be negative"),
 });
 
-export type BatchFormValues = z.infer<typeof batchSchema>;
+export type ProductFormValues = z.infer<typeof productSchema>;

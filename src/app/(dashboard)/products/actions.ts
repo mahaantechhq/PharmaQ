@@ -3,7 +3,7 @@
 import { revalidatePath } from "next/cache";
 import { createClient } from "@/lib/supabase/server";
 import { getCurrentBusiness } from "@/lib/supabase/current-business";
-import { productSchema, batchSchema, type ProductFormValues, type BatchFormValues } from "@/lib/validations/product";
+import { productSchema, type ProductFormValues } from "@/lib/validations/product";
 
 function slugify(name: string) {
   return name
@@ -40,11 +40,25 @@ export async function createProduct(values: ProductFormValues) {
 
   if (error) throw new Error(error.message);
 
+  const { error: batchError } = await supabase.from("product_batches").insert({
+    product_id: data.id,
+    business_id: ctx.business.id,
+    batch_number: parsed.batch_number,
+    mfg_date: parsed.mfg_date || null,
+    expiry_date: parsed.expiry_date,
+    mrp: parsed.mrp,
+    selling_price: parsed.selling_price,
+    scheme: parsed.scheme || null,
+    discount_percent: parsed.discount_percent ?? null,
+    stock_qty: parsed.stock_qty,
+  });
+  if (batchError) throw new Error(batchError.message);
+
   revalidatePath("/products");
   return data.id as string;
 }
 
-export async function updateProduct(productId: string, values: ProductFormValues) {
+export async function updateProduct(productId: string, values: ProductFormValues, batchId?: string) {
   const ctx = await getCurrentBusiness();
   if (!ctx) throw new Error("Not authenticated");
 
@@ -71,8 +85,25 @@ export async function updateProduct(productId: string, values: ProductFormValues
 
   if (error) throw new Error(error.message);
 
+  const batchFields = {
+    batch_number: parsed.batch_number,
+    mfg_date: parsed.mfg_date || null,
+    expiry_date: parsed.expiry_date,
+    mrp: parsed.mrp,
+    selling_price: parsed.selling_price,
+    scheme: parsed.scheme || null,
+    discount_percent: parsed.discount_percent ?? null,
+    stock_qty: parsed.stock_qty,
+  };
+
+  const { error: batchError } = batchId
+    ? await supabase.from("product_batches").update(batchFields).eq("id", batchId).eq("business_id", ctx.business.id)
+    : await supabase.from("product_batches").insert({ ...batchFields, product_id: productId, business_id: ctx.business.id });
+  if (batchError) throw new Error(batchError.message);
+
   revalidatePath("/products");
   revalidatePath(`/products/${productId}`);
+  revalidatePath("/inventory");
 }
 
 export async function deleteProduct(productId: string) {
@@ -123,47 +154,6 @@ export async function bulkUpdateProductStatus(productIds: string[], status: "dra
   revalidatePath("/products");
 }
 
-export async function addBatch(productId: string, values: BatchFormValues) {
-  const ctx = await getCurrentBusiness();
-  if (!ctx) throw new Error("Not authenticated");
-
-  const parsed = batchSchema.parse(values);
-  const supabase = await createClient();
-
-  const { error } = await supabase.from("product_batches").insert({
-    product_id: productId,
-    business_id: ctx.business.id,
-    batch_number: parsed.batch_number,
-    mfg_date: parsed.mfg_date || null,
-    expiry_date: parsed.expiry_date,
-    mrp: parsed.mrp,
-    selling_price: parsed.selling_price,
-    stock_qty: parsed.stock_qty,
-  });
-
-  if (error) throw new Error(error.message);
-
-  revalidatePath(`/products/${productId}`);
-  revalidatePath("/inventory");
-}
-
-export async function deleteBatch(batchId: string, productId: string) {
-  const ctx = await getCurrentBusiness();
-  if (!ctx) throw new Error("Not authenticated");
-
-  const supabase = await createClient();
-  const { error } = await supabase
-    .from("product_batches")
-    .delete()
-    .eq("id", batchId)
-    .eq("business_id", ctx.business.id);
-
-  if (error) throw new Error(error.message);
-
-  revalidatePath(`/products/${productId}`);
-  revalidatePath("/inventory");
-}
-
 interface BulkProductRow {
   name: string;
   category?: string;
@@ -175,7 +165,20 @@ interface BulkProductRow {
   expiry_date?: string;
   mrp?: string;
   selling_price?: string;
+  scheme?: string;
+  discount_percent?: string;
   stock_qty?: string;
+}
+
+// The bulk-upload template uses DD-MM-YYYY; pass ISO (YYYY-MM-DD) through
+// unchanged so re-uploads of previously-exported data still work.
+function parseExpiryDate(input: string): string {
+  const parts = input.trim().split(/[-/]/);
+  if (parts.length === 3 && parts[0].length <= 2 && parts[2].length === 4) {
+    const [d, m, y] = parts;
+    return `${y}-${m.padStart(2, "0")}-${d.padStart(2, "0")}`;
+  }
+  return input.trim();
 }
 
 export async function bulkImportProducts(rows: BulkProductRow[]) {
@@ -240,9 +243,11 @@ export async function bulkImportProducts(rows: BulkProductRow[]) {
         product_id: product.id,
         business_id: ctx.business.id,
         batch_number: row.batch_number,
-        expiry_date: row.expiry_date,
+        expiry_date: parseExpiryDate(row.expiry_date),
         mrp: Number(row.mrp),
         selling_price: Number(row.selling_price),
+        scheme: row.scheme || null,
+        discount_percent: row.discount_percent ? Number(row.discount_percent) : null,
         stock_qty: row.stock_qty ? Number(row.stock_qty) : 0,
       });
       if (batchError) errors.push(`Row ${index + 2} (batch): ${batchError.message}`);

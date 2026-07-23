@@ -15,13 +15,14 @@ import type { Category, Brand, Manufacturer } from "@/lib/types/database";
 
 interface ProductFormProps {
   productId?: string;
+  batchId?: string;
   defaultValues?: Partial<ProductFormValues>;
   categories: Category[];
   brands: Brand[];
   manufacturers: Manufacturer[];
 }
 
-export function ProductForm({ productId, defaultValues, categories, brands, manufacturers }: ProductFormProps) {
+export function ProductForm({ productId, batchId, defaultValues, categories, brands, manufacturers }: ProductFormProps) {
   const router = useRouter();
   const { toast } = useToast();
 
@@ -34,6 +35,7 @@ export function ProductForm({ productId, defaultValues, categories, brands, manu
     defaultValues: {
       status: "draft",
       gst_rate: 12,
+      stock_qty: 0,
       ...defaultValues,
     },
   });
@@ -41,7 +43,7 @@ export function ProductForm({ productId, defaultValues, categories, brands, manu
   const onSubmit = async (values: ProductFormValues) => {
     try {
       if (productId) {
-        await updateProduct(productId, values);
+        await updateProduct(productId, values, batchId);
         toast("Product updated", "success");
       } else {
         const id = await createProduct(values);
@@ -116,6 +118,36 @@ export function ProductForm({ productId, defaultValues, categories, brands, manu
         <Field label="Description" htmlFor="description" className="sm:col-span-2">
           <Textarea id="description" rows={3} placeholder="Additional details about this product" {...register("description")} />
         </Field>
+      </div>
+
+      <div className="border-t border-slate-100 pt-5">
+        <p className="mb-3 text-sm font-semibold text-slate-800">Stock &amp; pricing</p>
+        <div className="grid grid-cols-1 gap-5 sm:grid-cols-2">
+          <Field label="Batch number" htmlFor="batch_number" required error={errors.batch_number?.message}>
+            <Input id="batch_number" {...register("batch_number")} />
+          </Field>
+          <Field label="Mfg. date" htmlFor="mfg_date">
+            <Input id="mfg_date" type="date" {...register("mfg_date")} />
+          </Field>
+          <Field label="Expiry date" htmlFor="expiry_date" required error={errors.expiry_date?.message}>
+            <Input id="expiry_date" type="date" {...register("expiry_date")} />
+          </Field>
+          <Field label="Stock quantity" htmlFor="stock_qty" required error={errors.stock_qty?.message}>
+            <Input id="stock_qty" type="number" {...register("stock_qty", { valueAsNumber: true })} />
+          </Field>
+          <Field label="MRP (₹)" htmlFor="mrp" required error={errors.mrp?.message}>
+            <Input id="mrp" type="number" step="0.01" {...register("mrp", { valueAsNumber: true })} />
+          </Field>
+          <Field label="Selling price (₹)" htmlFor="selling_price" required error={errors.selling_price?.message}>
+            <Input id="selling_price" type="number" step="0.01" {...register("selling_price", { valueAsNumber: true })} />
+          </Field>
+          <Field label="Scheme" htmlFor="scheme" error={errors.scheme?.message} hint="e.g. 5+1">
+            <Input id="scheme" placeholder="e.g. 5+1" {...register("scheme")} />
+          </Field>
+          <Field label="Discount %" htmlFor="discount_percent" error={errors.discount_percent?.message}>
+            <Input id="discount_percent" type="number" step="0.01" {...register("discount_percent", { valueAsNumber: true })} />
+          </Field>
+        </div>
       </div>
 
       <div className="flex justify-end gap-2 border-t border-slate-100 pt-5">
