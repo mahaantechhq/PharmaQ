@@ -11,7 +11,7 @@ import { Select } from "@/components/ui/Select";
 import { Button } from "@/components/ui/Button";
 import { ProductStatusBadge } from "@/components/products/ProductStatusBadge";
 import { Dropdown, DropdownItem } from "@/components/ui/Dropdown";
-import { formatCurrency } from "@/lib/format";
+import { formatCurrency, formatDate } from "@/lib/format";
 import { useToast } from "@/components/ui/Toast";
 import { deleteProduct, bulkDeleteProducts, bulkUpdateProductStatus } from "@/app/(dashboard)/products/actions";
 import type { ProductStatus } from "@/lib/types/database";
@@ -21,10 +21,18 @@ export interface ProductRow {
   name: string;
   categoryName: string | null;
   brandName: string | null;
+  composition: string | null;
   packSize: string | null;
+  hsnCode: string | null;
+  gstRate: number;
   status: ProductStatus;
-  totalStock: number;
-  minPrice: number | null;
+  batchNumber: string | null;
+  expiryDate: string | null;
+  mrp: number | null;
+  sellingPrice: number | null;
+  scheme: string | null;
+  discountPercent: number | null;
+  stockQty: number;
 }
 
 export function ProductsExplorer({ products }: { products: ProductRow[] }) {
@@ -146,20 +154,56 @@ export function ProductsExplorer({ products }: { products: ProductRow[] }) {
       header: "Brand",
       cell: ({ row }) => row.original.brandName ?? <span className="text-slate-300">—</span>,
     },
+    {
+      accessorKey: "composition",
+      header: "Composition",
+      cell: ({ row }) => row.original.composition ?? <span className="text-slate-300">—</span>,
+    },
     { accessorKey: "packSize", header: "Pack size", cell: ({ row }) => row.original.packSize ?? "—" },
     {
-      accessorKey: "totalStock",
-      header: "Stock",
-      cell: ({ row }) => (
-        <span className={row.original.totalStock === 0 ? "text-danger-500 font-medium" : ""}>
-          {row.original.totalStock}
-        </span>
-      ),
+      accessorKey: "hsnCode",
+      header: "HSN code",
+      cell: ({ row }) => row.original.hsnCode ?? <span className="text-slate-300">—</span>,
+    },
+    { accessorKey: "gstRate", header: "GST %", cell: ({ row }) => `${row.original.gstRate}%` },
+    {
+      accessorKey: "batchNumber",
+      header: "Batch no.",
+      cell: ({ row }) => row.original.batchNumber ?? <span className="text-slate-300">—</span>,
     },
     {
-      accessorKey: "minPrice",
-      header: "Price from",
-      cell: ({ row }) => (row.original.minPrice != null ? formatCurrency(row.original.minPrice) : "—"),
+      accessorKey: "expiryDate",
+      header: "Expiry",
+      cell: ({ row }) => (row.original.expiryDate ? formatDate(row.original.expiryDate) : <span className="text-slate-300">—</span>),
+    },
+    {
+      accessorKey: "mrp",
+      header: "MRP",
+      cell: ({ row }) => (row.original.mrp != null ? formatCurrency(row.original.mrp) : "—"),
+    },
+    {
+      accessorKey: "sellingPrice",
+      header: "Selling price",
+      cell: ({ row }) => (row.original.sellingPrice != null ? formatCurrency(row.original.sellingPrice) : "—"),
+    },
+    {
+      accessorKey: "scheme",
+      header: "Scheme",
+      cell: ({ row }) => row.original.scheme ?? <span className="text-slate-300">—</span>,
+    },
+    {
+      accessorKey: "discountPercent",
+      header: "Discount %",
+      cell: ({ row }) => (row.original.discountPercent != null ? `${row.original.discountPercent}%` : <span className="text-slate-300">—</span>),
+    },
+    {
+      accessorKey: "stockQty",
+      header: "Stock",
+      cell: ({ row }) => (
+        <span className={row.original.stockQty === 0 ? "text-danger-500 font-medium" : ""}>
+          {row.original.stockQty}
+        </span>
+      ),
     },
     {
       accessorKey: "status",

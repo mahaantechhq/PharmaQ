@@ -46,7 +46,6 @@ export default async function ProductDetailPage({ params }: { params: Promise<{ 
               pack_size: product.pack_size ?? "",
               hsn_code: product.hsn_code ?? "",
               gst_rate: Number(product.gst_rate),
-              description: product.description ?? "",
               status: product.status,
               batch_number: batch?.batch_number ?? "",
               mfg_date: batch?.mfg_date ?? "",

@@ -7,7 +7,6 @@ import { productSchema, type ProductFormValues } from "@/lib/validations/product
 import { Field } from "@/components/ui/Field";
 import { Input } from "@/components/ui/Input";
 import { Select } from "@/components/ui/Select";
-import { Textarea } from "@/components/ui/Textarea";
 import { Button } from "@/components/ui/Button";
 import { useToast } from "@/components/ui/Toast";
 import { createProduct, updateProduct } from "@/app/(dashboard)/products/actions";
@@ -115,9 +114,6 @@ export function ProductForm({ productId, batchId, defaultValues, categories, bra
           </Select>
         </Field>
 
-        <Field label="Description" htmlFor="description" className="sm:col-span-2">
-          <Textarea id="description" rows={3} placeholder="Additional details about this product" {...register("description")} />
-        </Field>
       </div>
 
       <div className="border-t border-slate-100 pt-5">

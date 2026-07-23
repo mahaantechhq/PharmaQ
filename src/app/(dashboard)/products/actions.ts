@@ -32,7 +32,6 @@ export async function createProduct(values: ProductFormValues) {
       pack_size: parsed.pack_size || null,
       hsn_code: parsed.hsn_code || null,
       gst_rate: parsed.gst_rate,
-      description: parsed.description || null,
       status: parsed.status,
     })
     .select("id")
@@ -76,7 +75,6 @@ export async function updateProduct(productId: string, values: ProductFormValues
       pack_size: parsed.pack_size || null,
       hsn_code: parsed.hsn_code || null,
       gst_rate: parsed.gst_rate,
-      description: parsed.description || null,
       status: parsed.status,
       updated_at: new Date().toISOString(),
     })

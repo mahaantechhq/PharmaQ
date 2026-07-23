@@ -16,42 +16,44 @@ export default async function ProductsPage() {
   const [{ data: products }, { data: batches }] = await Promise.all([
     supabase
       .from("products")
-      .select("id, name, status, pack_size, categories(name), brands(name)")
+      .select("id, name, status, composition, pack_size, hsn_code, gst_rate, categories(name), brands(name)")
       .eq("business_id", ctx.business.id)
       .order("created_at", { ascending: false }),
     supabase
       .from("product_batches")
-      .select("product_id, stock_qty, selling_price, expiry_date")
-      .eq("business_id", ctx.business.id),
+      .select("product_id, batch_number, expiry_date, mrp, selling_price, scheme, discount_percent, stock_qty")
+      .eq("business_id", ctx.business.id)
+      .order("expiry_date", { ascending: true }),
   ]);
 
-  // Match what the marketplace actually treats as sellable (searchProducts()
-  // in the marketplace app excludes expired batches too) -- otherwise this
-  // list shows stock/price from batches that can't actually be ordered,
-  // making a product look in-stock here while showing "Out of stock" to
-  // buyers.
-  const today = new Date().toISOString().slice(0, 10);
-  const stockByProduct = new Map<string, { stock: number; minPrice: number | null }>();
-  for (const b of batches ?? []) {
-    if (b.expiry_date < today) continue;
-    const existing = stockByProduct.get(b.product_id) ?? { stock: 0, minPrice: null };
-    existing.stock += b.stock_qty;
-    if (b.stock_qty > 0) {
-      existing.minPrice = existing.minPrice == null ? Number(b.selling_price) : Math.min(existing.minPrice, Number(b.selling_price));
-    }
-    stockByProduct.set(b.product_id, existing);
+  // One row per product: the soonest-expiring batch is what the marketplace
+  // actually sells first (FIFO), so its details represent this product here.
+  const primaryBatchByProduct = new Map<string, any>();
+  for (const b of (batches ?? []) as any[]) {
+    if (!primaryBatchByProduct.has(b.product_id)) primaryBatchByProduct.set(b.product_id, b);
   }
 
-  const rows: ProductRow[] = (products ?? []).map((p: any) => ({
-    id: p.id,
-    name: p.name,
-    categoryName: p.categories?.name ?? null,
-    brandName: p.brands?.name ?? null,
-    packSize: p.pack_size,
-    status: p.status,
-    totalStock: stockByProduct.get(p.id)?.stock ?? 0,
-    minPrice: stockByProduct.get(p.id)?.minPrice ?? null,
-  }));
+  const rows: ProductRow[] = (products ?? []).map((p: any) => {
+    const batch = primaryBatchByProduct.get(p.id);
+    return {
+      id: p.id,
+      name: p.name,
+      categoryName: p.categories?.name ?? null,
+      brandName: p.brands?.name ?? null,
+      composition: p.composition,
+      packSize: p.pack_size,
+      hsnCode: p.hsn_code,
+      gstRate: Number(p.gst_rate),
+      status: p.status,
+      batchNumber: batch?.batch_number ?? null,
+      expiryDate: batch?.expiry_date ?? null,
+      mrp: batch ? Number(batch.mrp) : null,
+      sellingPrice: batch ? Number(batch.selling_price) : null,
+      scheme: batch?.scheme ?? null,
+      discountPercent: batch?.discount_percent != null ? Number(batch.discount_percent) : null,
+      stockQty: batch?.stock_qty ?? 0,
+    };
+  });
 
   return (
     <div>

@@ -9,7 +9,6 @@ export const productSchema = z.object({
   pack_size: z.string().optional(),
   hsn_code: z.string().optional(),
   gst_rate: z.number().min(0).max(28),
-  description: z.string().optional(),
   status: z.enum(["draft", "active", "inactive"]),
   batch_number: z.string().min(1, "Batch number is required"),
   mfg_date: z.string().optional(),
