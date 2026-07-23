@@ -4,16 +4,15 @@ import { useMemo, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import type { ColumnDef } from "@tanstack/react-table";
-import { MoreVertical, Pencil, Search, Trash2 } from "lucide-react";
+import { Search, Trash2 } from "lucide-react";
 import { DataTable } from "@/components/ui/DataTable";
 import { Input } from "@/components/ui/Input";
 import { Select } from "@/components/ui/Select";
 import { Button } from "@/components/ui/Button";
 import { ProductStatusBadge } from "@/components/products/ProductStatusBadge";
-import { Dropdown, DropdownItem } from "@/components/ui/Dropdown";
 import { formatCurrency, formatDate } from "@/lib/format";
 import { useToast } from "@/components/ui/Toast";
-import { deleteProduct, bulkDeleteProducts, bulkUpdateProductStatus } from "@/app/(dashboard)/products/actions";
+import { bulkDeleteProducts, bulkUpdateProductStatus } from "@/app/(dashboard)/products/actions";
 import type { ProductStatus } from "@/lib/types/database";
 
 export interface ProductRow {
@@ -69,17 +68,6 @@ export function ProductsExplorer({ products }: { products: ProductRow[] }) {
       else next.add(id);
       return next;
     });
-  };
-
-  const handleDelete = async (id: string) => {
-    if (!confirm("Delete this product? This cannot be undone.")) return;
-    try {
-      await deleteProduct(id);
-      toast("Product deleted", "success");
-      router.refresh();
-    } catch (err) {
-      toast(err instanceof Error ? err.message : "Failed to delete", "error");
-    }
   };
 
   const handleBulkDelete = async () => {
@@ -209,33 +197,6 @@ export function ProductsExplorer({ products }: { products: ProductRow[] }) {
       accessorKey: "status",
       header: "Status",
       cell: ({ row }) => <ProductStatusBadge status={row.original.status} />,
-    },
-    {
-      id: "actions",
-      header: "",
-      cell: ({ row }) => (
-        <Dropdown
-          trigger={
-            <button className="rounded-lg p-1.5 text-slate-400 hover:bg-slate-100 hover:text-slate-600">
-              <MoreVertical className="h-4 w-4" />
-            </button>
-          }
-        >
-          {(close) => (
-            <>
-              <DropdownItem onClick={() => { close(); router.push(`/products/${row.original.id}`); }}>
-                <Pencil className="h-4 w-4" /> Edit
-              </DropdownItem>
-              <DropdownItem
-                onClick={() => { close(); handleDelete(row.original.id); }}
-                className="text-danger-600 hover:bg-danger-50"
-              >
-                <Trash2 className="h-4 w-4" /> Delete
-              </DropdownItem>
-            </>
-          )}
-        </Dropdown>
-      ),
     },
   ];
 
