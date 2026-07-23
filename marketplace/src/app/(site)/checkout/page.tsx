@@ -35,6 +35,7 @@ export default async function CheckoutPage() {
             {Array.from(supplierGroups.entries()).map(([id, name]) => {
               const lines = summary.lines.filter((l) => l.businessId === id);
               const total = lines.reduce((sum, l) => sum + l.lineTotal, 0);
+              const appliedOffer = summary.appliedOffers.find((o) => o.businessId === id);
               return (
                 <div key={id} className="py-3">
                   <div className="flex items-center justify-between">
@@ -50,6 +51,11 @@ export default async function CheckoutPage() {
                       </div>
                     ))}
                   </div>
+                  {appliedOffer && (
+                    <p className="mt-2 text-xs font-medium text-success-600">
+                      {appliedOffer.displayText} · -{formatCurrency(appliedOffer.discountAmount)}
+                    </p>
+                  )}
                 </div>
               );
             })}
@@ -60,6 +66,12 @@ export default async function CheckoutPage() {
               <span>Subtotal</span>
               <span>{formatCurrency(summary.subtotal)}</span>
             </div>
+            {summary.discountTotal > 0 && (
+              <div className="flex justify-between text-success-600">
+                <span>Offer discount</span>
+                <span>-{formatCurrency(summary.discountTotal)}</span>
+              </div>
+            )}
             <div className="flex justify-between text-slate-500">
               <span>Tax</span>
               <span>{formatCurrency(summary.taxTotal)}</span>

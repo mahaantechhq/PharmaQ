@@ -69,6 +69,11 @@ export default async function OrderDetailPage({ params }: { params: Promise<{ id
                     </div>
                   ))}
                 </div>
+                {Number(so.discount_total) > 0 && (
+                  <p className="mb-4 text-xs font-medium text-success-600">
+                    Offer discount applied: -{formatCurrency(Number(so.discount_total))}
+                  </p>
+                )}
                 <StatusTimeline history={history} />
               </CardBody>
             </Card>

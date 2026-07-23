@@ -10,9 +10,10 @@ import { updateCartItemQuantity, removeCartItem } from "@/app/(site)/cart/action
 import { formatCurrency } from "@/lib/format";
 import type { CartLine } from "@/lib/checkout";
 
-export function CartTable({ lines, subtotal, taxTotal, grandTotal, supplierCount }: {
+export function CartTable({ lines, subtotal, discountTotal, taxTotal, grandTotal, supplierCount }: {
   lines: CartLine[];
   subtotal: number;
+  discountTotal: number;
   taxTotal: number;
   grandTotal: number;
   supplierCount: number;
@@ -124,6 +125,12 @@ export function CartTable({ lines, subtotal, taxTotal, grandTotal, supplierCount
             <span>Subtotal ({lines.length} items)</span>
             <span>{formatCurrency(subtotal)}</span>
           </div>
+          {discountTotal > 0 && (
+            <div className="flex justify-between text-success-600">
+              <span>Offer discount</span>
+              <span>-{formatCurrency(discountTotal)}</span>
+            </div>
+          )}
           <div className="flex justify-between text-slate-500">
             <span>Tax</span>
             <span>{formatCurrency(taxTotal)}</span>

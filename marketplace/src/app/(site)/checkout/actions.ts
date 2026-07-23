@@ -4,6 +4,7 @@ import { revalidatePath } from "next/cache";
 import { createClient } from "@/lib/supabase/server";
 import { getCurrentBusiness } from "@/lib/supabase/current-business";
 import { getCartSummary, type CartLine } from "@/lib/checkout";
+import { getEligibleOffersByBusiness, pickBestOffer } from "@/lib/offers";
 
 export async function placeOrder() {
   const ctx = await getCurrentBusiness();
@@ -25,25 +26,40 @@ export async function placeOrder() {
   }
   const supplierGroups = Array.from(bySupplier.values());
 
+  // Discount is recomputed here server-side (not trusted from the client) --
+  // same logic as applyOfferDiscounts, applied per supplier group since
+  // offers are business-owned.
+  const offersByBusiness = await getEligibleOffersByBusiness(supplierGroups.map((g) => g.businessId));
+
   // Derive the MASTER totals as the sum of each supplier group's already-
   // rounded figures (not recomputed independently from all lines), so the
   // master order's totals always reconcile exactly with the sum of its
   // supplier orders instead of drifting by a paisa.
   let masterSubtotal = 0;
   let masterTax = 0;
+  let masterDiscount = 0;
 
   const supplierOrderPayload = supplierGroups.map((group) => {
     const groupSubtotal = Math.round(group.lines.reduce((sum, l) => sum + l.lineTotal, 0) * 100) / 100;
-    const groupTax = Math.round(group.lines.reduce((sum, l) => sum + (l.lineTotal * l.gstRate) / 100, 0) * 100) / 100;
-    const groupGrandTotal = Math.round((groupSubtotal + groupTax) * 100) / 100;
+    const best = pickBestOffer(offersByBusiness.get(group.businessId) ?? [], groupSubtotal);
+    const discountRatio = best && groupSubtotal > 0 ? best.discountAmount / groupSubtotal : 0;
+    const groupTax =
+      Math.round(
+        group.lines.reduce((sum, l) => sum + (l.lineTotal * (1 - discountRatio) * l.gstRate) / 100, 0) * 100,
+      ) / 100;
+    const groupDiscount = best?.discountAmount ?? 0;
+    const groupGrandTotal = Math.round((groupSubtotal - groupDiscount + groupTax) * 100) / 100;
 
     masterSubtotal += groupSubtotal;
     masterTax += groupTax;
+    masterDiscount += groupDiscount;
 
     return {
       supplierBusinessId: group.businessId,
       subtotal: groupSubtotal,
       taxTotal: groupTax,
+      discountTotal: groupDiscount,
+      offerId: best?.offer.id ?? null,
       grandTotal: groupGrandTotal,
       notificationMessage: `${ctx.business.name} placed a new order worth ₹${groupGrandTotal.toLocaleString("en-IN")}.`,
       items: group.lines.map((l) => ({
@@ -59,7 +75,7 @@ export async function placeOrder() {
     };
   });
 
-  const masterGrandTotal = Math.round((masterSubtotal + masterTax) * 100) / 100;
+  const masterGrandTotal = Math.round((masterSubtotal - masterDiscount + masterTax) * 100) / 100;
 
   // One transaction: master order + every supplier order + items + status
   // history + notifications. A failure partway through now rolls back
@@ -74,6 +90,7 @@ export async function placeOrder() {
     p_buyer_business_id: ctx.business.id,
     p_subtotal: Math.round(masterSubtotal * 100) / 100,
     p_tax_total: Math.round(masterTax * 100) / 100,
+    p_discount_total: Math.round(masterDiscount * 100) / 100,
     p_grand_total: masterGrandTotal,
     p_supplier_orders: supplierOrderPayload,
   });

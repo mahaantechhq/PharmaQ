@@ -12,9 +12,8 @@ import { Input } from "@/components/ui/Input";
 import { Select } from "@/components/ui/Select";
 import { Badge } from "@/components/ui/Badge";
 import { useToast } from "@/components/ui/Toast";
-import { createClient } from "@/lib/supabase/client";
 import { bannerSchema, type BannerFormValues } from "@/lib/validations/marketing";
-import { createBanner, deleteBanner, toggleBannerStatus } from "@/app/(dashboard)/marketing/actions";
+import { createBanner, deleteBanner, toggleBannerStatus, uploadBannerImage } from "@/app/(dashboard)/marketing/actions";
 import type { Banner } from "@/lib/types/database";
 
 export function BannersManager({ banners }: { banners: Banner[] }) {
@@ -23,7 +22,6 @@ export function BannersManager({ banners }: { banners: Banner[] }) {
   const [preview, setPreview] = useState<string | null>(null);
   const router = useRouter();
   const { toast } = useToast();
-  const supabase = createClient();
 
   const {
     register,
@@ -45,13 +43,11 @@ export function BannersManager({ banners }: { banners: Banner[] }) {
 
     setUploading(true);
     try {
-      const path = `${Date.now()}-${file.name.replace(/[^a-zA-Z0-9._-]/g, "_")}`;
-      const { error } = await supabase.storage.from("banners").upload(path, file, { upsert: true });
-      if (error) throw error;
-
-      const { data } = supabase.storage.from("banners").getPublicUrl(path);
-      setValue("image_url", data.publicUrl, { shouldValidate: true });
-      setPreview(data.publicUrl);
+      const formData = new FormData();
+      formData.set("file", file);
+      const publicUrl = await uploadBannerImage(formData);
+      setValue("image_url", publicUrl, { shouldValidate: true });
+      setPreview(publicUrl);
     } catch (err) {
       toast(err instanceof Error ? err.message : "Failed to upload image", "error");
     } finally {

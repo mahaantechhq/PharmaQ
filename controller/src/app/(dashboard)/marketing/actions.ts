@@ -6,6 +6,23 @@ import { getCurrentAdmin } from "@/lib/supabase/current-admin";
 import { logAudit } from "@/lib/audit";
 import { bannerSchema, type BannerFormValues } from "@/lib/validations/marketing";
 
+export async function uploadBannerImage(formData: FormData) {
+  const admin = await getCurrentAdmin();
+  if (!admin) throw new Error("Not authenticated as super admin");
+
+  const file = formData.get("file");
+  if (!(file instanceof File)) throw new Error("No file provided");
+
+  const supabase = await createClient();
+  const path = `${Date.now()}-${file.name.replace(/[^a-zA-Z0-9._-]/g, "_")}`;
+
+  const { error } = await supabase.storage.from("banners").upload(path, file, { upsert: true });
+  if (error) throw new Error(error.message);
+
+  const { data } = supabase.storage.from("banners").getPublicUrl(path);
+  return data.publicUrl;
+}
+
 export async function createBanner(values: BannerFormValues) {
   const admin = await getCurrentAdmin();
   if (!admin) throw new Error("Not authenticated as super admin");

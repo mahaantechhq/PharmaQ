@@ -106,6 +106,7 @@ export interface Order {
   buyer_business_id: string;
   subtotal: number;
   tax_total: number;
+  discount_total: number;
   grand_total: number;
   created_at: string;
 }
@@ -119,6 +120,8 @@ export interface SupplierOrder {
   status: SupplierOrderStatus;
   subtotal: number;
   tax_total: number;
+  discount_total: number;
+  offer_id: string | null;
   grand_total: number;
   created_at: string;
   updated_at: string;

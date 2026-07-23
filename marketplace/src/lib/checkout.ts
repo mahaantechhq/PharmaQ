@@ -1,4 +1,13 @@
 import { createClient } from "@/lib/supabase/server";
+import { getEligibleOffersByBusiness, pickBestOffer, type OfferSummary } from "@/lib/offers";
+
+export interface AppliedOffer {
+  businessId: string;
+  businessName: string;
+  offerId: string;
+  displayText: string;
+  discountAmount: number;
+}
 
 export interface CartLine {
   cartItemId: string;
@@ -19,9 +28,58 @@ export interface CartLine {
 export interface CartSummary {
   lines: CartLine[];
   subtotal: number;
+  discountTotal: number;
   taxTotal: number;
   grandTotal: number;
   supplierCount: number;
+  appliedOffers: AppliedOffer[];
+}
+
+// Discount is applied per supplier group (offers are business-owned), and
+// spread proportionally across that group's lines so tax is charged on the
+// discounted amount rather than the pre-discount price.
+export function applyOfferDiscounts(
+  lines: CartLine[],
+  offersByBusiness: Map<string, OfferSummary[]>,
+): { discountTotal: number; taxTotal: number; appliedOffers: AppliedOffer[] } {
+  const byBusiness = new Map<string, CartLine[]>();
+  for (const line of lines) {
+    const list = byBusiness.get(line.businessId) ?? [];
+    list.push(line);
+    byBusiness.set(line.businessId, list);
+  }
+
+  let discountTotal = 0;
+  let taxTotal = 0;
+  const appliedOffers: AppliedOffer[] = [];
+
+  for (const [businessId, groupLines] of byBusiness) {
+    const groupSubtotal = groupLines.reduce((sum, l) => sum + l.lineTotal, 0);
+    const best = pickBestOffer(offersByBusiness.get(businessId) ?? [], groupSubtotal);
+    const discountRatio = best && groupSubtotal > 0 ? best.discountAmount / groupSubtotal : 0;
+
+    for (const line of groupLines) {
+      const discountedLineTotal = line.lineTotal * (1 - discountRatio);
+      taxTotal += (discountedLineTotal * line.gstRate) / 100;
+    }
+
+    if (best) {
+      discountTotal += best.discountAmount;
+      appliedOffers.push({
+        businessId,
+        businessName: groupLines[0].businessName,
+        offerId: best.offer.id,
+        displayText: best.offer.displayText,
+        discountAmount: best.discountAmount,
+      });
+    }
+  }
+
+  return {
+    discountTotal: Math.round(discountTotal * 100) / 100,
+    taxTotal: Math.round(taxTotal * 100) / 100,
+    appliedOffers,
+  };
 }
 
 export async function getCartSummary(buyerBusinessId: string): Promise<CartSummary> {
@@ -33,7 +91,7 @@ export async function getCartSummary(buyerBusinessId: string): Promise<CartSumma
     .eq("buyer_business_id", buyerBusinessId);
 
   if (!cartItems || cartItems.length === 0) {
-    return { lines: [], subtotal: 0, taxTotal: 0, grandTotal: 0, supplierCount: 0 };
+    return { lines: [], subtotal: 0, discountTotal: 0, taxTotal: 0, grandTotal: 0, supplierCount: 0, appliedOffers: [] };
   }
 
   const productIds = cartItems.map((c) => c.product_id);
@@ -89,9 +147,11 @@ export async function getCartSummary(buyerBusinessId: string): Promise<CartSumma
     });
 
   const subtotal = Math.round(lines.reduce((sum, l) => sum + l.lineTotal, 0) * 100) / 100;
-  const taxTotal = Math.round(lines.reduce((sum, l) => sum + (l.lineTotal * l.gstRate) / 100, 0) * 100) / 100;
-  const grandTotal = Math.round((subtotal + taxTotal) * 100) / 100;
   const supplierCount = new Set(lines.map((l) => l.businessId)).size;
 
-  return { lines, subtotal, taxTotal, grandTotal, supplierCount };
+  const offersByBusiness = await getEligibleOffersByBusiness(Array.from(new Set(lines.map((l) => l.businessId))));
+  const { discountTotal, taxTotal, appliedOffers } = applyOfferDiscounts(lines, offersByBusiness);
+  const grandTotal = Math.round((subtotal - discountTotal + taxTotal) * 100) / 100;
+
+  return { lines, subtotal, discountTotal, taxTotal, grandTotal, supplierCount, appliedOffers };
 }

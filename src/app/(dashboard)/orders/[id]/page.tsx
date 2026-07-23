@@ -90,6 +90,12 @@ export default async function OrderDetailPage({ params }: { params: Promise<{ id
                   <span>Subtotal</span>
                   <span>{formatCurrency(Number(order.subtotal))}</span>
                 </div>
+                {Number(order.discount_total) > 0 && (
+                  <div className="flex w-48 justify-between text-success-600">
+                    <span>Offer discount</span>
+                    <span>-{formatCurrency(Number(order.discount_total))}</span>
+                  </div>
+                )}
                 <div className="flex w-48 justify-between text-slate-500">
                   <span>Tax</span>
                   <span>{formatCurrency(Number(order.tax_total))}</span>
