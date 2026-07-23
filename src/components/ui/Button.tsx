@@ -3,7 +3,7 @@ import { Loader2 } from "lucide-react";
 import { cn } from "@/lib/cn";
 
 type Variant = "primary" | "secondary" | "outline" | "ghost" | "danger";
-type Size = "sm" | "md" | "lg" | "icon";
+type Size = "xs" | "sm" | "md" | "lg" | "icon";
 
 interface ButtonProps extends ButtonHTMLAttributes<HTMLButtonElement> {
   variant?: Variant;
@@ -23,6 +23,7 @@ const variantClasses: Record<Variant, string> = {
 };
 
 const sizeClasses: Record<Size, string> = {
+  xs: "h-7 px-2 text-xs gap-1",
   sm: "h-8 px-3 text-sm gap-1.5",
   md: "h-10 px-4 text-sm gap-2",
   lg: "h-11 px-5 text-base gap-2",
