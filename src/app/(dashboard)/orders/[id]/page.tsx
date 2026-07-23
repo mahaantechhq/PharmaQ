@@ -7,7 +7,6 @@ import { PageHeader } from "@/components/layout/PageHeader";
 import { Card, CardHeader, CardBody } from "@/components/ui/Card";
 import { StatusBadge } from "@/components/ui/StatusBadge";
 import { Button } from "@/components/ui/Button";
-import { OrderActions } from "@/components/orders/OrderActions";
 import { StatusTimeline } from "@/components/orders/StatusTimeline";
 import { formatCurrency, formatDate } from "@/lib/format";
 import type { OrderStatusHistory, SupplierOrderItem } from "@/lib/types/database";
@@ -100,13 +99,6 @@ export default async function OrderDetailPage({ params }: { params: Promise<{ id
                   <span>{formatCurrency(Number(order.grand_total))}</span>
                 </div>
               </div>
-            </CardBody>
-          </Card>
-
-          <Card>
-            <CardHeader title="Update status" description="Move this order through the fulfillment pipeline." />
-            <CardBody>
-              <OrderActions orderId={order.id} status={order.status} />
             </CardBody>
           </Card>
         </div>

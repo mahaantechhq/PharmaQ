@@ -2,7 +2,7 @@ import type { SupplierOrderStatus } from "@/lib/types/database";
 
 export const STATUS_FLOW: Record<SupplierOrderStatus, SupplierOrderStatus[]> = {
   placed: ["accepted", "rejected"],
-  accepted: ["invoiced", "cancelled"],
+  accepted: ["invoiced", "delivered", "cancelled"],
   rejected: [],
   invoiced: ["packed"],
   packed: ["shipped"],

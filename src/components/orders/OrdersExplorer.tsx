@@ -9,7 +9,7 @@ import { DataTable } from "@/components/ui/DataTable";
 import { Input } from "@/components/ui/Input";
 import { Select } from "@/components/ui/Select";
 import { Button } from "@/components/ui/Button";
-import { StatusBadge } from "@/components/ui/StatusBadge";
+import { Badge } from "@/components/ui/Badge";
 import { useToast } from "@/components/ui/Toast";
 import { updateOrderStatus } from "@/app/(dashboard)/orders/actions";
 import { PaymentStatusCell } from "@/components/orders/PaymentStatusCell";
@@ -74,7 +74,6 @@ export function OrdersExplorer({ orders }: { orders: OrderRow[] }) {
       cell: ({ row }) => formatDate(row.original.createdAt),
     },
     { accessorKey: "grandTotal", header: "Amount", cell: ({ row }) => formatCurrency(row.original.grandTotal) },
-    { accessorKey: "status", header: "Status", cell: ({ row }) => <StatusBadge status={row.original.status} /> },
     {
       id: "paymentStatus",
       header: "Payment",
@@ -88,11 +87,12 @@ export function OrdersExplorer({ orders }: { orders: OrderRow[] }) {
       ),
     },
     {
-      id: "actions",
-      header: "",
+      id: "orderStatus",
+      header: "Order Status",
       cell: ({ row }) => {
+        const status = row.original.status;
         const busy = pendingId === row.original.id;
-        if (row.original.status === "placed") {
+        if (status === "placed") {
           return (
             <div className="flex gap-2">
               <Button size="sm" onClick={() => handleTransition(row.original.id, "accepted", "Order accepted")} loading={busy}>
@@ -104,7 +104,32 @@ export function OrdersExplorer({ orders }: { orders: OrderRow[] }) {
             </div>
           );
         }
-        if (row.original.status === "delivered") {
+        return <Badge tone={status === "rejected" ? "danger" : "success"}>{status === "rejected" ? "Rejected" : "Accepted"}</Badge>;
+      },
+    },
+    {
+      id: "deliveryStatus",
+      header: "Delivery Status",
+      cell: ({ row }) => {
+        const status = row.original.status;
+        const busy = pendingId === row.original.id;
+        if (["placed", "rejected", "cancelled"].includes(status)) return <span className="text-slate-300">—</span>;
+        const isDelivered = ["delivered", "completed", "returned"].includes(status);
+        if (isDelivered) return <Badge tone="success">Delivered</Badge>;
+        return (
+          <Button size="sm" onClick={() => handleTransition(row.original.id, "delivered", "Order marked as delivered")} loading={busy}>
+            <Check className="h-3.5 w-3.5" /> Mark as delivered
+          </Button>
+        );
+      },
+    },
+    {
+      id: "completionStatus",
+      header: "Completion Status",
+      cell: ({ row }) => {
+        const status = row.original.status;
+        const busy = pendingId === row.original.id;
+        if (status === "delivered") {
           return (
             <div className="flex gap-2">
               <Button size="sm" onClick={() => handleTransition(row.original.id, "completed", "Order marked as completed")} loading={busy}>
@@ -116,14 +141,18 @@ export function OrdersExplorer({ orders }: { orders: OrderRow[] }) {
             </div>
           );
         }
-        if (row.original.status === "completed") {
+        if (status === "completed") {
           return (
-            <Button variant="danger" size="sm" onClick={() => handleTransition(row.original.id, "returned", "Order marked as returned")} loading={busy}>
-              <X className="h-3.5 w-3.5" /> Mark as returned
-            </Button>
+            <div className="flex items-center gap-2">
+              <Badge tone="success">Completed</Badge>
+              <Button variant="danger" size="sm" onClick={() => handleTransition(row.original.id, "returned", "Order marked as returned")} loading={busy}>
+                <X className="h-3.5 w-3.5" /> Mark as returned
+              </Button>
+            </div>
           );
         }
-        return null;
+        if (status === "returned") return <Badge tone="danger">Returned</Badge>;
+        return <span className="text-slate-300">—</span>;
       },
     },
   ];
