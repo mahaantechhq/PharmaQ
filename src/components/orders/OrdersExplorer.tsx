@@ -118,7 +118,7 @@ export function OrdersExplorer({ orders }: { orders: OrderRow[] }) {
         if (isDelivered) return <Badge tone="success">Delivered</Badge>;
         return (
           <Button size="xs" onClick={() => handleTransition(row.original.id, "delivered", "Order marked as delivered")} loading={busy}>
-            <Check className="h-3 w-3" /> Mark as delivered
+            <Check className="h-3 w-3" /> Deliver
           </Button>
         );
       },
@@ -133,10 +133,10 @@ export function OrdersExplorer({ orders }: { orders: OrderRow[] }) {
           return (
             <div className="flex gap-2">
               <Button size="xs" onClick={() => handleTransition(row.original.id, "completed", "Order marked as completed")} loading={busy}>
-                <Check className="h-3 w-3" /> Mark as completed
+                <Check className="h-3 w-3" /> Complete
               </Button>
               <Button variant="danger" size="xs" onClick={() => handleTransition(row.original.id, "returned", "Order marked as returned")} loading={busy}>
-                <X className="h-3 w-3" /> Mark as returned
+                <X className="h-3 w-3" /> Return
               </Button>
             </div>
           );
@@ -146,7 +146,7 @@ export function OrdersExplorer({ orders }: { orders: OrderRow[] }) {
             <div className="flex items-center gap-2">
               <Badge tone="success">Completed</Badge>
               <Button variant="danger" size="xs" onClick={() => handleTransition(row.original.id, "returned", "Order marked as returned")} loading={busy}>
-                <X className="h-3 w-3" /> Mark as returned
+                <X className="h-3 w-3" /> Return
               </Button>
             </div>
           );
