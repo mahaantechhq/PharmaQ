@@ -173,13 +173,9 @@ export function OrdersExplorer({ orders }: { orders: OrderRow[] }) {
           <option value="all">All statuses</option>
           <option value="placed">Placed</option>
           <option value="accepted">Accepted</option>
-          <option value="invoiced">Invoiced</option>
-          <option value="packed">Packed</option>
-          <option value="shipped">Shipped</option>
+          <option value="rejected">Rejected</option>
           <option value="delivered">Delivered</option>
           <option value="completed">Completed</option>
-          <option value="rejected">Rejected</option>
-          <option value="cancelled">Cancelled</option>
           <option value="returned">Returned</option>
         </Select>
       </div>
