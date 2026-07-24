@@ -5,7 +5,7 @@ import { Area, AreaChart, CartesianGrid, ResponsiveContainer, Tooltip, XAxis, YA
 export function SalesChart({ data }: { data: { date: string; total: number }[] }) {
   return (
     <ResponsiveContainer width="100%" height={260}>
-      <AreaChart data={data} margin={{ top: 8, right: 8, left: -16, bottom: 0 }}>
+      <AreaChart data={data} margin={{ top: 8, right: 8, left: 0, bottom: 0 }}>
         <defs>
           <linearGradient id="salesFill" x1="0" y1="0" x2="0" y2="1">
             <stop offset="0%" stopColor="#014baa" stopOpacity={0.25} />
