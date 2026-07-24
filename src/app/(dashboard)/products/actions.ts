@@ -221,7 +221,7 @@ function parsePercent(input: string): number {
   return Number(input.replace(/%/g, "").trim());
 }
 
-export async function bulkImportProducts(rows: BulkProductRow[]) {
+export async function bulkImportProducts(rows: BulkProductRow[], rowOffset = 0) {
   const ctx = await getCurrentBusiness();
   if (!ctx) throw new Error("Not authenticated");
 
@@ -256,7 +256,7 @@ export async function bulkImportProducts(rows: BulkProductRow[]) {
       // an error worth reporting -- only flag a row that has some data but
       // is missing the name specifically.
       const hasOtherData = Object.values(row).some((v) => v && String(v).trim());
-      if (hasOtherData) errors.push(`Row ${index + 2}: missing product name`);
+      if (hasOtherData) errors.push(`Row ${index + rowOffset + 2}: missing product name`);
       continue;
     }
 
@@ -281,7 +281,7 @@ export async function bulkImportProducts(rows: BulkProductRow[]) {
         .single();
 
       if (productError) {
-        errors.push(`Row ${index + 2}: ${productError.message}`);
+        errors.push(`Row ${index + rowOffset + 2}: ${productError.message}`);
         continue;
       }
 
@@ -295,7 +295,7 @@ export async function bulkImportProducts(rows: BulkProductRow[]) {
     const batchKey = `${productId}:${row.batch_number.trim().toLowerCase()}`;
     if (existingBatchKeys.has(batchKey)) {
       skipped++;
-      errors.push(`Row ${index + 2}: batch "${row.batch_number}" for "${row.name.trim()}" already exists — skipped`);
+      errors.push(`Row ${index + rowOffset + 2}: batch "${row.batch_number}" for "${row.name.trim()}" already exists — skipped`);
       continue;
     }
     existingBatchKeys.add(batchKey);
@@ -312,7 +312,7 @@ export async function bulkImportProducts(rows: BulkProductRow[]) {
       stock_qty: row.stock_qty ? Number(row.stock_qty) : 0,
     });
     if (batchError) {
-      errors.push(`Row ${index + 2} (batch): ${batchError.message}`);
+      errors.push(`Row ${index + rowOffset + 2} (batch): ${batchError.message}`);
       continue;
     }
     restocked++;

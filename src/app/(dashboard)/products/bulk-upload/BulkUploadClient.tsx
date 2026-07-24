@@ -53,11 +53,14 @@ function downloadTemplate() {
   URL.revokeObjectURL(url);
 }
 
+const IMPORT_CHUNK_SIZE = 20;
+
 export function BulkUploadClient() {
   const [rows, setRows] = useState<Record<string, string>[]>([]);
   const [fileName, setFileName] = useState<string | null>(null);
   const [result, setResult] = useState<{ created: number; restocked: number; skipped: number; errors: string[] } | null>(null);
   const [loading, setLoading] = useState(false);
+  const [progress, setProgress] = useState(0);
   const inputRef = useRef<HTMLInputElement>(null);
   const router = useRouter();
   const { toast } = useToast();
@@ -97,11 +100,21 @@ export function BulkUploadClient() {
   const handleImport = async () => {
     if (rows.length === 0) return;
     setLoading(true);
+    setProgress(0);
+    const combined = { created: 0, restocked: 0, skipped: 0, errors: [] as string[] };
     try {
-      const res = await bulkImportProducts(rows as any);
-      setResult(res);
-      if (res.created > 0 || res.restocked > 0) {
-        toast(`Imported ${res.created} new products, added ${res.restocked} batches`, "success");
+      for (let start = 0; start < rows.length; start += IMPORT_CHUNK_SIZE) {
+        const chunk = rows.slice(start, start + IMPORT_CHUNK_SIZE);
+        const res = await bulkImportProducts(chunk as any, start);
+        combined.created += res.created;
+        combined.restocked += res.restocked;
+        combined.skipped += res.skipped;
+        combined.errors.push(...res.errors);
+        setProgress(Math.round((Math.min(start + IMPORT_CHUNK_SIZE, rows.length) / rows.length) * 100));
+      }
+      setResult(combined);
+      if (combined.created > 0 || combined.restocked > 0) {
+        toast(`Imported ${combined.created} new products, added ${combined.restocked} batches`, "success");
       }
       router.refresh();
     } catch (err) {
@@ -160,9 +173,17 @@ export function BulkUploadClient() {
                 Import {rows.length} products
               </Button>
               {loading && (
-                <p className="mt-2 flex items-center gap-1.5 text-sm text-slate-500">
-                  <Loader2 className="h-3.5 w-3.5 animate-spin" /> Importing products, please wait...
-                </p>
+                <div className="mt-3">
+                  <div className="h-2 w-full overflow-hidden rounded-full bg-slate-100">
+                    <div
+                      className="h-full rounded-full bg-primary-600 transition-[width] duration-300 ease-out"
+                      style={{ width: `${progress}%` }}
+                    />
+                  </div>
+                  <p className="mt-1.5 flex items-center gap-1.5 text-sm text-slate-500">
+                    <Loader2 className="h-3.5 w-3.5 animate-spin" /> Importing... {progress}%
+                  </p>
+                </div>
               )}
             </div>
           )}
