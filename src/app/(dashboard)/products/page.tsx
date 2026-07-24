@@ -26,11 +26,18 @@ export default async function ProductsPage() {
       .order("expiry_date", { ascending: true }),
   ]);
 
-  // One row per product: the soonest-expiring batch is what the marketplace
-  // actually sells first (FIFO), so its details represent this product here.
+  // A product can have several batches (restocks). The soonest-expiring one
+  // represents the product's displayed batch details (what FIFO sells
+  // first), but Stock must sum every non-expired batch or restocked
+  // quantity silently disappears from this list.
+  const today = new Date().toISOString().slice(0, 10);
   const primaryBatchByProduct = new Map<string, any>();
+  const stockByProduct = new Map<string, number>();
   for (const b of (batches ?? []) as any[]) {
     if (!primaryBatchByProduct.has(b.product_id)) primaryBatchByProduct.set(b.product_id, b);
+    if (b.expiry_date >= today) {
+      stockByProduct.set(b.product_id, (stockByProduct.get(b.product_id) ?? 0) + b.stock_qty);
+    }
   }
 
   const rows: ProductRow[] = (products ?? []).map((p: any) => {
@@ -51,7 +58,7 @@ export default async function ProductsPage() {
       sellingPrice: batch ? Number(batch.selling_price) : null,
       scheme: batch?.scheme ?? null,
       discountPercent: batch?.discount_percent != null ? Number(batch.discount_percent) : null,
-      stockQty: batch?.stock_qty ?? 0,
+      stockQty: stockByProduct.get(p.id) ?? 0,
     };
   });
 
