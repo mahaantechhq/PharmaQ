@@ -51,21 +51,26 @@ export default async function DashboardPage() {
     return exp >= now && exp <= thirtyDaysOut;
   });
 
-  // Keyed by ISO date so it sorts correctly regardless of the order
+  // Keyed by "YYYY-MM" so it sorts chronologically regardless of the order
   // `allOrders` came back in (it's fetched newest-first for the recent
   // orders list below); formatted for display only after sorting.
-  const salesByDate = new Map<string, number>();
+  const salesByMonth = new Map<string, number>();
   for (const o of allOrders) {
     // created_at is UTC; slicing it directly would bucket late-night IST
-    // orders under the wrong (previous) calendar day. en-CA gives YYYY-MM-DD.
-    const isoDate = new Date(o.created_at).toLocaleDateString("en-CA", { timeZone: "Asia/Kolkata" });
-    salesByDate.set(isoDate, (salesByDate.get(isoDate) ?? 0) + Number(o.grand_total));
+    // orders under the wrong (previous) calendar month. en-CA gives YYYY-MM-DD.
+    const monthKey = new Date(o.created_at).toLocaleDateString("en-CA", { timeZone: "Asia/Kolkata" }).slice(0, 7);
+    salesByMonth.set(monthKey, (salesByMonth.get(monthKey) ?? 0) + Number(o.grand_total));
   }
-  const salesData = Array.from(salesByDate.entries())
+  // Ensure the current month always appears (at ₹0 if there are no orders
+  // yet), instead of the trend line stopping at the last month with sales.
+  const currentMonthKey = new Date().toLocaleDateString("en-CA", { timeZone: "Asia/Kolkata" }).slice(0, 7);
+  if (!salesByMonth.has(currentMonthKey)) salesByMonth.set(currentMonthKey, 0);
+
+  const salesData = Array.from(salesByMonth.entries())
     .sort(([a], [b]) => a.localeCompare(b))
-    .slice(-14)
-    .map(([isoDate, total]) => ({
-      date: formatDate(isoDate, { day: "2-digit", month: "short" }),
+    .slice(-12)
+    .map(([monthKey, total]) => ({
+      date: formatDate(`${monthKey}-01`, { month: "short", year: "2-digit" }),
       total,
     }));
 
@@ -116,7 +121,7 @@ export default async function DashboardPage() {
 
       <div className="mt-6 grid grid-cols-1 gap-6 lg:grid-cols-3">
         <Card className="lg:col-span-2">
-          <CardHeader title="Sales trend" description="Order value over recent activity" />
+          <CardHeader title="Sales trend" description="Order value by month" />
           <CardBody>
             <SalesChart data={salesData} />
           </CardBody>
