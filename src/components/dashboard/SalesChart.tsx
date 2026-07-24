@@ -1,6 +1,7 @@
 "use client";
 
 import { Area, AreaChart, CartesianGrid, ResponsiveContainer, Tooltip, XAxis, YAxis } from "recharts";
+import { formatCurrency } from "@/lib/format";
 
 export function SalesChart({ data }: { data: { date: string; total: number }[] }) {
   return (
@@ -19,7 +20,13 @@ export function SalesChart({ data }: { data: { date: string; total: number }[] }
           axisLine={false}
           tickLine={false}
         />
-        <YAxis tick={{ fontSize: 11, fill: "#94a3b8" }} axisLine={false} tickLine={false} width={48} />
+        <YAxis
+          tick={{ fontSize: 11, fill: "#94a3b8" }}
+          axisLine={false}
+          tickLine={false}
+          width={64}
+          tickFormatter={(value) => formatCurrency(Number(value))}
+        />
         <Tooltip
           formatter={(value) => [`₹${Number(value).toLocaleString("en-IN")}`, "Sales"]}
           contentStyle={{ borderRadius: 12, border: "1px solid #eef1f5", fontSize: 12 }}

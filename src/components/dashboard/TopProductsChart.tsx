@@ -1,6 +1,7 @@
 "use client";
 
 import { Bar, BarChart, CartesianGrid, ResponsiveContainer, Tooltip, XAxis, YAxis } from "recharts";
+import { formatCurrency } from "@/lib/format";
 
 export function TopProductsChart({ data }: { data: { name: string; revenue: number }[] }) {
   if (data.length === 0) {
@@ -11,7 +12,13 @@ export function TopProductsChart({ data }: { data: { name: string; revenue: numb
     <ResponsiveContainer width="100%" height={280}>
       <BarChart data={data} layout="vertical" margin={{ left: 24, right: 16 }}>
         <CartesianGrid strokeDasharray="3 3" horizontal={false} stroke="#eef1f5" />
-        <XAxis type="number" tick={{ fontSize: 11, fill: "#94a3b8" }} axisLine={false} tickLine={false} />
+        <XAxis
+          type="number"
+          tick={{ fontSize: 11, fill: "#94a3b8" }}
+          axisLine={false}
+          tickLine={false}
+          tickFormatter={(value) => formatCurrency(Number(value))}
+        />
         <YAxis
           type="category"
           dataKey="name"
