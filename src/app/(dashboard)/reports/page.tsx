@@ -5,6 +5,7 @@ import { Card, CardHeader, CardBody } from "@/components/ui/Card";
 import { SalesChart } from "@/components/dashboard/SalesChart";
 import { OrderStatusChart } from "@/components/dashboard/OrderStatusChart";
 import { TopProductsChart } from "@/components/dashboard/TopProductsChart";
+import { TopBuyersChart } from "@/components/dashboard/TopBuyersChart";
 import { formatDate } from "@/lib/format";
 
 export default async function ReportsPage() {
@@ -13,7 +14,7 @@ export default async function ReportsPage() {
 
   const supabase = await createClient();
 
-  const [{ data: orders }, { data: items }] = await Promise.all([
+  const [{ data: orders }, { data: items }, { data: buyers }] = await Promise.all([
     supabase
       .from("supplier_orders")
       .select("status, grand_total, created_at")
@@ -22,6 +23,10 @@ export default async function ReportsPage() {
       .from("supplier_order_items")
       .select("product_name, line_total, supplier_orders!inner(supplier_business_id)")
       .eq("supplier_orders.supplier_business_id", ctx.business.id),
+    supabase
+      .from("business_customers")
+      .select("buyer_name, total_spent")
+      .eq("supplier_business_id", ctx.business.id),
   ]);
 
   // Keyed by "YYYY-MM" so it sorts chronologically regardless of the order
@@ -51,6 +56,11 @@ export default async function ReportsPage() {
     .sort((a, b) => b.revenue - a.revenue)
     .slice(0, 8);
 
+  const topBuyers = (buyers ?? [])
+    .map((b) => ({ name: b.buyer_name, revenue: Number(b.total_spent) }))
+    .sort((a, b) => b.revenue - a.revenue)
+    .slice(0, 8);
+
   return (
     <div>
       <PageHeader title="Reports" description="Sales performance and product insights for your business." />
@@ -70,12 +80,20 @@ export default async function ReportsPage() {
         </Card>
       </div>
 
-      <Card className="mt-6">
-        <CardHeader title="Top products by revenue" />
-        <CardBody>
-          <TopProductsChart data={topProducts} />
-        </CardBody>
-      </Card>
+      <div className="mt-6 grid grid-cols-1 gap-6 lg:grid-cols-2">
+        <Card>
+          <CardHeader title="Top products by revenue" />
+          <CardBody>
+            <TopProductsChart data={topProducts} />
+          </CardBody>
+        </Card>
+        <Card>
+          <CardHeader title="Top buyers" description="Businesses that buy the most from you" />
+          <CardBody>
+            <TopBuyersChart data={topBuyers} />
+          </CardBody>
+        </Card>
+      </div>
     </div>
   );
 }
