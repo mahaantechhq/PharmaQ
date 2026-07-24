@@ -1,11 +1,13 @@
 import Link from "next/link";
-import { Plus, Upload } from "lucide-react";
+import { Plus, Upload, Package, Tag, Award } from "lucide-react";
 import { createClient } from "@/lib/supabase/server";
 import { getCurrentBusiness } from "@/lib/supabase/current-business";
 import { PageHeader } from "@/components/layout/PageHeader";
 import { Card } from "@/components/ui/Card";
 import { Button } from "@/components/ui/Button";
+import { StatCard } from "@/components/dashboard/StatCard";
 import { ProductsExplorer, type ProductRow } from "@/components/products/ProductsExplorer";
+import { formatNumber } from "@/lib/format";
 
 export default async function ProductsPage() {
   const ctx = await getCurrentBusiness();
@@ -62,6 +64,9 @@ export default async function ProductsPage() {
     };
   });
 
+  const categoryCount = new Set(rows.map((r) => r.categoryName).filter(Boolean)).size;
+  const brandCount = new Set(rows.map((r) => r.brandName).filter(Boolean)).size;
+
   return (
     <div>
       <PageHeader
@@ -82,6 +87,12 @@ export default async function ProductsPage() {
           </div>
         }
       />
+
+      <div className="mb-6 grid grid-cols-1 gap-4 sm:grid-cols-3">
+        <StatCard label="Total products" value={formatNumber(rows.length)} icon={Package} />
+        <StatCard label="Categories" value={formatNumber(categoryCount)} icon={Tag} tone="success" />
+        <StatCard label="Brands" value={formatNumber(brandCount)} icon={Award} tone="warning" />
+      </div>
 
       <Card className="p-5">
         <ProductsExplorer products={rows} />
