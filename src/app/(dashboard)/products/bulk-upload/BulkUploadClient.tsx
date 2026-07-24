@@ -3,6 +3,7 @@
 import { useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import Papa from "papaparse";
+import * as XLSX from "xlsx";
 import { Download, Upload, CheckCircle2, AlertCircle } from "lucide-react";
 import { Button } from "@/components/ui/Button";
 import { Card, CardBody, CardHeader } from "@/components/ui/Card";
@@ -26,10 +27,13 @@ const TEMPLATE_HEADERS = [
 ];
 
 // Maps a CSV header (any case) to the lowercase/snake_case field name
-// bulkImportProducts expects. "Discount %" has no direct snake_case
-// equivalent, so it needs an explicit entry rather than a generic transform.
+// bulkImportProducts expects. Entries here have no direct snake_case
+// equivalent (or use a different word entirely), so a generic transform
+// alone won't produce the right field name.
 const HEADER_FIELD_MAP: Record<string, string> = {
   "discount %": "discount_percent",
+  "product name": "name",
+  "product": "name",
 };
 
 function normalizeHeader(header: string): string {
@@ -61,6 +65,26 @@ export function BulkUploadClient() {
   const handleFile = (file: File) => {
     setFileName(file.name);
     setResult(null);
+
+    const isExcel = /\.xlsx?$/i.test(file.name);
+    if (isExcel) {
+      file
+        .arrayBuffer()
+        .then((buffer) => {
+          const workbook = XLSX.read(buffer, { type: "array" });
+          const sheet = workbook.Sheets[workbook.SheetNames[0]];
+          const raw = XLSX.utils.sheet_to_json<Record<string, string>>(sheet, { defval: "", raw: false });
+          const normalized = raw.map((row) => {
+            const out: Record<string, string> = {};
+            for (const [key, value] of Object.entries(row)) out[normalizeHeader(key)] = String(value);
+            return out;
+          });
+          setRows(normalized);
+        })
+        .catch(() => toast("Failed to parse Excel file", "error"));
+      return;
+    }
+
     Papa.parse<Record<string, string>>(file, {
       header: true,
       skipEmptyLines: true,
@@ -102,7 +126,7 @@ export function BulkUploadClient() {
       </Card>
 
       <Card>
-        <CardHeader title="2. Upload your file" description="CSV files only." />
+        <CardHeader title="2. Upload your file" description="CSV or Excel (.xlsx) files." />
         <CardBody>
           <div
             onClick={() => inputRef.current?.click()}
@@ -116,12 +140,12 @@ export function BulkUploadClient() {
           >
             <Upload className="h-6 w-6 text-slate-400" />
             <p className="text-sm text-slate-500">
-              {fileName ? <span className="font-medium text-slate-700">{fileName}</span> : "Click to browse or drag & drop your CSV file"}
+              {fileName ? <span className="font-medium text-slate-700">{fileName}</span> : "Click to browse or drag & drop your CSV or Excel file"}
             </p>
             <input
               ref={inputRef}
               type="file"
-              accept=".csv"
+              accept=".csv,.xlsx,.xls"
               className="hidden"
               onChange={(e) => e.target.files?.[0] && handleFile(e.target.files[0])}
             />

@@ -177,22 +177,40 @@ interface BulkProductRow {
   stock_qty?: string;
 }
 
-// The bulk-upload template accepts DD-MM-YYYY or MM/YYYY (day omitted --
-// pharma packs are commonly labelled with just month/year, taken to mean
-// valid through the end of that month); ISO (YYYY-MM-DD) passes through
-// unchanged so re-uploads of previously-exported data still work.
+const MONTH_ABBREVIATIONS: Record<string, number> = {
+  jan: 1, feb: 2, mar: 3, apr: 4, may: 5, jun: 6,
+  jul: 7, aug: 8, sep: 9, oct: 10, nov: 11, dec: 12,
+};
+
+// The bulk-upload template accepts DD-MM-YYYY, MM/YYYY, or "Mon-YY" /
+// "Mon-YYYY" (e.g. "Dec-28") -- day omitted forms are pharma packs commonly
+// labelled with just month/year, taken to mean valid through the end of
+// that month; ISO (YYYY-MM-DD) passes through unchanged so re-uploads of
+// previously-exported data still work.
 function parseExpiryDate(input: string): string {
   const trimmed = input.trim();
-  const parts = trimmed.split(/[-/]/);
-  if (parts.length === 3 && parts[0].length <= 2 && parts[2].length === 4) {
+  const parts = trimmed.split(/[-/\s]+/).filter(Boolean);
+
+  if (parts.length === 3 && /^\d{1,2}$/.test(parts[0]) && /^\d{1,2}$/.test(parts[1]) && /^\d{4}$/.test(parts[2])) {
     const [d, m, y] = parts;
     return `${y}-${m.padStart(2, "0")}-${d.padStart(2, "0")}`;
   }
-  if (parts.length === 2 && parts[1].length === 4) {
+
+  if (parts.length === 2 && /^\d{1,2}$/.test(parts[0]) && /^\d{4}$/.test(parts[1])) {
     const [m, y] = parts;
     const lastDay = new Date(Number(y), Number(m), 0).getDate();
     return `${y}-${m.padStart(2, "0")}-${String(lastDay).padStart(2, "0")}`;
   }
+
+  if (parts.length === 2) {
+    const month = MONTH_ABBREVIATIONS[parts[0].slice(0, 3).toLowerCase()];
+    if (month && /^\d{2,4}$/.test(parts[1])) {
+      const year = parts[1].length === 2 ? 2000 + Number(parts[1]) : Number(parts[1]);
+      const lastDay = new Date(year, month, 0).getDate();
+      return `${year}-${String(month).padStart(2, "0")}-${String(lastDay).padStart(2, "0")}`;
+    }
+  }
+
   return trimmed;
 }
 
@@ -234,7 +252,11 @@ export async function bulkImportProducts(rows: BulkProductRow[]) {
 
   for (const [index, row] of rows.entries()) {
     if (!row.name?.trim()) {
-      errors.push(`Row ${index + 2}: missing product name`);
+      // Trailing fully-blank rows (common in spreadsheet exports) are not
+      // an error worth reporting -- only flag a row that has some data but
+      // is missing the name specifically.
+      const hasOtherData = Object.values(row).some((v) => v && String(v).trim());
+      if (hasOtherData) errors.push(`Row ${index + 2}: missing product name`);
       continue;
     }
 
