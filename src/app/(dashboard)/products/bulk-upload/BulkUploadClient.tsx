@@ -4,7 +4,7 @@ import { useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import Papa from "papaparse";
 import * as XLSX from "xlsx";
-import { Download, Upload, CheckCircle2, AlertCircle } from "lucide-react";
+import { Download, Upload, CheckCircle2, AlertCircle, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/Button";
 import { Card, CardBody, CardHeader } from "@/components/ui/Card";
 import { useToast } from "@/components/ui/Toast";
@@ -159,6 +159,11 @@ export function BulkUploadClient() {
               <Button onClick={handleImport} loading={loading}>
                 Import {rows.length} products
               </Button>
+              {loading && (
+                <p className="mt-2 flex items-center gap-1.5 text-sm text-slate-500">
+                  <Loader2 className="h-3.5 w-3.5 animate-spin" /> Importing products, please wait...
+                </p>
+              )}
             </div>
           )}
 
