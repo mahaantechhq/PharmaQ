@@ -74,8 +74,16 @@ export function ProductsExplorer({ products }: { products: ProductRow[] }) {
     if (!confirm(`Delete ${selected.size} product${selected.size !== 1 ? "s" : ""}? This cannot be undone.`)) return;
     setBulkLoading(true);
     try {
-      await bulkDeleteProducts(Array.from(selected));
-      toast(`${selected.size} product${selected.size !== 1 ? "s" : ""} deleted`, "success");
+      const res = await bulkDeleteProducts(Array.from(selected));
+      if (res && res.deleted > 0) {
+        toast(`${res.deleted} product${res.deleted !== 1 ? "s" : ""} deleted`, "success");
+      }
+      if (res && res.blockedNames.length > 0) {
+        toast(
+          `Skipped ${res.blockedNames.length} product${res.blockedNames.length !== 1 ? "s" : ""} with existing orders: ${res.blockedNames.join(", ")}`,
+          "error",
+        );
+      }
       setSelected(new Set());
       router.refresh();
     } catch (err) {

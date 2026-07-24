@@ -104,36 +104,45 @@ export async function updateProduct(productId: string, values: ProductFormValues
   revalidatePath("/inventory");
 }
 
-export async function deleteProduct(productId: string) {
-  const ctx = await getCurrentBusiness();
-  if (!ctx) throw new Error("Not authenticated");
-
-  const supabase = await createClient();
-  const { error } = await supabase
-    .from("products")
-    .delete()
-    .eq("id", productId)
-    .eq("business_id", ctx.business.id);
-
-  if (error) throw new Error(error.message);
-  revalidatePath("/products");
-}
-
 export async function bulkDeleteProducts(productIds: string[]) {
   const ctx = await getCurrentBusiness();
   if (!ctx) throw new Error("Not authenticated");
-  if (productIds.length === 0) return;
+  if (productIds.length === 0) return { deleted: 0, blockedNames: [] as string[] };
 
   const supabase = await createClient();
-  const { error } = await supabase
-    .from("products")
-    .delete()
-    .in("id", productIds)
-    .eq("business_id", ctx.business.id);
 
-  if (error) throw new Error(error.message);
+  // Products with real order history can't be deleted -- supplier_order_items
+  // has product_id references products(id) on delete restrict, so deleting
+  // one would orphan that order's line item. A single batched DELETE would
+  // fail entirely if any row hit this, so skip those up front instead.
+  const { data: ordered } = await supabase
+    .from("supplier_order_items")
+    .select("product_id")
+    .in("product_id", productIds);
+  const blockedIds = new Set((ordered ?? []).map((o) => o.product_id));
+  const deletableIds = productIds.filter((id) => !blockedIds.has(id));
+
+  let blockedNames: string[] = [];
+  if (blockedIds.size > 0) {
+    const { data: blockedProducts } = await supabase
+      .from("products")
+      .select("name")
+      .in("id", Array.from(blockedIds));
+    blockedNames = (blockedProducts ?? []).map((p) => p.name);
+  }
+
+  if (deletableIds.length > 0) {
+    const { error } = await supabase
+      .from("products")
+      .delete()
+      .in("id", deletableIds)
+      .eq("business_id", ctx.business.id);
+    if (error) throw new Error(error.message);
+  }
   revalidatePath("/products");
   revalidatePath("/inventory");
+
+  return { deleted: deletableIds.length, blockedNames };
 }
 
 export async function bulkUpdateProductStatus(productIds: string[], status: "draft" | "active" | "inactive") {
