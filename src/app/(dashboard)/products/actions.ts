@@ -168,15 +168,30 @@ interface BulkProductRow {
   stock_qty?: string;
 }
 
-// The bulk-upload template uses DD-MM-YYYY; pass ISO (YYYY-MM-DD) through
+// The bulk-upload template accepts DD-MM-YYYY or MM/YYYY (day omitted --
+// pharma packs are commonly labelled with just month/year, taken to mean
+// valid through the end of that month); ISO (YYYY-MM-DD) passes through
 // unchanged so re-uploads of previously-exported data still work.
 function parseExpiryDate(input: string): string {
-  const parts = input.trim().split(/[-/]/);
+  const trimmed = input.trim();
+  const parts = trimmed.split(/[-/]/);
   if (parts.length === 3 && parts[0].length <= 2 && parts[2].length === 4) {
     const [d, m, y] = parts;
     return `${y}-${m.padStart(2, "0")}-${d.padStart(2, "0")}`;
   }
-  return input.trim();
+  if (parts.length === 2 && parts[1].length === 4) {
+    const [m, y] = parts;
+    const lastDay = new Date(Number(y), Number(m), 0).getDate();
+    return `${y}-${m.padStart(2, "0")}-${String(lastDay).padStart(2, "0")}`;
+  }
+  return trimmed;
+}
+
+// gst_rate / discount_percent may be entered as "12%" or "12" — strip any
+// "%" before parsing. Number("12%") is NaN, which supabase-js serializes
+// to JSON `null`, silently tripping the not-null constraint on gst_rate.
+function parsePercent(input: string): number {
+  return Number(input.replace(/%/g, "").trim());
 }
 
 export async function bulkImportProducts(rows: BulkProductRow[]) {
@@ -185,19 +200,28 @@ export async function bulkImportProducts(rows: BulkProductRow[]) {
 
   const supabase = await createClient();
   let created = 0;
+  let restocked = 0;
   let skipped = 0;
   const errors: string[] = [];
 
-  const [{ data: categories }, { data: existingProducts }] = await Promise.all([
+  const [{ data: categories }, { data: existingProducts }, { data: existingBatches }] = await Promise.all([
     supabase.from("categories").select("id, name"),
-    supabase.from("products").select("name").eq("business_id", ctx.business.id),
+    supabase.from("products").select("id, name").eq("business_id", ctx.business.id),
+    supabase.from("product_batches").select("product_id, batch_number").eq("business_id", ctx.business.id),
   ]);
   const categoryMap = new Map((categories ?? []).map((c) => [c.name.toLowerCase(), c.id]));
-  // Re-uploading the same CSV (or overlapping rows across two uploads)
-  // would otherwise create full duplicate products every time, since the
-  // slug is always unique (name + timestamp + row index) and never
-  // collides with the existing row. Skip names this business already has.
-  const existingNames = new Set((existingProducts ?? []).map((p) => p.name.trim().toLowerCase()));
+
+  // Product names for this business (existing + created during this run)
+  // map to their id, so repeated rows for the same product name in the CSV
+  // (different batch numbers = restocking) attach a new batch to the one
+  // product instead of being skipped or duplicated.
+  const productIdByName = new Map((existingProducts ?? []).map((p) => [p.name.trim().toLowerCase(), p.id as string]));
+
+  // (product_id, batch_number) pairs that already exist, so re-uploading
+  // the exact same row twice is a genuine no-op skip.
+  const existingBatchKeys = new Set(
+    (existingBatches ?? []).map((b) => `${b.product_id}:${b.batch_number.trim().toLowerCase()}`),
+  );
 
   for (const [index, row] of rows.entries()) {
     if (!row.name?.trim()) {
@@ -206,54 +230,65 @@ export async function bulkImportProducts(rows: BulkProductRow[]) {
     }
 
     const normalizedName = row.name.trim().toLowerCase();
-    if (existingNames.has(normalizedName)) {
+    let productId = productIdByName.get(normalizedName);
+
+    if (!productId) {
+      const { data: product, error: productError } = await supabase
+        .from("products")
+        .insert({
+          business_id: ctx.business.id,
+          name: row.name.trim(),
+          slug: `${slugify(row.name)}-${Date.now().toString(36)}-${index}`,
+          category_id: row.category ? categoryMap.get(row.category.toLowerCase()) ?? null : null,
+          composition: row.composition || null,
+          pack_size: row.pack_size || null,
+          hsn_code: row.hsn_code || null,
+          gst_rate: row.gst_rate ? parsePercent(row.gst_rate) : 0,
+          status: "active",
+        })
+        .select("id")
+        .single();
+
+      if (productError) {
+        errors.push(`Row ${index + 2}: ${productError.message}`);
+        continue;
+      }
+
+      productId = product.id as string;
+      productIdByName.set(normalizedName, productId);
+      created++;
+    }
+
+    if (!(row.batch_number && row.expiry_date && row.mrp && row.selling_price)) continue;
+
+    const batchKey = `${productId}:${row.batch_number.trim().toLowerCase()}`;
+    if (existingBatchKeys.has(batchKey)) {
       skipped++;
-      errors.push(`Row ${index + 2}: "${row.name.trim()}" already exists — skipped`);
+      errors.push(`Row ${index + 2}: batch "${row.batch_number}" for "${row.name.trim()}" already exists — skipped`);
       continue;
     }
-    existingNames.add(normalizedName);
+    existingBatchKeys.add(batchKey);
 
-    const { data: product, error: productError } = await supabase
-      .from("products")
-      .insert({
-        business_id: ctx.business.id,
-        name: row.name.trim(),
-        slug: `${slugify(row.name)}-${Date.now().toString(36)}-${index}`,
-        category_id: row.category ? categoryMap.get(row.category.toLowerCase()) ?? null : null,
-        composition: row.composition || null,
-        pack_size: row.pack_size || null,
-        hsn_code: row.hsn_code || null,
-        gst_rate: row.gst_rate ? Number(row.gst_rate) : 0,
-        status: "active",
-      })
-      .select("id")
-      .single();
-
-    if (productError) {
-      errors.push(`Row ${index + 2}: ${productError.message}`);
+    const { error: batchError } = await supabase.from("product_batches").insert({
+      product_id: productId,
+      business_id: ctx.business.id,
+      batch_number: row.batch_number,
+      expiry_date: parseExpiryDate(row.expiry_date),
+      mrp: Number(row.mrp),
+      selling_price: Number(row.selling_price),
+      scheme: row.scheme || null,
+      discount_percent: row.discount_percent ? parsePercent(row.discount_percent) : null,
+      stock_qty: row.stock_qty ? Number(row.stock_qty) : 0,
+    });
+    if (batchError) {
+      errors.push(`Row ${index + 2} (batch): ${batchError.message}`);
       continue;
     }
-
-    created++;
-
-    if (row.batch_number && row.expiry_date && row.mrp && row.selling_price) {
-      const { error: batchError } = await supabase.from("product_batches").insert({
-        product_id: product.id,
-        business_id: ctx.business.id,
-        batch_number: row.batch_number,
-        expiry_date: parseExpiryDate(row.expiry_date),
-        mrp: Number(row.mrp),
-        selling_price: Number(row.selling_price),
-        scheme: row.scheme || null,
-        discount_percent: row.discount_percent ? Number(row.discount_percent) : null,
-        stock_qty: row.stock_qty ? Number(row.stock_qty) : 0,
-      });
-      if (batchError) errors.push(`Row ${index + 2} (batch): ${batchError.message}`);
-    }
+    restocked++;
   }
 
   revalidatePath("/products");
   revalidatePath("/inventory");
 
-  return { created, skipped, errors };
+  return { created, restocked, skipped, errors };
 }
