@@ -227,28 +227,21 @@ export async function bulkImportProducts(rows: BulkProductRow[], rowOffset = 0) 
 
   const supabase = await createClient();
   let created = 0;
-  let restocked = 0;
-  let skipped = 0;
+  let updated = 0;
+  const skipped = 0;
   const errors: string[] = [];
 
-  const [{ data: categories }, { data: existingProducts }, { data: existingBatches }] = await Promise.all([
+  const [{ data: categories }, { data: existingProducts }] = await Promise.all([
     supabase.from("categories").select("id, name"),
     supabase.from("products").select("id, name").eq("business_id", ctx.business.id),
-    supabase.from("product_batches").select("product_id, batch_number").eq("business_id", ctx.business.id),
   ]);
   const categoryMap = new Map((categories ?? []).map((c) => [c.name.toLowerCase(), c.id]));
 
-  // Product names for this business (existing + created during this run)
-  // map to their id, so repeated rows for the same product name in the CSV
-  // (different batch numbers = restocking) attach a new batch to the one
-  // product instead of being skipped or duplicated.
+  // Product and batch are the same record now (one batch per product), so
+  // product names (existing + created during this run) map to their id --
+  // re-importing an existing name syncs its one batch with the new row's
+  // values instead of adding another batch.
   const productIdByName = new Map((existingProducts ?? []).map((p) => [p.name.trim().toLowerCase(), p.id as string]));
-
-  // (product_id, batch_number) pairs that already exist, so re-uploading
-  // the exact same row twice is a genuine no-op skip.
-  const existingBatchKeys = new Set(
-    (existingBatches ?? []).map((b) => `${b.product_id}:${b.batch_number.trim().toLowerCase()}`),
-  );
 
   for (const [index, row] of rows.entries()) {
     if (!row.name?.trim()) {
@@ -262,6 +255,7 @@ export async function bulkImportProducts(rows: BulkProductRow[], rowOffset = 0) 
 
     const normalizedName = row.name.trim().toLowerCase();
     let productId = productIdByName.get(normalizedName);
+    const isNewProduct = !productId;
 
     if (!productId) {
       const { data: product, error: productError } = await supabase
@@ -292,13 +286,20 @@ export async function bulkImportProducts(rows: BulkProductRow[], rowOffset = 0) 
 
     if (!(row.batch_number && row.expiry_date && row.mrp && row.selling_price)) continue;
 
-    const batchKey = `${productId}:${row.batch_number.trim().toLowerCase()}`;
-    if (existingBatchKeys.has(batchKey)) {
-      skipped++;
-      errors.push(`Row ${index + rowOffset + 2}: batch "${row.batch_number}" for "${row.name.trim()}" already exists — skipped`);
-      continue;
+    // Product and batch are 1:1 -- clear out any existing batch(es) for
+    // this product before writing the new one, so re-importing always
+    // syncs to a single batch instead of accumulating extras.
+    if (!isNewProduct) {
+      const { error: clearError } = await supabase
+        .from("product_batches")
+        .delete()
+        .eq("product_id", productId)
+        .eq("business_id", ctx.business.id);
+      if (clearError) {
+        errors.push(`Row ${index + rowOffset + 2}: ${clearError.message}`);
+        continue;
+      }
     }
-    existingBatchKeys.add(batchKey);
 
     const { error: batchError } = await supabase.from("product_batches").insert({
       product_id: productId,
@@ -315,11 +316,11 @@ export async function bulkImportProducts(rows: BulkProductRow[], rowOffset = 0) 
       errors.push(`Row ${index + rowOffset + 2} (batch): ${batchError.message}`);
       continue;
     }
-    restocked++;
+    if (!isNewProduct) updated++;
   }
 
   revalidatePath("/products");
   revalidatePath("/inventory");
 
-  return { created, restocked, skipped, errors };
+  return { created, updated, skipped, errors };
 }

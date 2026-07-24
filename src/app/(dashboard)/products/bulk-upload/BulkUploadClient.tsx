@@ -58,7 +58,7 @@ const IMPORT_CHUNK_SIZE = 20;
 export function BulkUploadClient() {
   const [rows, setRows] = useState<Record<string, string>[]>([]);
   const [fileName, setFileName] = useState<string | null>(null);
-  const [result, setResult] = useState<{ created: number; restocked: number; skipped: number; errors: string[] } | null>(null);
+  const [result, setResult] = useState<{ created: number; updated: number; skipped: number; errors: string[] } | null>(null);
   const [loading, setLoading] = useState(false);
   const [progress, setProgress] = useState(0);
   const inputRef = useRef<HTMLInputElement>(null);
@@ -101,20 +101,20 @@ export function BulkUploadClient() {
     if (rows.length === 0) return;
     setLoading(true);
     setProgress(0);
-    const combined = { created: 0, restocked: 0, skipped: 0, errors: [] as string[] };
+    const combined = { created: 0, updated: 0, skipped: 0, errors: [] as string[] };
     try {
       for (let start = 0; start < rows.length; start += IMPORT_CHUNK_SIZE) {
         const chunk = rows.slice(start, start + IMPORT_CHUNK_SIZE);
         const res = await bulkImportProducts(chunk as any, start);
         combined.created += res.created;
-        combined.restocked += res.restocked;
+        combined.updated += res.updated;
         combined.skipped += res.skipped;
         combined.errors.push(...res.errors);
         setProgress(Math.round((Math.min(start + IMPORT_CHUNK_SIZE, rows.length) / rows.length) * 100));
       }
       setResult(combined);
-      if (combined.created > 0 || combined.restocked > 0) {
-        toast(`Imported ${combined.created} new products, added ${combined.restocked} batches`, "success");
+      if (combined.created > 0 || combined.updated > 0) {
+        toast(`Imported ${combined.created} new products, synced ${combined.updated} existing`, "success");
       }
       router.refresh();
     } catch (err) {
@@ -191,8 +191,7 @@ export function BulkUploadClient() {
           {result && (
             <div className="mt-4 space-y-2">
               <div className="flex items-center gap-2 rounded-lg bg-success-50 px-3 py-2 text-sm text-success-600">
-                <CheckCircle2 className="h-4 w-4" /> {result.created} new products, {result.restocked} batches added
-                {result.skipped > 0 && ` (${result.skipped} batches skipped — already exists)`}
+                <CheckCircle2 className="h-4 w-4" /> {result.created} new products, {result.updated} existing products synced
               </div>
               {result.errors.map((e, i) => (
                 <div key={i} className="flex items-center gap-2 rounded-lg bg-danger-50 px-3 py-2 text-sm text-danger-600">
