@@ -4,14 +4,14 @@ import { ProductForm } from "@/components/products/ProductForm";
 import { getCatalogMasters } from "@/lib/supabase/catalog";
 
 export default async function NewProductPage() {
-  const { categories, brands, manufacturers } = await getCatalogMasters();
+  const { categories, brands } = await getCatalogMasters();
 
   return (
     <div>
       <PageHeader title="Add product" description="List a new product to your storefront." />
       <Card>
         <CardBody>
-          <ProductForm categories={categories} brands={brands} manufacturers={manufacturers} />
+          <ProductForm categories={categories} brands={brands} />
         </CardBody>
       </Card>
     </div>

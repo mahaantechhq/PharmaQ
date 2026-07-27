@@ -5,7 +5,7 @@ import { createClient } from "@/lib/supabase/server";
 import { getCurrentAdmin } from "@/lib/supabase/current-admin";
 import { logAudit } from "@/lib/audit";
 
-type CatalogTable = "categories" | "brands" | "manufacturers";
+type CatalogTable = "categories" | "brands";
 
 function slugify(name: string) {
   return name

@@ -59,21 +59,11 @@ export interface Brand {
   created_at: string;
 }
 
-export interface Manufacturer {
-  id: string;
-  name: string;
-  slug: string;
-  is_global: boolean;
-  created_by_business_id: string | null;
-  created_at: string;
-}
-
 export interface Product {
   id: string;
   business_id: string;
   category_id: string | null;
   brand_id: string | null;
-  manufacturer_id: string | null;
   name: string;
   slug: string;
   composition: string | null;

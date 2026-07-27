@@ -10,7 +10,7 @@ import { Select } from "@/components/ui/Select";
 import { Button } from "@/components/ui/Button";
 import { useToast } from "@/components/ui/Toast";
 import { createProduct, updateProduct } from "@/app/(dashboard)/products/actions";
-import type { Category, Brand, Manufacturer } from "@/lib/types/database";
+import type { Category, Brand } from "@/lib/types/database";
 
 interface ProductFormProps {
   productId?: string;
@@ -18,10 +18,9 @@ interface ProductFormProps {
   defaultValues?: Partial<ProductFormValues>;
   categories: Category[];
   brands: Brand[];
-  manufacturers: Manufacturer[];
 }
 
-export function ProductForm({ productId, batchId, defaultValues, categories, brands, manufacturers }: ProductFormProps) {
+export function ProductForm({ productId, batchId, defaultValues, categories, brands }: ProductFormProps) {
   const router = useRouter();
   const { toast } = useToast();
 
@@ -85,15 +84,6 @@ export function ProductForm({ productId, batchId, defaultValues, categories, bra
             <option value="">Select brand</option>
             {brands.map((b) => (
               <option key={b.id} value={b.id}>{b.name}</option>
-            ))}
-          </Select>
-        </Field>
-
-        <Field label="Manufacturer" htmlFor="manufacturer_id">
-          <Select id="manufacturer_id" {...register("manufacturer_id")}>
-            <option value="">Select manufacturer</option>
-            {manufacturers.map((m) => (
-              <option key={m.id} value={m.id}>{m.name}</option>
             ))}
           </Select>
         </Field>

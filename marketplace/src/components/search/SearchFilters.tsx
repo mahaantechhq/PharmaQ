@@ -11,11 +11,9 @@ interface FilterOption {
 export function SearchFilters({
   categories,
   brands,
-  manufacturers,
 }: {
   categories: FilterOption[];
   brands: FilterOption[];
-  manufacturers: FilterOption[];
 }) {
   const router = useRouter();
   const pathname = usePathname();
@@ -46,16 +44,6 @@ export function SearchFilters({
           <option value="">All brands</option>
           {brands.map((b) => (
             <option key={b.id} value={b.id}>{b.name}</option>
-          ))}
-        </Select>
-      </div>
-
-      <div>
-        <p className="mb-1.5 text-xs font-semibold uppercase tracking-wide text-slate-400">Manufacturer</p>
-        <Select value={searchParams.get("manufacturer") ?? ""} onChange={(e) => updateParam("manufacturer", e.target.value)}>
-          <option value="">All manufacturers</option>
-          {manufacturers.map((m) => (
-            <option key={m.id} value={m.id}>{m.name}</option>
           ))}
         </Select>
       </div>

@@ -4,7 +4,6 @@ export const productSchema = z.object({
   name: z.string().min(2, "Name is required"),
   category_id: z.string().uuid().optional().or(z.literal("")),
   brand_id: z.string().uuid().optional().or(z.literal("")),
-  manufacturer_id: z.string().uuid().optional().or(z.literal("")),
   composition: z.string().optional(),
   pack_size: z.string().optional(),
   hsn_code: z.string().optional(),

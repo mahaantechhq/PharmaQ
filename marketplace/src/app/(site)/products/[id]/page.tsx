@@ -16,7 +16,7 @@ export default async function ProductDetailPage({ params }: { params: Promise<{ 
 
   const { data: product } = await supabase
     .from("products")
-    .select("*, businesses:business_id(id, name, city, state), categories:category_id(name), brands:brand_id(name), manufacturers:manufacturer_id(name)")
+    .select("*, businesses:business_id(id, name, city, state), categories:category_id(name), brands:brand_id(name)")
     .eq("id", id)
     .eq("status", "active")
     .maybeSingle();
@@ -109,12 +109,6 @@ export default async function ProductDetailPage({ params }: { params: Promise<{ 
                   <div>
                     <dt className="text-slate-400">HSN code</dt>
                     <dd className="font-medium text-slate-700">{product.hsn_code}</dd>
-                  </div>
-                )}
-                {product.manufacturers?.name && (
-                  <div>
-                    <dt className="text-slate-400">Manufacturer</dt>
-                    <dd className="font-medium text-slate-700">{product.manufacturers.name}</dd>
                   </div>
                 )}
                 <div>

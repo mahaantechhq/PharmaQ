@@ -10,7 +10,7 @@ import { SearchFilters } from "@/components/search/SearchFilters";
 import { SearchBox } from "@/components/search/SearchBox";
 
 interface SearchPageProps {
-  searchParams: Promise<{ q?: string; category?: string; brand?: string; manufacturer?: string; sort?: string }>;
+  searchParams: Promise<{ q?: string; category?: string; brand?: string; sort?: string }>;
 }
 
 export default async function SearchPage({ searchParams }: SearchPageProps) {
@@ -18,15 +18,13 @@ export default async function SearchPage({ searchParams }: SearchPageProps) {
   const supabase = await createClient();
   const ctx = await getCurrentBusiness();
 
-  const [{ data: categories }, { data: brands }, { data: manufacturers }, products] = await Promise.all([
+  const [{ data: categories }, { data: brands }, products] = await Promise.all([
     supabase.from("categories").select("id, name").order("name"),
     supabase.from("brands").select("id, name").order("name"),
-    supabase.from("manufacturers").select("id, name").order("name"),
     searchProducts({
       q: params.q,
       category: params.category,
       brand: params.brand,
-      manufacturer: params.manufacturer,
       sort: (params.sort as "price_low" | "price_high" | "newest") ?? "newest",
     }),
   ]);
@@ -69,7 +67,6 @@ export default async function SearchPage({ searchParams }: SearchPageProps) {
             <SearchFilters
               categories={categories ?? []}
               brands={brands ?? []}
-              manufacturers={manufacturers ?? []}
             />
           </Suspense>
         </aside>

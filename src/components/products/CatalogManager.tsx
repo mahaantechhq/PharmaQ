@@ -9,19 +9,18 @@ import { Button } from "@/components/ui/Button";
 import { Input } from "@/components/ui/Input";
 import { useToast } from "@/components/ui/Toast";
 import { createCatalogEntry } from "@/app/(dashboard)/catalog/actions";
-import type { Category, Brand, Manufacturer } from "@/lib/types/database";
+import type { Category, Brand } from "@/lib/types/database";
 
 interface CatalogManagerProps {
   categories: Category[];
   brands: Brand[];
-  manufacturers: Manufacturer[];
 }
 
 function MasterList({
   table,
   items,
 }: {
-  table: "categories" | "brands" | "manufacturers";
+  table: "categories" | "brands";
   items: { id: string; name: string; is_global: boolean }[];
 }) {
   const [value, setValue] = useState("");
@@ -74,13 +73,12 @@ function MasterList({
   );
 }
 
-export function CatalogManager({ categories, brands, manufacturers }: CatalogManagerProps) {
+export function CatalogManager({ categories, brands }: CatalogManagerProps) {
   return (
     <Tabs
       tabs={[
         { key: "categories", label: `Categories (${categories.length})`, content: <MasterList table="categories" items={categories} /> },
         { key: "brands", label: `Brands (${brands.length})`, content: <MasterList table="brands" items={brands} /> },
-        { key: "manufacturers", label: `Manufacturers (${manufacturers.length})`, content: <MasterList table="manufacturers" items={manufacturers} /> },
       ]}
     />
   );

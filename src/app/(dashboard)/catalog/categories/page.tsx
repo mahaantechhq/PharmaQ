@@ -4,7 +4,7 @@ import { CatalogManager } from "@/components/products/CatalogManager";
 import { getCatalogMasters } from "@/lib/supabase/catalog";
 
 export default async function CatalogPage() {
-  const { categories, brands, manufacturers } = await getCatalogMasters();
+  const { categories, brands } = await getCatalogMasters();
 
   return (
     <div>
@@ -14,7 +14,7 @@ export default async function CatalogPage() {
       />
       <Card>
         <CardBody>
-          <CatalogManager categories={categories} brands={brands} manufacturers={manufacturers} />
+          <CatalogManager categories={categories} brands={brands} />
         </CardBody>
       </Card>
     </div>

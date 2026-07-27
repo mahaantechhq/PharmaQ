@@ -11,7 +11,7 @@ function slugify(name: string) {
     .replace(/(^-|-$)/g, "");
 }
 
-export async function createCatalogEntry(table: "categories" | "brands" | "manufacturers", name: string) {
+export async function createCatalogEntry(table: "categories" | "brands", name: string) {
   const ctx = await getCurrentBusiness();
   if (!ctx) throw new Error("Not authenticated");
   if (!name.trim()) throw new Error("Name is required");

@@ -22,7 +22,7 @@ interface CatalogItem {
   is_global: boolean;
 }
 
-export function CatalogTable({ table, items }: { table: "categories" | "brands" | "manufacturers"; items: CatalogItem[] }) {
+export function CatalogTable({ table, items }: { table: "categories" | "brands"; items: CatalogItem[] }) {
   const [newName, setNewName] = useState("");
   const [editing, setEditing] = useState<CatalogItem | null>(null);
   const [editValue, setEditValue] = useState("");

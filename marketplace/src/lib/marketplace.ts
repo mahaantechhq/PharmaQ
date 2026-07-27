@@ -24,7 +24,6 @@ export interface ProductSearchFilters {
   q?: string;
   category?: string;
   brand?: string;
-  manufacturer?: string;
   sort?: "price_low" | "price_high" | "newest";
 }
 
@@ -35,7 +34,7 @@ export async function searchProducts(filters: ProductSearchFilters): Promise<Pro
   let query = supabase
     .from("products")
     .select(
-      "id, name, composition, pack_size, gst_rate, created_at, business_id, category_id, brand_id, manufacturer_id, businesses:business_id(name, city), categories:category_id(name), brands:brand_id(name)",
+      "id, name, composition, pack_size, gst_rate, created_at, business_id, category_id, brand_id, businesses:business_id(name, city), categories:category_id(name), brands:brand_id(name)",
     )
     .eq("status", "active");
 
@@ -47,7 +46,6 @@ export async function searchProducts(filters: ProductSearchFilters): Promise<Pro
   if (filters.q) query = query.ilike("name", `%${filters.q}%`);
   if (filters.category) query = query.eq("category_id", filters.category);
   if (filters.brand) query = query.eq("brand_id", filters.brand);
-  if (filters.manufacturer) query = query.eq("manufacturer_id", filters.manufacturer);
 
   query = query.order("created_at", { ascending: false }).limit(60);
 

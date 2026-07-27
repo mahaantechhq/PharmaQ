@@ -41,7 +41,6 @@ export default async function ProductDetailPage({ params }: { params: Promise<{ 
               name: product.name,
               category_id: product.category_id ?? "",
               brand_id: product.brand_id ?? "",
-              manufacturer_id: product.manufacturer_id ?? "",
               composition: product.composition ?? "",
               pack_size: product.pack_size ?? "",
               hsn_code: product.hsn_code ?? "",
@@ -58,7 +57,6 @@ export default async function ProductDetailPage({ params }: { params: Promise<{ 
             }}
             categories={catalog.categories}
             brands={catalog.brands}
-            manufacturers={catalog.manufacturers}
           />
         </CardBody>
       </Card>
