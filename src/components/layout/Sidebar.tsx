@@ -7,7 +7,7 @@ import { cn } from "@/lib/cn";
 import { NAV_GROUPS } from "@/components/layout/nav-items";
 import type { Business } from "@/lib/types/database";
 
-export function Sidebar({ business }: { business: Business }) {
+export function Sidebar({ business, newOrdersCount = 0 }: { business: Business; newOrdersCount?: number }) {
   const pathname = usePathname();
 
   return (
@@ -41,6 +41,11 @@ export function Sidebar({ business }: { business: Business }) {
                   >
                     <Icon className="h-[18px] w-[18px] shrink-0" />
                     <span className="truncate">{item.label}</span>
+                    {item.href === "/orders" && newOrdersCount > 0 && (
+                      <span className="ml-auto flex h-5 min-w-5 items-center justify-center rounded-full bg-danger-500 px-1.5 text-[11px] font-semibold text-white">
+                        {newOrdersCount}
+                      </span>
+                    )}
                   </Link>
                 );
               })}

@@ -18,17 +18,24 @@ export default async function DashboardLayout({
   }
 
   const supabase = await createClient();
-  const { count: unreadCount } = await supabase
-    .from("notifications")
-    .select("id", { count: "exact", head: true })
-    .eq("business_id", ctx.business.id)
-    .eq("is_read", false);
+  const [{ count: unreadCount }, { count: newOrdersCount }] = await Promise.all([
+    supabase
+      .from("notifications")
+      .select("id", { count: "exact", head: true })
+      .eq("business_id", ctx.business.id)
+      .eq("is_read", false),
+    supabase
+      .from("supplier_orders")
+      .select("id", { count: "exact", head: true })
+      .eq("supplier_business_id", ctx.business.id)
+      .eq("status", "placed"),
+  ]);
 
   return (
     <ToastProvider>
       <IdleLogout />
       <div className="flex min-h-screen bg-background">
-        <Sidebar business={ctx.business} />
+        <Sidebar business={ctx.business} newOrdersCount={newOrdersCount ?? 0} />
         <div className="flex-1 min-w-0">
           <Topbar business={ctx.business} owner={ctx.owner} unreadCount={unreadCount ?? 0} />
           <main className="mx-auto max-w-7xl px-6 py-8">{children}</main>
