@@ -6,19 +6,21 @@ import { StatCard } from "@/components/dashboard/StatCard";
 import { BusinessStatusBadge } from "@/components/businesses/BusinessStatusBadge";
 import { BusinessActions } from "@/components/businesses/BusinessActions";
 import { BusinessProfileForm } from "@/components/businesses/BusinessProfileForm";
+import { BusinessOwnerForm } from "@/components/businesses/BusinessOwnerForm";
 import { Package, ShoppingCart, Wallet } from "lucide-react";
 import { formatCurrency, formatNumber, formatDate } from "@/lib/format";
-import type { Business } from "@/lib/types/database";
+import type { Business, BusinessOwner } from "@/lib/types/database";
 
 export default async function BusinessDetailPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
   const supabase = await createClient();
 
-  const [{ data: business }, { count: productCount }, { count: orderCount }, { data: wallet }] = await Promise.all([
+  const [{ data: business }, { count: productCount }, { count: orderCount }, { data: wallet }, { data: owner }] = await Promise.all([
     supabase.from("businesses").select("*").eq("id", id).single(),
     supabase.from("products").select("id", { count: "exact", head: true }).eq("business_id", id),
     supabase.from("supplier_orders").select("id", { count: "exact", head: true }).eq("supplier_business_id", id),
     supabase.from("wallets").select("*").eq("business_id", id).maybeSingle(),
+    supabase.from("business_owners").select("*").eq("business_id", id).maybeSingle(),
   ]);
 
   if (!business) notFound();
@@ -50,6 +52,15 @@ export default async function BusinessDetailPage({ params }: { params: Promise<{
           <BusinessProfileForm business={b} />
         </CardBody>
       </Card>
+
+      {owner && (
+        <Card className="mt-6">
+          <CardHeader title="Business owner" description="The name of the person who owns this business account." />
+          <CardBody>
+            <BusinessOwnerForm businessId={b.id} owner={owner as BusinessOwner} />
+          </CardBody>
+        </Card>
+      )}
     </div>
   );
 }

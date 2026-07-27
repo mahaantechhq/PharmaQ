@@ -135,3 +135,28 @@ export async function updateBusinessProfile(businessId: string, values: Business
 
   revalidatePath(`/businesses/${businessId}`);
 }
+
+export async function updateBusinessOwnerName(businessId: string, ownerId: string, fullName: string) {
+  const admin = await getCurrentAdmin();
+  if (!admin) throw new Error("Not authenticated as super admin");
+  if (!fullName.trim()) throw new Error("Owner name is required");
+
+  const supabase = await createClient();
+  const { error } = await supabase
+    .from("business_owners")
+    .update({ full_name: fullName.trim() })
+    .eq("id", ownerId)
+    .eq("business_id", businessId);
+
+  if (error) throw new Error(error.message);
+
+  await logAudit({
+    actorId: admin.adminId,
+    action: "business.update_owner_name",
+    entityType: "business",
+    entityId: businessId,
+    metadata: { fullName: fullName.trim() },
+  });
+
+  revalidatePath(`/businesses/${businessId}`);
+}
