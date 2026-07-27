@@ -47,22 +47,6 @@ export default async function SearchPage({ searchParams }: SearchPageProps) {
 
   return (
     <div className="mx-auto max-w-7xl px-4 py-8 sm:px-6">
-      <div className="mb-6 flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
-        <div>
-          <h1 className="text-2xl font-semibold text-slate-900">
-            {params.q ? `Results for "${params.q}"` : "All products"}
-          </h1>
-          <p className="mt-1 text-sm text-slate-500">
-            {products.length} listing{products.length !== 1 && "s"} from independent suppliers
-          </p>
-        </div>
-        <div className="relative left-[-500px] w-full sm:w-[calc(24rem+170px)] sm:max-w-none">
-          <Suspense>
-            <SearchBox isLoggedIn={!!ctx} />
-          </Suspense>
-        </div>
-      </div>
-
       <div className={`grid grid-cols-1 gap-6 lg:grid-cols-[240px_1fr]${cartSummary ? " xl:grid-cols-[240px_1fr_320px]" : ""}`}>
         <aside className="lg:sticky lg:top-20 lg:h-fit">
           <Suspense>
@@ -74,17 +58,34 @@ export default async function SearchPage({ searchParams }: SearchPageProps) {
           </Suspense>
         </aside>
 
-        <div className="overflow-hidden rounded-xl border border-slate-100 bg-white">
-          {products.length === 0 ? (
-            <div className="flex flex-col items-center gap-2 py-24 text-slate-400">
-              <SearchX className="h-8 w-8" />
-              <p className="text-sm">No products found. Try a different search or filter.</p>
-            </div>
-          ) : (
-            products.map((p) => (
-              <ProductRow key={p.id} product={p} isLoggedIn={!!ctx} initialWishlisted={wishlistedIds.has(p.id)} query={params.q} />
-            ))
-          )}
+        <div>
+          <div className="mb-4">
+            <h1 className="text-2xl font-semibold text-slate-900">
+              {params.q ? `Results for "${params.q}"` : "All products"}
+            </h1>
+            <p className="mt-1 text-sm text-slate-500">
+              {products.length} listing{products.length !== 1 && "s"} from independent suppliers
+            </p>
+          </div>
+
+          <div className="mb-4">
+            <Suspense>
+              <SearchBox isLoggedIn={!!ctx} />
+            </Suspense>
+          </div>
+
+          <div className="overflow-hidden rounded-xl border border-slate-100 bg-white">
+            {products.length === 0 ? (
+              <div className="flex flex-col items-center gap-2 py-24 text-slate-400">
+                <SearchX className="h-8 w-8" />
+                <p className="text-sm">No products found. Try a different search or filter.</p>
+              </div>
+            ) : (
+              products.map((p) => (
+                <ProductRow key={p.id} product={p} isLoggedIn={!!ctx} initialWishlisted={wishlistedIds.has(p.id)} query={params.q} />
+              ))
+            )}
+          </div>
         </div>
 
         {cartSummary && (
