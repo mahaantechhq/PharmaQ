@@ -6,7 +6,6 @@ import { StatCard } from "@/components/dashboard/StatCard";
 import { BusinessStatusBadge } from "@/components/businesses/BusinessStatusBadge";
 import { BusinessActions } from "@/components/businesses/BusinessActions";
 import { BusinessProfileForm } from "@/components/businesses/BusinessProfileForm";
-import { BusinessOwnerForm } from "@/components/businesses/BusinessOwnerForm";
 import { Package, ShoppingCart, Wallet } from "lucide-react";
 import { formatCurrency, formatNumber, formatDate } from "@/lib/format";
 import type { Business, BusinessOwner } from "@/lib/types/database";
@@ -24,8 +23,10 @@ export default async function BusinessDetailPage({ params }: { params: Promise<{
   ]);
 
   if (!business) notFound();
+  if (!owner) notFound();
 
   const b = business as Business;
+  const o = owner as BusinessOwner;
 
   return (
     <div>
@@ -49,18 +50,9 @@ export default async function BusinessDetailPage({ params }: { params: Promise<{
       <Card className="mt-6">
         <CardHeader title="Business profile" />
         <CardBody>
-          <BusinessProfileForm business={b} />
+          <BusinessProfileForm business={b} owner={o} />
         </CardBody>
       </Card>
-
-      {owner && (
-        <Card className="mt-6">
-          <CardHeader title="Business owner" description="The name of the person who owns this business account." />
-          <CardBody>
-            <BusinessOwnerForm businessId={b.id} owner={owner as BusinessOwner} />
-          </CardBody>
-        </Card>
-      )}
     </div>
   );
 }

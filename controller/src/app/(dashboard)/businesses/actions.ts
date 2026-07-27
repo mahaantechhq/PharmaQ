@@ -102,60 +102,43 @@ export async function updateBusinessStatus(businessId: string, status: BusinessS
   revalidatePath("/dashboard");
 }
 
-export async function updateBusinessProfile(businessId: string, values: BusinessProfileFormValues) {
+export async function updateBusinessProfile(businessId: string, ownerId: string, values: BusinessProfileFormValues) {
   const admin = await getCurrentAdmin();
   if (!admin) throw new Error("Not authenticated as super admin");
 
   const parsed = businessProfileSchema.parse(values);
   const supabase = await createClient();
 
-  const { error } = await supabase
-    .from("businesses")
-    .update({
-      name: parsed.name,
-      phone: parsed.phone || null,
-      email: parsed.email || null,
-      gstin: parsed.gstin || null,
-      drug_license_no: parsed.drug_license_no || null,
-      address_line1: parsed.address_line1 || null,
-      city: parsed.city || null,
-      state: parsed.state || null,
-      pincode: parsed.pincode || null,
-    })
-    .eq("id", businessId);
+  const [{ error }, { error: ownerError }] = await Promise.all([
+    supabase
+      .from("businesses")
+      .update({
+        name: parsed.name,
+        phone: parsed.phone || null,
+        email: parsed.email || null,
+        gstin: parsed.gstin || null,
+        drug_license_no: parsed.drug_license_no || null,
+        address_line1: parsed.address_line1 || null,
+        city: parsed.city || null,
+        state: parsed.state || null,
+        pincode: parsed.pincode || null,
+      })
+      .eq("id", businessId),
+    supabase
+      .from("business_owners")
+      .update({ full_name: parsed.ownerName })
+      .eq("id", ownerId)
+      .eq("business_id", businessId),
+  ]);
 
   if (error) throw new Error(error.message);
+  if (ownerError) throw new Error(ownerError.message);
 
   await logAudit({
     actorId: admin.adminId,
     action: "business.update_profile",
     entityType: "business",
     entityId: businessId,
-  });
-
-  revalidatePath(`/businesses/${businessId}`);
-}
-
-export async function updateBusinessOwnerName(businessId: string, ownerId: string, fullName: string) {
-  const admin = await getCurrentAdmin();
-  if (!admin) throw new Error("Not authenticated as super admin");
-  if (!fullName.trim()) throw new Error("Owner name is required");
-
-  const supabase = await createClient();
-  const { error } = await supabase
-    .from("business_owners")
-    .update({ full_name: fullName.trim() })
-    .eq("id", ownerId)
-    .eq("business_id", businessId);
-
-  if (error) throw new Error(error.message);
-
-  await logAudit({
-    actorId: admin.adminId,
-    action: "business.update_owner_name",
-    entityType: "business",
-    entityId: businessId,
-    metadata: { fullName: fullName.trim() },
   });
 
   revalidatePath(`/businesses/${businessId}`);

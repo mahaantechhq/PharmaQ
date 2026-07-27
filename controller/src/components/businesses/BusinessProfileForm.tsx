@@ -9,9 +9,9 @@ import { Input } from "@/components/ui/Input";
 import { Button } from "@/components/ui/Button";
 import { useToast } from "@/components/ui/Toast";
 import { updateBusinessProfile } from "@/app/(dashboard)/businesses/actions";
-import type { Business } from "@/lib/types/database";
+import type { Business, BusinessOwner } from "@/lib/types/database";
 
-export function BusinessProfileForm({ business }: { business: Business }) {
+export function BusinessProfileForm({ business, owner }: { business: Business; owner: BusinessOwner }) {
   const router = useRouter();
   const { toast } = useToast();
 
@@ -23,6 +23,7 @@ export function BusinessProfileForm({ business }: { business: Business }) {
     resolver: zodResolver(businessProfileSchema),
     defaultValues: {
       name: business.name,
+      ownerName: owner.full_name,
       phone: business.phone ?? "",
       email: business.email ?? "",
       gstin: business.gstin ?? "",
@@ -36,7 +37,7 @@ export function BusinessProfileForm({ business }: { business: Business }) {
 
   const onSubmit = async (values: BusinessProfileFormValues) => {
     try {
-      await updateBusinessProfile(business.id, values);
+      await updateBusinessProfile(business.id, owner.id, values);
       toast("Business profile updated", "success");
       router.refresh();
     } catch (err) {
@@ -49,6 +50,9 @@ export function BusinessProfileForm({ business }: { business: Business }) {
       <div className="grid grid-cols-1 gap-5 sm:grid-cols-2">
         <Field label="Business name" htmlFor="name" required error={errors.name?.message} className="sm:col-span-2">
           <Input id="name" {...register("name")} />
+        </Field>
+        <Field label="Owner name" htmlFor="ownerName" required error={errors.ownerName?.message}>
+          <Input id="ownerName" {...register("ownerName")} />
         </Field>
         <Field label="Phone" htmlFor="phone">
           <Input id="phone" {...register("phone")} />

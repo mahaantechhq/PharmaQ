@@ -24,6 +24,7 @@ export type CreateBusinessFormValues = z.infer<typeof createBusinessSchema>;
 
 export const businessProfileSchema = z.object({
   name: z.string().min(2, "Business name is required"),
+  ownerName: z.string().min(2, "Owner name is required"),
   phone: z.string().optional(),
   email: z.string().email("Enter a valid email").optional().or(z.literal("")),
   gstin: z.string().optional(),
