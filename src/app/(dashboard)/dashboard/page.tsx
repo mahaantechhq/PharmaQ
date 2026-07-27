@@ -51,28 +51,38 @@ export default async function DashboardPage() {
     return exp >= now && exp <= thirtyDaysOut;
   });
 
-  // Keyed by "YYYY-MM" so it sorts chronologically regardless of the order
-  // `allOrders` came back in (it's fetched newest-first for the recent
-  // orders list below); formatted for display only after sorting.
-  const salesByMonth = new Map<string, number>();
+  // Keyed by ISO date (YYYY-MM-DD) so it sorts correctly regardless of the
+  // order `allOrders` came back in (it's fetched newest-first for the
+  // recent orders list below); formatted for display only after sorting.
+  const salesByDay = new Map<string, number>();
   for (const o of allOrders) {
     // created_at is UTC; slicing it directly would bucket late-night IST
-    // orders under the wrong (previous) calendar month. en-CA gives YYYY-MM-DD.
-    const monthKey = new Date(o.created_at).toLocaleDateString("en-CA", { timeZone: "Asia/Kolkata" }).slice(0, 7);
-    salesByMonth.set(monthKey, (salesByMonth.get(monthKey) ?? 0) + Number(o.grand_total));
+    // orders under the wrong (previous) calendar day. en-CA gives YYYY-MM-DD.
+    const isoDate = new Date(o.created_at).toLocaleDateString("en-CA", { timeZone: "Asia/Kolkata" });
+    salesByDay.set(isoDate, (salesByDay.get(isoDate) ?? 0) + Number(o.grand_total));
   }
-  // Ensure the current month always appears (at ₹0 if there are no orders
-  // yet), instead of the trend line stopping at the last month with sales.
-  const currentMonthKey = new Date().toLocaleDateString("en-CA", { timeZone: "Asia/Kolkata" }).slice(0, 7);
-  if (!salesByMonth.has(currentMonthKey)) salesByMonth.set(currentMonthKey, 0);
 
-  const salesData = Array.from(salesByMonth.entries())
-    .sort(([a], [b]) => a.localeCompare(b))
-    .slice(-12)
-    .map(([monthKey, total]) => ({
-      date: formatDate(`${monthKey}-01`, { month: "short", year: "2-digit" }),
-      total,
-    }));
+  // Current week (Monday-Sunday, IST), every day shown even at ₹0 so the
+  // trend always reflects this week specifically rather than whichever
+  // days happened to have orders. Anchored in UTC date arithmetic (not the
+  // server's local timezone, which on Vercel is UTC but shouldn't be
+  // assumed) using the IST calendar date as the starting point.
+  const todayIsoIst = new Date().toLocaleDateString("en-CA", { timeZone: "Asia/Kolkata" });
+  const [ty, tm, td] = todayIsoIst.split("-").map(Number);
+  const todayUtc = new Date(Date.UTC(ty, tm - 1, td));
+  const dayOfWeek = (todayUtc.getUTCDay() + 6) % 7; // 0 = Monday
+  const monday = new Date(todayUtc);
+  monday.setUTCDate(todayUtc.getUTCDate() - dayOfWeek);
+
+  const salesData = Array.from({ length: 7 }, (_, i) => {
+    const d = new Date(monday);
+    d.setUTCDate(monday.getUTCDate() + i);
+    const isoDate = d.toISOString().slice(0, 10);
+    return {
+      date: formatDate(isoDate, { weekday: "short" }),
+      total: salesByDay.get(isoDate) ?? 0,
+    };
+  });
 
   const statusCounts: Record<string, number> = {};
   for (const o of allOrders) {
@@ -121,7 +131,7 @@ export default async function DashboardPage() {
 
       <div className="mt-6 grid grid-cols-1 gap-6 lg:grid-cols-3">
         <Card className="lg:col-span-2">
-          <CardHeader title="Sales trend" description="Order value by month" />
+          <CardHeader title="Sales trend" description="Order value this week" />
           <CardBody>
             <SalesChart data={salesData} />
           </CardBody>
