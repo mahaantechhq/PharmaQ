@@ -56,7 +56,7 @@ export default async function SearchPage({ searchParams }: SearchPageProps) {
             {products.length} listing{products.length !== 1 && "s"} from independent suppliers
           </p>
         </div>
-        <div className="relative left-[-430px] w-full sm:w-[calc(24rem+70px)] sm:max-w-none">
+        <div className="relative left-[-500px] w-full sm:w-[calc(24rem+170px)] sm:max-w-none">
           <Suspense>
             <SearchBox isLoggedIn={!!ctx} />
           </Suspense>
@@ -82,7 +82,7 @@ export default async function SearchPage({ searchParams }: SearchPageProps) {
             </div>
           ) : (
             products.map((p) => (
-              <ProductRow key={p.id} product={p} isLoggedIn={!!ctx} initialWishlisted={wishlistedIds.has(p.id)} />
+              <ProductRow key={p.id} product={p} isLoggedIn={!!ctx} initialWishlisted={wishlistedIds.has(p.id)} query={params.q} />
             ))
           )}
         </div>

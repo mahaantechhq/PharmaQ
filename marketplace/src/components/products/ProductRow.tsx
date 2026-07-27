@@ -9,16 +9,19 @@ import { useToast } from "@/components/ui/Toast";
 import { addToCart } from "@/app/(site)/cart/actions";
 import { toggleWishlist } from "@/app/(site)/wishlist/actions";
 import { formatCurrency } from "@/lib/format";
+import { highlightMatch } from "@/lib/highlight";
 import type { ProductListing } from "@/lib/marketplace";
 
 export function ProductRow({
   product,
   isLoggedIn,
   initialWishlisted = false,
+  query,
 }: {
   product: ProductListing;
   isLoggedIn: boolean;
   initialWishlisted?: boolean;
+  query?: string;
 }) {
   const [qty, setQty] = useState("1");
   const [loading, setLoading] = useState(false);
@@ -63,7 +66,7 @@ export function ProductRow({
     <div className="flex items-center gap-4 border-b border-slate-100 px-4 py-4 last:border-b-0 sm:px-5">
       <div className="min-w-0 flex-1">
         <Link href={`/products/${product.id}`} className="truncate text-sm font-semibold text-slate-800 hover:text-primary-600">
-          {product.name}
+          {highlightMatch(product.name, query)}
         </Link>
         <div className="mt-1 flex flex-wrap items-center gap-x-2 gap-y-1 text-xs">
           <Link href={`/suppliers/${product.businessId}`} className="font-medium text-primary-600 hover:underline">
