@@ -15,10 +15,14 @@ export interface InventoryRow {
   id: string;
   productId: string;
   productName: string;
+  categoryName: string | null;
+  brandName: string | null;
   batchNumber: string;
   expiryDate: string;
   mrp: number;
   sellingPrice: number;
+  scheme: string | null;
+  discountPercent: number | null;
   stockQty: number;
 }
 
@@ -54,6 +58,16 @@ export function InventoryExplorer({ rows }: { rows: InventoryRow[] }) {
         </Link>
       ),
     },
+    {
+      accessorKey: "categoryName",
+      header: "Category",
+      cell: ({ row }) => row.original.categoryName ?? <span className="text-slate-300">—</span>,
+    },
+    {
+      accessorKey: "brandName",
+      header: "Brand",
+      cell: ({ row }) => row.original.brandName ?? <span className="text-slate-300">—</span>,
+    },
     { accessorKey: "batchNumber", header: "Batch No." },
     {
       accessorKey: "expiryDate",
@@ -71,6 +85,16 @@ export function InventoryExplorer({ rows }: { rows: InventoryRow[] }) {
     },
     { accessorKey: "mrp", header: "MRP", cell: ({ row }) => formatCurrency(row.original.mrp) },
     { accessorKey: "sellingPrice", header: "Selling price", cell: ({ row }) => formatCurrency(row.original.sellingPrice) },
+    {
+      accessorKey: "scheme",
+      header: "Scheme",
+      cell: ({ row }) => row.original.scheme ?? <span className="text-slate-300">—</span>,
+    },
+    {
+      accessorKey: "discountPercent",
+      header: "Discount %",
+      cell: ({ row }) => (row.original.discountPercent != null ? `${row.original.discountPercent}%` : <span className="text-slate-300">—</span>),
+    },
     {
       accessorKey: "stockQty",
       header: "Stock",

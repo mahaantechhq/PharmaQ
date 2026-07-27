@@ -11,7 +11,9 @@ export default async function InventoryPage() {
   const supabase = await createClient();
   const { data: batches } = await supabase
     .from("product_batches")
-    .select("id, product_id, batch_number, expiry_date, mrp, selling_price, stock_qty, products(name)")
+    .select(
+      "id, product_id, batch_number, expiry_date, mrp, selling_price, scheme, discount_percent, stock_qty, products(name, categories(name), brands(name))",
+    )
     .eq("business_id", ctx.business.id)
     .order("expiry_date", { ascending: true });
 
@@ -19,10 +21,14 @@ export default async function InventoryPage() {
     id: b.id,
     productId: b.product_id,
     productName: b.products?.name ?? "Unknown product",
+    categoryName: b.products?.categories?.name ?? null,
+    brandName: b.products?.brands?.name ?? null,
     batchNumber: b.batch_number,
     expiryDate: b.expiry_date,
     mrp: Number(b.mrp),
     sellingPrice: Number(b.selling_price),
+    scheme: b.scheme,
+    discountPercent: b.discount_percent != null ? Number(b.discount_percent) : null,
     stockQty: b.stock_qty,
   }));
 

@@ -164,6 +164,7 @@ export async function bulkUpdateProductStatus(productIds: string[], status: "dra
 interface BulkProductRow {
   name: string;
   category?: string;
+  brand?: string;
   composition?: string;
   pack_size?: string;
   hsn_code?: string;
@@ -221,6 +222,14 @@ function parsePercent(input: string): number {
   return Number(input.replace(/%/g, "").trim());
 }
 
+// mrp / selling_price may be entered as "₹50", "50", or "1,200" with
+// thousands separators — strip the currency symbol and commas so a plain
+// number like 50 still parses as 50 (displayed as ₹50 everywhere else via
+// formatCurrency) instead of failing on Number("₹50") === NaN.
+function parseCurrency(input: string): number {
+  return Number(input.replace(/[₹,]/g, "").trim());
+}
+
 export async function bulkImportProducts(rows: BulkProductRow[], rowOffset = 0) {
   const ctx = await getCurrentBusiness();
   if (!ctx) throw new Error("Not authenticated");
@@ -231,11 +240,13 @@ export async function bulkImportProducts(rows: BulkProductRow[], rowOffset = 0) 
   const skipped = 0;
   const errors: string[] = [];
 
-  const [{ data: categories }, { data: existingProducts }] = await Promise.all([
+  const [{ data: categories }, { data: brands }, { data: existingProducts }] = await Promise.all([
     supabase.from("categories").select("id, name"),
+    supabase.from("brands").select("id, name"),
     supabase.from("products").select("id, name").eq("business_id", ctx.business.id),
   ]);
   const categoryMap = new Map((categories ?? []).map((c) => [c.name.toLowerCase(), c.id]));
+  const brandMap = new Map((brands ?? []).map((b) => [b.name.toLowerCase(), b.id]));
 
   // Product and batch are the same record now (one batch per product), so
   // product names (existing + created during this run) map to their id --
@@ -265,6 +276,7 @@ export async function bulkImportProducts(rows: BulkProductRow[], rowOffset = 0) 
           name: row.name.trim(),
           slug: `${slugify(row.name)}-${Date.now().toString(36)}-${index}`,
           category_id: row.category ? categoryMap.get(row.category.toLowerCase()) ?? null : null,
+          brand_id: row.brand ? brandMap.get(row.brand.toLowerCase()) ?? null : null,
           composition: row.composition || null,
           pack_size: row.pack_size || null,
           hsn_code: row.hsn_code || null,
@@ -306,8 +318,8 @@ export async function bulkImportProducts(rows: BulkProductRow[], rowOffset = 0) 
       business_id: ctx.business.id,
       batch_number: row.batch_number,
       expiry_date: parseExpiryDate(row.expiry_date),
-      mrp: Number(row.mrp),
-      selling_price: Number(row.selling_price),
+      mrp: parseCurrency(row.mrp),
+      selling_price: parseCurrency(row.selling_price),
       scheme: row.scheme || null,
       discount_percent: row.discount_percent ? parsePercent(row.discount_percent) : null,
       stock_qty: row.stock_qty ? Number(row.stock_qty) : 0,

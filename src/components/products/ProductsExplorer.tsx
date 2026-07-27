@@ -4,11 +4,12 @@ import { useMemo, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import type { ColumnDef } from "@tanstack/react-table";
-import { Search, Trash2 } from "lucide-react";
+import { Search, Trash2, AlertTriangle } from "lucide-react";
 import { DataTable } from "@/components/ui/DataTable";
 import { Input } from "@/components/ui/Input";
 import { Select } from "@/components/ui/Select";
 import { Button } from "@/components/ui/Button";
+import { Modal } from "@/components/ui/Modal";
 import { ProductStatusBadge } from "@/components/products/ProductStatusBadge";
 import { formatCurrency, formatDate } from "@/lib/format";
 import { useToast } from "@/components/ui/Toast";
@@ -39,6 +40,7 @@ export function ProductsExplorer({ products }: { products: ProductRow[] }) {
   const [status, setStatus] = useState<string>("all");
   const [selected, setSelected] = useState<Set<string>>(new Set());
   const [bulkLoading, setBulkLoading] = useState(false);
+  const [confirmDeleteOpen, setConfirmDeleteOpen] = useState(false);
   const router = useRouter();
   const { toast } = useToast();
 
@@ -71,7 +73,7 @@ export function ProductsExplorer({ products }: { products: ProductRow[] }) {
   };
 
   const handleBulkDelete = async () => {
-    if (!confirm(`Delete ${selected.size} product${selected.size !== 1 ? "s" : ""}? This cannot be undone.`)) return;
+    setConfirmDeleteOpen(false);
     setBulkLoading(true);
     try {
       const res = await bulkDeleteProducts(Array.from(selected));
@@ -242,7 +244,7 @@ export function ProductsExplorer({ products }: { products: ProductRow[] }) {
             <option value="draft">Draft</option>
             <option value="inactive">Inactive</option>
           </Select>
-          <Button variant="danger" size="sm" onClick={handleBulkDelete} loading={bulkLoading}>
+          <Button variant="danger" size="sm" onClick={() => setConfirmDeleteOpen(true)} loading={bulkLoading}>
             <Trash2 className="h-4 w-4" /> Delete selected
           </Button>
           <button onClick={() => setSelected(new Set())} className="ml-auto text-xs text-primary-600 hover:underline">
@@ -252,6 +254,21 @@ export function ProductsExplorer({ products }: { products: ProductRow[] }) {
       )}
 
       <DataTable columns={columns} data={filtered} emptyLabel="No products found" pageSize={10} />
+
+      <Modal open={confirmDeleteOpen} onClose={() => setConfirmDeleteOpen(false)} title="Delete products" size="sm">
+        <div className="flex gap-3">
+          <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-danger-50 text-danger-600">
+            <AlertTriangle className="h-4 w-4" />
+          </div>
+          <p className="text-sm text-slate-600">
+            Delete {selected.size} product{selected.size !== 1 ? "s" : ""}? This cannot be undone.
+          </p>
+        </div>
+        <div className="mt-5 flex justify-end gap-2">
+          <Button variant="outline" onClick={() => setConfirmDeleteOpen(false)}>Cancel</Button>
+          <Button variant="danger" onClick={handleBulkDelete} loading={bulkLoading}>Delete</Button>
+        </div>
+      </Modal>
     </div>
   );
 }

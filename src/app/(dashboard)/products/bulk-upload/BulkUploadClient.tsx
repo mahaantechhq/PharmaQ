@@ -11,29 +11,34 @@ import { useToast } from "@/components/ui/Toast";
 import { bulkImportProducts } from "@/app/(dashboard)/products/actions";
 
 const TEMPLATE_HEADERS = [
-  "Name",
+  "Product Name",
   "Category",
   "Composition",
-  "Pack_size",
-  "HSN_code",
-  "GST_rate",
-  "Batch_number",
-  "Expiry_date",
-  "Mrp",
-  "Selling_price",
+  "Company",
+  "Pack Size",
+  "HSN Code",
+  "Batch Number",
+  "MRP",
+  "GST",
+  "Selling Price",
   "Scheme",
   "Discount %",
-  "Stock_qty",
+  "Stock Qty",
+  "Expiry Date",
 ];
 
 // Maps a CSV header (any case) to the lowercase/snake_case field name
 // bulkImportProducts expects. Entries here have no direct snake_case
-// equivalent (or use a different word entirely), so a generic transform
-// alone won't produce the right field name.
+// equivalent (or use a different word/synonym entirely), so a generic
+// transform alone won't produce the right field name.
 const HEADER_FIELD_MAP: Record<string, string> = {
   "discount %": "discount_percent",
   "product name": "name",
   "product": "name",
+  "company": "brand",
+  "brand": "brand",
+  "offer": "scheme",
+  "gst": "gst_rate",
 };
 
 function normalizeHeader(header: string): string {
@@ -43,7 +48,7 @@ function normalizeHeader(header: string): string {
 
 function downloadTemplate() {
   const csv = TEMPLATE_HEADERS.join(",") + "\n" +
-    "Paracetamol 650mg,Analgesics,Paracetamol 650mg,Strip of 15,3004,5,B-001,01-01-2027,45,40,5+1,2,200\n";
+    "DOLO 650,Analgesics,Paracetamol 650mg,Micro,15's,3004,B-001,45,5%,40,5+1,2%,200,01-01-2027\n";
   const blob = new Blob([csv], { type: "text/csv" });
   const url = URL.createObjectURL(blob);
   const a = document.createElement("a");
