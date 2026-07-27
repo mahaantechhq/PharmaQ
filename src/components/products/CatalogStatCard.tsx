@@ -1,7 +1,6 @@
 "use client";
 
-import { useState } from "react";
-import type { LucideIcon } from "lucide-react";
+import { useState, type ReactNode } from "react";
 import { Card } from "@/components/ui/Card";
 import { Modal } from "@/components/ui/Modal";
 import { cn } from "@/lib/cn";
@@ -20,12 +19,12 @@ const toneClasses = {
 
 export function CatalogStatCard({
   label,
-  icon: Icon,
+  icon,
   tone = "primary",
   items,
 }: {
   label: string;
-  icon: LucideIcon;
+  icon: ReactNode;
   tone?: keyof typeof toneClasses;
   items: CatalogBreakdownItem[];
 }) {
@@ -41,7 +40,7 @@ export function CatalogStatCard({
               <p className="mt-2 text-2xl font-semibold text-slate-900">{items.length}</p>
             </div>
             <div className={cn("flex h-10 w-10 items-center justify-center rounded-xl", toneClasses[tone])}>
-              <Icon className="h-5 w-5" />
+              {icon}
             </div>
           </div>
         </Card>

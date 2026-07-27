@@ -102,8 +102,8 @@ export default async function ProductsPage() {
 
       <div className="mb-6 grid grid-cols-1 gap-4 sm:grid-cols-3">
         <StatCard label="Total products" value={formatNumber(rows.length)} icon={Package} />
-        <CatalogStatCard label="Categories" icon={Tag} tone="success" items={categoryBreakdown} />
-        <CatalogStatCard label="Company" icon={Award} tone="warning" items={companyBreakdown} />
+        <CatalogStatCard label="Categories" icon={<Tag className="h-5 w-5" />} tone="success" items={categoryBreakdown} />
+        <CatalogStatCard label="Company" icon={<Award className="h-5 w-5" />} tone="warning" items={companyBreakdown} />
       </div>
 
       <Card className="p-5">
