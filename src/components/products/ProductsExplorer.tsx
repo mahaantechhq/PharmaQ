@@ -11,7 +11,7 @@ import { Select } from "@/components/ui/Select";
 import { Button } from "@/components/ui/Button";
 import { Modal } from "@/components/ui/Modal";
 import { ProductStatusBadge } from "@/components/products/ProductStatusBadge";
-import { formatCurrency, formatDate } from "@/lib/format";
+import { formatCurrency, formatExpiryDate } from "@/lib/format";
 import { useToast } from "@/components/ui/Toast";
 import { bulkDeleteProducts, bulkUpdateProductStatus } from "@/app/(dashboard)/products/actions";
 import type { ProductStatus } from "@/lib/types/database";
@@ -135,7 +135,7 @@ export function ProductsExplorer({ products }: { products: ProductRow[] }) {
     },
     {
       accessorKey: "name",
-      header: "Product",
+      header: "Product Name",
       cell: ({ row }) => (
         <Link href={`/products/${row.original.id}`} className="font-medium text-slate-800 hover:text-primary-600">
           {row.original.name}
@@ -149,7 +149,7 @@ export function ProductsExplorer({ products }: { products: ProductRow[] }) {
     },
     {
       accessorKey: "brandName",
-      header: "Brand",
+      header: "Company",
       cell: ({ row }) => row.original.brandName ?? <span className="text-slate-300">—</span>,
     },
     {
@@ -157,31 +157,26 @@ export function ProductsExplorer({ products }: { products: ProductRow[] }) {
       header: "Composition",
       cell: ({ row }) => row.original.composition ?? <span className="text-slate-300">—</span>,
     },
-    { accessorKey: "packSize", header: "Pack size", cell: ({ row }) => row.original.packSize ?? "—" },
+    { accessorKey: "packSize", header: "Pack Size", cell: ({ row }) => row.original.packSize ?? "—" },
     {
       accessorKey: "hsnCode",
-      header: "HSN code",
+      header: "HSN Code",
       cell: ({ row }) => row.original.hsnCode ?? <span className="text-slate-300">—</span>,
     },
-    { accessorKey: "gstRate", header: "GST %", cell: ({ row }) => `${row.original.gstRate}%` },
     {
       accessorKey: "batchNumber",
-      header: "Batch no.",
+      header: "Batch Number",
       cell: ({ row }) => row.original.batchNumber ?? <span className="text-slate-300">—</span>,
-    },
-    {
-      accessorKey: "expiryDate",
-      header: "Expiry",
-      cell: ({ row }) => (row.original.expiryDate ? formatDate(row.original.expiryDate) : <span className="text-slate-300">—</span>),
     },
     {
       accessorKey: "mrp",
       header: "MRP",
       cell: ({ row }) => (row.original.mrp != null ? formatCurrency(row.original.mrp) : "—"),
     },
+    { accessorKey: "gstRate", header: "GST", cell: ({ row }) => `${row.original.gstRate}%` },
     {
       accessorKey: "sellingPrice",
-      header: "Selling price",
+      header: "Selling Price",
       cell: ({ row }) => (row.original.sellingPrice != null ? formatCurrency(row.original.sellingPrice) : "—"),
     },
     {
@@ -196,12 +191,17 @@ export function ProductsExplorer({ products }: { products: ProductRow[] }) {
     },
     {
       accessorKey: "stockQty",
-      header: "Stock",
+      header: "Stock Qty",
       cell: ({ row }) => (
         <span className={row.original.stockQty === 0 ? "text-danger-500 font-medium" : ""}>
           {row.original.stockQty}
         </span>
       ),
+    },
+    {
+      accessorKey: "expiryDate",
+      header: "Expiry Date",
+      cell: ({ row }) => (row.original.expiryDate ? formatExpiryDate(row.original.expiryDate) : <span className="text-slate-300">—</span>),
     },
     {
       accessorKey: "status",

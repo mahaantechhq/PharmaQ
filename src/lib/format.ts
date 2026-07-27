@@ -20,6 +20,19 @@ export function formatDate(
   return new Date(value).toLocaleDateString("en-IN", { ...opts, timeZone: "Asia/Kolkata" });
 }
 
+// Product batch expiry dates specifically use D-M-YY (e.g. "1-5-26"), unlike
+// formatDate's "31 Dec 2027" style used everywhere else in the app.
+export function formatExpiryDate(value: string | Date): string {
+  const parts = new Intl.DateTimeFormat("en-IN", {
+    day: "numeric",
+    month: "numeric",
+    year: "2-digit",
+    timeZone: "Asia/Kolkata",
+  }).formatToParts(new Date(value));
+  const get = (type: string) => parts.find((p) => p.type === type)?.value ?? "";
+  return `${get("day")}-${get("month")}-${get("year")}`;
+}
+
 export function formatDateTime(
   value: string | Date,
   opts: Intl.DateTimeFormatOptions = { day: "2-digit", month: "short", year: "numeric", hour: "2-digit", minute: "2-digit" },

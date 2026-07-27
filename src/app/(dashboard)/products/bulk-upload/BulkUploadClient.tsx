@@ -36,7 +36,6 @@ const HEADER_FIELD_MAP: Record<string, string> = {
   "product name": "name",
   "product": "name",
   "company": "brand",
-  "brand": "brand",
   "offer": "scheme",
   "gst": "gst_rate",
 };
@@ -48,7 +47,7 @@ function normalizeHeader(header: string): string {
 
 function downloadTemplate() {
   const csv = TEMPLATE_HEADERS.join(",") + "\n" +
-    "DOLO 650,Analgesics,Paracetamol 650mg,Micro,15's,3004,B-001,45,5%,40,5+1,2%,200,01-01-2027\n";
+    "DOLO 650,BRAND,Paracetamol 650mg,MICRO,15's,3004,B-001,45,5%,40,5+1,2%,200,01-01-2027\n";
   const blob = new Blob([csv], { type: "text/csv" });
   const url = URL.createObjectURL(blob);
   const a = document.createElement("a");
@@ -63,7 +62,7 @@ const IMPORT_CHUNK_SIZE = 20;
 export function BulkUploadClient() {
   const [rows, setRows] = useState<Record<string, string>[]>([]);
   const [fileName, setFileName] = useState<string | null>(null);
-  const [result, setResult] = useState<{ created: number; updated: number; skipped: number; errors: string[] } | null>(null);
+  const [result, setResult] = useState<{ created: number; updated: number; errors: string[] } | null>(null);
   const [loading, setLoading] = useState(false);
   const [progress, setProgress] = useState(0);
   const inputRef = useRef<HTMLInputElement>(null);
@@ -106,14 +105,13 @@ export function BulkUploadClient() {
     if (rows.length === 0) return;
     setLoading(true);
     setProgress(0);
-    const combined = { created: 0, updated: 0, skipped: 0, errors: [] as string[] };
+    const combined = { created: 0, updated: 0, errors: [] as string[] };
     try {
       for (let start = 0; start < rows.length; start += IMPORT_CHUNK_SIZE) {
         const chunk = rows.slice(start, start + IMPORT_CHUNK_SIZE);
         const res = await bulkImportProducts(chunk as any, start);
         combined.created += res.created;
         combined.updated += res.updated;
-        combined.skipped += res.skipped;
         combined.errors.push(...res.errors);
         setProgress(Math.round((Math.min(start + IMPORT_CHUNK_SIZE, rows.length) / rows.length) * 100));
       }

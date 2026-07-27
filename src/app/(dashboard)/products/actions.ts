@@ -178,16 +178,22 @@ interface BulkProductRow {
   stock_qty?: string;
 }
 
+interface BulkImportResult {
+  created: number;
+  updated: number;
+  errors: string[];
+}
+
 const MONTH_ABBREVIATIONS: Record<string, number> = {
   jan: 1, feb: 2, mar: 3, apr: 4, may: 5, jun: 6,
   jul: 7, aug: 8, sep: 9, oct: 10, nov: 11, dec: 12,
 };
 
-// The bulk-upload template accepts DD-MM-YYYY, MM/YYYY, or "Mon-YY" /
-// "Mon-YYYY" (e.g. "Dec-28") -- day omitted forms are pharma packs commonly
-// labelled with just month/year, taken to mean valid through the end of
-// that month; ISO (YYYY-MM-DD) passes through unchanged so re-uploads of
-// previously-exported data still work.
+// Accepts DD-MM-YYYY, MM/YYYY, or "Mon-YY" / "Mon-YYYY" (e.g. "Dec-28") --
+// day-omitted forms are pharma packs commonly labelled with just
+// month/year, taken to mean valid through the end of that month. ISO
+// (YYYY-MM-DD) passes through unchanged so re-uploads of previously
+// exported data still work.
 function parseExpiryDate(input: string): string {
   const trimmed = input.trim();
   const parts = trimmed.split(/[-/\s]+/).filter(Boolean);
@@ -215,124 +221,166 @@ function parseExpiryDate(input: string): string {
   return trimmed;
 }
 
-// gst_rate / discount_percent may be entered as "12%" or "12" — strip any
-// "%" before parsing. Number("12%") is NaN, which supabase-js serializes
-// to JSON `null`, silently tripping the not-null constraint on gst_rate.
+// gst_rate / discount_percent may be entered as "12%" or "12" -- strip any
+// "%" before parsing. Number("12%") is NaN, which supabase-js serializes to
+// JSON `null`, silently tripping not-null constraints.
 function parsePercent(input: string): number {
   return Number(input.replace(/%/g, "").trim());
 }
 
-// mrp / selling_price may be entered as "₹50", "50", or "1,200" with
-// thousands separators — strip the currency symbol and commas so a plain
-// number like 50 still parses as 50 (displayed as ₹50 everywhere else via
-// formatCurrency) instead of failing on Number("₹50") === NaN.
+// mrp / selling_price may be entered as "₹50", "50", or "1,200" -- strip
+// the currency symbol and thousands separators before parsing.
 function parseCurrency(input: string): number {
   return Number(input.replace(/[₹,]/g, "").trim());
 }
 
-export async function bulkImportProducts(rows: BulkProductRow[], rowOffset = 0) {
+// Category/Company values in a CSV (e.g. "GSK", "Sun Pharma") are real
+// names that won't already exist as catalog rows in a fresh business --
+// look one up case-insensitively, creating it if there's no match, so the
+// link never silently drops to null just because it hasn't been seen yet.
+async function resolveCatalogId(
+  supabase: Awaited<ReturnType<typeof createClient>>,
+  table: "categories" | "brands",
+  cache: Map<string, string>,
+  businessId: string,
+  rawName: string,
+): Promise<string | null> {
+  const name = rawName.trim();
+  if (!name) return null;
+
+  const key = name.toLowerCase();
+  const cached = cache.get(key);
+  if (cached) return cached;
+
+  const { data, error } = await supabase
+    .from(table)
+    .insert({ name, slug: `${slugify(name)}-${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 6)}`, created_by_business_id: businessId })
+    .select("id")
+    .single();
+  if (error || !data) return null;
+
+  cache.set(key, data.id);
+  return data.id;
+}
+
+export async function bulkImportProducts(rows: BulkProductRow[], rowOffset = 0): Promise<BulkImportResult> {
   const ctx = await getCurrentBusiness();
   if (!ctx) throw new Error("Not authenticated");
 
   const supabase = await createClient();
-  let created = 0;
-  let updated = 0;
-  const skipped = 0;
-  const errors: string[] = [];
+  const businessId = ctx.business.id;
+  const result: BulkImportResult = { created: 0, updated: 0, errors: [] };
 
   const [{ data: categories }, { data: brands }, { data: existingProducts }] = await Promise.all([
     supabase.from("categories").select("id, name"),
     supabase.from("brands").select("id, name"),
-    supabase.from("products").select("id, name").eq("business_id", ctx.business.id),
+    supabase.from("products").select("id, name").eq("business_id", businessId),
   ]);
-  const categoryMap = new Map((categories ?? []).map((c) => [c.name.toLowerCase(), c.id]));
-  const brandMap = new Map((brands ?? []).map((b) => [b.name.toLowerCase(), b.id]));
+  const categoryCache = new Map((categories ?? []).map((c) => [c.name.toLowerCase(), c.id as string]));
+  const brandCache = new Map((brands ?? []).map((b) => [b.name.toLowerCase(), b.id as string]));
 
-  // Product and batch are the same record now (one batch per product), so
-  // product names (existing + created during this run) map to their id --
-  // re-importing an existing name syncs its one batch with the new row's
-  // values instead of adding another batch.
+  // Product and batch are treated as one record (one batch per product):
+  // product names (existing + created during this run) map to their id, so
+  // re-importing an existing name syncs its details and single batch with
+  // the new row's values instead of creating a duplicate or adding a
+  // second batch alongside the first.
   const productIdByName = new Map((existingProducts ?? []).map((p) => [p.name.trim().toLowerCase(), p.id as string]));
 
   for (const [index, row] of rows.entries()) {
-    if (!row.name?.trim()) {
-      // Trailing fully-blank rows (common in spreadsheet exports) are not
-      // an error worth reporting -- only flag a row that has some data but
-      // is missing the name specifically.
+    const rowNumber = index + rowOffset + 2; // +2: 1-indexed, plus header row
+
+    const name = row.name?.trim();
+    if (!name) {
+      // Trailing fully-blank rows (common in spreadsheet exports) aren't an
+      // error worth reporting -- only flag a row with some data that's
+      // missing the name specifically.
       const hasOtherData = Object.values(row).some((v) => v && String(v).trim());
-      if (hasOtherData) errors.push(`Row ${index + rowOffset + 2}: missing product name`);
+      if (hasOtherData) result.errors.push(`Row ${rowNumber}: missing product name`);
       continue;
     }
 
-    const normalizedName = row.name.trim().toLowerCase();
-    let productId = productIdByName.get(normalizedName);
-    const isNewProduct = !productId;
+    const normalizedName = name.toLowerCase();
+    const existingProductId = productIdByName.get(normalizedName);
 
-    if (!productId) {
-      const { data: product, error: productError } = await supabase
+    const categoryId = row.category ? await resolveCatalogId(supabase, "categories", categoryCache, businessId, row.category) : null;
+    const brandId = row.brand ? await resolveCatalogId(supabase, "brands", brandCache, businessId, row.brand) : null;
+
+    const productFields = {
+      category_id: categoryId,
+      brand_id: brandId,
+      composition: row.composition?.trim() || null,
+      pack_size: row.pack_size?.trim() || null,
+      hsn_code: row.hsn_code?.trim() || null,
+      gst_rate: row.gst_rate ? parsePercent(row.gst_rate) : 0,
+    };
+
+    let productId: string;
+
+    if (existingProductId) {
+      productId = existingProductId;
+      const { error } = await supabase
+        .from("products")
+        .update({ ...productFields, updated_at: new Date().toISOString() })
+        .eq("id", productId)
+        .eq("business_id", businessId);
+      if (error) {
+        result.errors.push(`Row ${rowNumber}: ${error.message}`);
+        continue;
+      }
+      result.updated++;
+    } else {
+      const { data: product, error } = await supabase
         .from("products")
         .insert({
-          business_id: ctx.business.id,
-          name: row.name.trim(),
-          slug: `${slugify(row.name)}-${Date.now().toString(36)}-${index}`,
-          category_id: row.category ? categoryMap.get(row.category.toLowerCase()) ?? null : null,
-          brand_id: row.brand ? brandMap.get(row.brand.toLowerCase()) ?? null : null,
-          composition: row.composition || null,
-          pack_size: row.pack_size || null,
-          hsn_code: row.hsn_code || null,
-          gst_rate: row.gst_rate ? parsePercent(row.gst_rate) : 0,
+          business_id: businessId,
+          name,
+          slug: `${slugify(name)}-${Date.now().toString(36)}-${index}`,
+          ...productFields,
           status: "active",
         })
         .select("id")
         .single();
-
-      if (productError) {
-        errors.push(`Row ${index + rowOffset + 2}: ${productError.message}`);
+      if (error || !product) {
+        result.errors.push(`Row ${rowNumber}: ${error?.message ?? "failed to create product"}`);
         continue;
       }
-
-      productId = product.id as string;
+      productId = product.id;
       productIdByName.set(normalizedName, productId);
-      created++;
+      result.created++;
     }
 
-    if (!(row.batch_number && row.expiry_date && row.mrp && row.selling_price)) continue;
+    const hasBatchData = row.batch_number && row.expiry_date && row.mrp && row.selling_price;
+    if (!hasBatchData) continue;
 
-    // Product and batch are 1:1 -- clear out any existing batch(es) for
-    // this product before writing the new one, so re-importing always
-    // syncs to a single batch instead of accumulating extras.
-    if (!isNewProduct) {
-      const { error: clearError } = await supabase
-        .from("product_batches")
-        .delete()
-        .eq("product_id", productId)
-        .eq("business_id", ctx.business.id);
-      if (clearError) {
-        errors.push(`Row ${index + rowOffset + 2}: ${clearError.message}`);
+    // Product and batch are 1:1 -- clear any existing batch(es) for this
+    // product before writing the new one, so re-importing always syncs to
+    // a single batch instead of accumulating extras.
+    if (existingProductId) {
+      const { error } = await supabase.from("product_batches").delete().eq("product_id", productId).eq("business_id", businessId);
+      if (error) {
+        result.errors.push(`Row ${rowNumber}: ${error.message}`);
         continue;
       }
     }
 
     const { error: batchError } = await supabase.from("product_batches").insert({
       product_id: productId,
-      business_id: ctx.business.id,
-      batch_number: row.batch_number,
-      expiry_date: parseExpiryDate(row.expiry_date),
-      mrp: parseCurrency(row.mrp),
-      selling_price: parseCurrency(row.selling_price),
-      scheme: row.scheme || null,
+      business_id: businessId,
+      batch_number: row.batch_number!.trim(),
+      expiry_date: parseExpiryDate(row.expiry_date!),
+      mrp: parseCurrency(row.mrp!),
+      selling_price: parseCurrency(row.selling_price!),
+      scheme: row.scheme?.trim() || null,
       discount_percent: row.discount_percent ? parsePercent(row.discount_percent) : null,
       stock_qty: row.stock_qty ? Number(row.stock_qty) : 0,
     });
     if (batchError) {
-      errors.push(`Row ${index + rowOffset + 2} (batch): ${batchError.message}`);
-      continue;
+      result.errors.push(`Row ${rowNumber} (batch): ${batchError.message}`);
     }
-    if (!isNewProduct) updated++;
   }
 
   revalidatePath("/products");
   revalidatePath("/inventory");
 
-  return { created, updated, skipped, errors };
+  return result;
 }

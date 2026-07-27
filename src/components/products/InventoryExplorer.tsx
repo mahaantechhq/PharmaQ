@@ -3,13 +3,13 @@
 import { useMemo, useState } from "react";
 import Link from "next/link";
 import type { ColumnDef } from "@tanstack/react-table";
-import { differenceInCalendarDays, format } from "date-fns";
+import { differenceInCalendarDays } from "date-fns";
 import { Search } from "lucide-react";
 import { DataTable } from "@/components/ui/DataTable";
 import { Input } from "@/components/ui/Input";
 import { Select } from "@/components/ui/Select";
 import { Badge } from "@/components/ui/Badge";
-import { formatCurrency } from "@/lib/format";
+import { formatCurrency, formatExpiryDate } from "@/lib/format";
 
 export interface InventoryRow {
   id: string;
@@ -51,7 +51,7 @@ export function InventoryExplorer({ rows }: { rows: InventoryRow[] }) {
   const columns: ColumnDef<InventoryRow, any>[] = [
     {
       accessorKey: "productName",
-      header: "Product",
+      header: "Product Name",
       cell: ({ row }) => (
         <Link href={`/products/${row.original.productId}`} className="font-medium text-slate-800 hover:text-primary-600">
           {row.original.productName}
@@ -65,26 +65,12 @@ export function InventoryExplorer({ rows }: { rows: InventoryRow[] }) {
     },
     {
       accessorKey: "brandName",
-      header: "Brand",
+      header: "Company",
       cell: ({ row }) => row.original.brandName ?? <span className="text-slate-300">—</span>,
     },
-    { accessorKey: "batchNumber", header: "Batch No." },
-    {
-      accessorKey: "expiryDate",
-      header: "Expiry",
-      cell: ({ row }) => {
-        const days = daysLeft(row.original.expiryDate);
-        const tone = days < 0 ? "danger" : days <= 30 ? "warning" : "success";
-        return (
-          <div className="flex items-center gap-2">
-            {format(new Date(row.original.expiryDate), "d MMM yyyy")}
-            <Badge tone={tone}>{days < 0 ? "Expired" : `${days}d left`}</Badge>
-          </div>
-        );
-      },
-    },
+    { accessorKey: "batchNumber", header: "Batch Number" },
     { accessorKey: "mrp", header: "MRP", cell: ({ row }) => formatCurrency(row.original.mrp) },
-    { accessorKey: "sellingPrice", header: "Selling price", cell: ({ row }) => formatCurrency(row.original.sellingPrice) },
+    { accessorKey: "sellingPrice", header: "Selling Price", cell: ({ row }) => formatCurrency(row.original.sellingPrice) },
     {
       accessorKey: "scheme",
       header: "Scheme",
@@ -97,12 +83,26 @@ export function InventoryExplorer({ rows }: { rows: InventoryRow[] }) {
     },
     {
       accessorKey: "stockQty",
-      header: "Stock",
+      header: "Stock Qty",
       cell: ({ row }) => (
         <span className={row.original.stockQty === 0 ? "text-danger-500 font-medium" : "font-medium text-slate-700"}>
           {row.original.stockQty}
         </span>
       ),
+    },
+    {
+      accessorKey: "expiryDate",
+      header: "Expiry Date",
+      cell: ({ row }) => {
+        const days = daysLeft(row.original.expiryDate);
+        const tone = days < 0 ? "danger" : days <= 30 ? "warning" : "success";
+        return (
+          <div className="flex items-center gap-2">
+            {formatExpiryDate(row.original.expiryDate)}
+            <Badge tone={tone}>{days < 0 ? "Expired" : `${days}d left`}</Badge>
+          </div>
+        );
+      },
     },
   ];
 
