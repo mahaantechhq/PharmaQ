@@ -11,7 +11,6 @@ export type SupplierOrderStatus =
   | "completed"
   | "cancelled"
   | "returned";
-export type WalletTransactionType = "credit" | "debit";
 export type NotificationType = "order" | "system" | "wallet" | "inventory";
 
 export interface Business {
@@ -153,25 +152,6 @@ export interface Invoice {
   subtotal: number;
   tax_total: number;
   grand_total: number;
-  created_at: string;
-}
-
-export interface Wallet {
-  id: string;
-  business_id: string;
-  balance: number;
-  credit_limit: number;
-  updated_at: string;
-}
-
-export interface WalletTransaction {
-  id: string;
-  wallet_id: string;
-  type: WalletTransactionType;
-  amount: number;
-  reference_type: string | null;
-  reference_id: string | null;
-  description: string | null;
   created_at: string;
 }
 

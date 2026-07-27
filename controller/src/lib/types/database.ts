@@ -13,6 +13,7 @@ export type SupplierOrderStatus =
   | "returned";
 export type WalletTransactionType = "credit" | "debit";
 export type NotificationType = "order" | "system" | "wallet" | "inventory";
+export type PaymentStatus = "paid" | "partial" | "unpaid";
 
 export interface Business {
   id: string;
@@ -87,6 +88,8 @@ export interface ProductBatch {
   mrp: number;
   selling_price: number;
   stock_qty: number;
+  scheme: string | null;
+  discount_percent: number | null;
   created_at: string;
 }
 
@@ -113,6 +116,8 @@ export interface SupplierOrder {
   discount_total: number;
   offer_id: string | null;
   grand_total: number;
+  payment_status: PaymentStatus;
+  amount_paid: number;
   created_at: string;
   updated_at: string;
 }
