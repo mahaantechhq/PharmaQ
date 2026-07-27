@@ -22,6 +22,10 @@ function formatDiscount(offer: Offer) {
   return offer.discount_type === "percentage" ? `${Number(offer.discount_value)}% off` : `₹${Number(offer.discount_value)} off`;
 }
 
+function isExpired(offer: Offer) {
+  return offer.expires_at < new Date().toISOString().slice(0, 10);
+}
+
 export function OffersManager({ offers }: { offers: Offer[] }) {
   const [open, setOpen] = useState(false);
   const [editingId, setEditingId] = useState<string | null>(null);
@@ -140,9 +144,13 @@ export function OffersManager({ offers }: { offers: Offer[] }) {
                 Min order ₹{Number(o.min_order_amount)} · Expires {formatDate(o.expires_at)}
               </p>
               <div className="mt-3">
-                <button onClick={() => handleToggle(o)}>
-                  <Badge tone={o.status === "active" ? "success" : "slate"}>{o.status}</Badge>
-                </button>
+                {isExpired(o) ? (
+                  <Badge tone="warning">expired</Badge>
+                ) : (
+                  <button onClick={() => handleToggle(o)}>
+                    <Badge tone={o.status === "active" ? "success" : "slate"}>{o.status}</Badge>
+                  </button>
+                )}
               </div>
             </div>
           ))}

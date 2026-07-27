@@ -38,7 +38,7 @@ export function Hero() {
                 className="h-12 w-full cursor-not-allowed rounded-xl pl-9 pr-3 text-sm text-slate-700 placeholder:text-slate-400 focus:outline-none"
               />
             </div>
-            <Button size="lg" className="rounded-xl" disabled>Search</Button>
+            <Button size="lg" className="rounded-xl disabled:opacity-100" disabled>Search</Button>
           </div>
 
           <div className="mt-8 flex flex-wrap items-center gap-x-6 gap-y-3">
