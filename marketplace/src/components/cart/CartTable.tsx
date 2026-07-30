@@ -75,45 +75,54 @@ export function CartTable({ lines, subtotal, discountTotal, taxTotal, grandTotal
               <p className="text-sm font-semibold text-slate-800">{group.name}</p>
               <p className="text-xs text-slate-400">This will be a separate order</p>
             </div>
+            <div className="flex items-center gap-4 border-b border-slate-50 px-5 py-2 text-[11px] font-medium uppercase tracking-wide text-slate-400">
+              <span className="flex-1">Item</span>
+              <span className="w-[7.5rem] text-center">Qty</span>
+              <span className="w-20 text-right">Tax</span>
+              <span className="w-24 text-right">Price</span>
+              <span className="w-7" />
+            </div>
             <div className="flex flex-col divide-y divide-slate-50">
-              {group.lines.map((line) => (
-                <div key={line.cartItemId} className="flex items-center gap-4 px-5 py-4">
-                  <div className="min-w-0 flex-1">
-                    <p className="truncate text-sm font-medium text-slate-800">{line.productName}</p>
-                    <p className="text-xs text-slate-400">
-                      {line.packSize && <>{line.packSize} · </>}Incl. {line.gstRate}% GST
-                    </p>
-                    {line.quantity > line.availableStock && (
-                      <p className="mt-1 text-xs text-danger-500">Only {line.availableStock} units available</p>
-                    )}
-                  </div>
-                  <div className="flex items-center rounded-lg border border-slate-200">
+              {group.lines.map((line) => {
+                const lineTax = Math.round(((line.lineTotal * line.gstRate) / 100) * 100) / 100;
+                return (
+                  <div key={line.cartItemId} className="flex items-center gap-4 px-5 py-4">
+                    <div className="min-w-0 flex-1">
+                      <p className="truncate text-sm font-medium text-slate-800">{line.productName}</p>
+                      {line.packSize && <p className="text-xs text-slate-400">{line.packSize}</p>}
+                      {line.quantity > line.availableStock && (
+                        <p className="mt-1 text-xs text-danger-500">Only {line.availableStock} units available</p>
+                      )}
+                    </div>
+                    <div className="flex items-center rounded-lg border border-slate-200">
+                      <button
+                        disabled={pendingId === line.cartItemId}
+                        onClick={() => handleQtyChange(line.cartItemId, line.quantity - 1)}
+                        className="flex h-9 w-9 items-center justify-center text-slate-500 hover:bg-slate-50"
+                      >
+                        <Minus className="h-3.5 w-3.5" />
+                      </button>
+                      <span className="w-8 text-center text-sm font-medium">{line.quantity}</span>
+                      <button
+                        disabled={pendingId === line.cartItemId}
+                        onClick={() => handleQtyChange(line.cartItemId, line.quantity + 1)}
+                        className="flex h-9 w-9 items-center justify-center text-slate-500 hover:bg-slate-50"
+                      >
+                        <Plus className="h-3.5 w-3.5" />
+                      </button>
+                    </div>
+                    <span className="w-20 text-right text-sm text-slate-500">{formatCurrency(lineTax)}</span>
+                    <span className="w-24 text-right text-sm font-semibold text-slate-800">{formatCurrency(line.lineTotal)}</span>
                     <button
                       disabled={pendingId === line.cartItemId}
-                      onClick={() => handleQtyChange(line.cartItemId, line.quantity - 1)}
-                      className="flex h-9 w-9 items-center justify-center text-slate-500 hover:bg-slate-50"
+                      onClick={() => handleRemove(line.cartItemId)}
+                      className="rounded-lg p-1.5 text-slate-400 hover:bg-danger-50 hover:text-danger-600"
                     >
-                      <Minus className="h-3.5 w-3.5" />
-                    </button>
-                    <span className="w-8 text-center text-sm font-medium">{line.quantity}</span>
-                    <button
-                      disabled={pendingId === line.cartItemId}
-                      onClick={() => handleQtyChange(line.cartItemId, line.quantity + 1)}
-                      className="flex h-9 w-9 items-center justify-center text-slate-500 hover:bg-slate-50"
-                    >
-                      <Plus className="h-3.5 w-3.5" />
+                      <Trash2 className="h-4 w-4" />
                     </button>
                   </div>
-                  <span className="w-24 text-right text-sm font-semibold text-slate-800">{formatCurrency(line.lineTotal)}</span>
-                  <button
-                    disabled={pendingId === line.cartItemId}
-                    onClick={() => handleRemove(line.cartItemId)}
-                    className="rounded-lg p-1.5 text-slate-400 hover:bg-danger-50 hover:text-danger-600"
-                  >
-                    <Trash2 className="h-4 w-4" />
-                  </button>
-                </div>
-              ))}
+                );
+              })}
             </div>
           </div>
         ))}
