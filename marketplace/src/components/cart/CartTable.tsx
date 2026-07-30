@@ -80,7 +80,9 @@ export function CartTable({ lines, subtotal, discountTotal, taxTotal, grandTotal
                 <div key={line.cartItemId} className="flex items-center gap-4 px-5 py-4">
                   <div className="min-w-0 flex-1">
                     <p className="truncate text-sm font-medium text-slate-800">{line.productName}</p>
-                    {line.packSize && <p className="text-xs text-slate-400">{line.packSize}</p>}
+                    <p className="text-xs text-slate-400">
+                      {line.packSize && <>{line.packSize} · </>}Incl. {line.gstRate}% GST
+                    </p>
                     {line.quantity > line.availableStock && (
                       <p className="mt-1 text-xs text-danger-500">Only {line.availableStock} units available</p>
                     )}
