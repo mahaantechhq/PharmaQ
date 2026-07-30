@@ -111,7 +111,7 @@ export function CartTable({ lines, subtotal, discountTotal, taxTotal, grandTotal
                         <Plus className="h-3.5 w-3.5" />
                       </button>
                     </div>
-                    <span className="w-20 text-right text-sm text-slate-500">{formatCurrency(lineTax)}</span>
+                    <span className="w-20 text-right text-sm text-slate-900">{formatCurrency(lineTax)}</span>
                     <span className="w-24 text-right text-sm font-semibold text-slate-800">{formatCurrency(line.lineTotal)}</span>
                     <button
                       disabled={pendingId === line.cartItemId}
