@@ -20,9 +20,30 @@ export interface CartLine {
   unitPrice: number;
   gstRate: number;
   lineTotal: number;
+  lineTax: number;
   availableStock: number;
   batchNumber: string | null;
   batchId: string | null;
+}
+
+// Rounding each line's tax to the nearest rupee independently, then summing
+// them for display, doesn't generally equal the total tax rounded once --
+// e.g. 10.56 + 14.64 + 124.8 displays as 11 + 15 + 125 = 151 while the
+// authoritative total rounds to 150. This allocates the target whole-rupee
+// total across lines (largest fractional remainder first) so the displayed
+// per-line values always sum to exactly the displayed total.
+function allocateWholeRupees(rawValues: number[], target: number): number[] {
+  const floors = rawValues.map((v) => Math.floor(v));
+  const remainder = target - floors.reduce((sum, v) => sum + v, 0);
+  const order = rawValues
+    .map((v, i) => ({ i, frac: v - Math.floor(v) }))
+    .sort((a, b) => b.frac - a.frac);
+
+  const result = [...floors];
+  for (let k = 0; k < remainder && k < order.length; k++) {
+    result[order[k].i] += 1;
+  }
+  return result;
 }
 
 export interface CartSummary {
@@ -52,6 +73,7 @@ export function applyOfferDiscounts(
   let discountTotal = 0;
   let taxTotal = 0;
   const appliedOffers: AppliedOffer[] = [];
+  const rawTaxByLine = new Map<CartLine, number>();
 
   for (const [businessId, groupLines] of byBusiness) {
     const groupSubtotal = groupLines.reduce((sum, l) => sum + l.lineTotal, 0);
@@ -60,7 +82,9 @@ export function applyOfferDiscounts(
 
     for (const line of groupLines) {
       const discountedLineTotal = line.lineTotal * (1 - discountRatio);
-      taxTotal += (discountedLineTotal * line.gstRate) / 100;
+      const lineTax = (discountedLineTotal * line.gstRate) / 100;
+      taxTotal += lineTax;
+      rawTaxByLine.set(line, lineTax);
     }
 
     if (best) {
@@ -75,9 +99,18 @@ export function applyOfferDiscounts(
     }
   }
 
+  const roundedTaxTotal = Math.round(taxTotal * 100) / 100;
+  const allocated = allocateWholeRupees(
+    lines.map((l) => rawTaxByLine.get(l) ?? 0),
+    Math.round(roundedTaxTotal),
+  );
+  lines.forEach((line, i) => {
+    line.lineTax = allocated[i];
+  });
+
   return {
     discountTotal: Math.round(discountTotal * 100) / 100,
-    taxTotal: Math.round(taxTotal * 100) / 100,
+    taxTotal: roundedTaxTotal,
     appliedOffers,
   };
 }
@@ -140,6 +173,7 @@ export async function getCartSummary(buyerBusinessId: string): Promise<CartSumma
         unitPrice,
         gstRate: Number(product.gst_rate),
         lineTotal,
+        lineTax: 0,
         availableStock: stockByProduct.get(c.product_id) ?? 0,
         batchNumber: bestBatch?.batch_number ?? null,
         batchId: bestBatch?.id ?? null,
