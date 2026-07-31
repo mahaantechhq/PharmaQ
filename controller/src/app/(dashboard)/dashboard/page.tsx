@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { Building2, IndianRupee, ShoppingCart, Clock } from "lucide-react";
+import { Building2, IndianRupee, ShoppingCart, Receipt, UserPlus } from "lucide-react";
 import { createClient } from "@/lib/supabase/server";
 import { PageHeader } from "@/components/layout/PageHeader";
 import { Card, CardHeader, CardBody } from "@/components/ui/Card";
@@ -9,24 +9,29 @@ import { SalesChart } from "@/components/dashboard/SalesChart";
 import { OrderStatusChart } from "@/components/dashboard/OrderStatusChart";
 import { Badge } from "@/components/ui/Badge";
 import { formatCurrency, formatNumber, formatDate } from "@/lib/format";
+import { currentPeriod } from "@/lib/period";
 import type { Business, SupplierOrder } from "@/lib/types/database";
 
 export default async function DashboardPage() {
   const supabase = await createClient();
 
-  const [{ data: businesses }, { data: orders }] = await Promise.all([
+  const [{ data: businesses }, { data: orders }, { data: subscriptionPayments }] = await Promise.all([
     supabase.from("businesses").select("*").order("created_at", { ascending: false }),
     supabase
       .from("supplier_orders")
       .select("*, supplier:supplier_business_id(name), buyer:buyer_business_id(name)")
       .order("created_at", { ascending: false }),
+    supabase.from("business_subscription_payments").select("amount").eq("period", currentPeriod()).eq("status", "paid"),
   ]);
 
   const allBusinesses = (businesses ?? []) as Business[];
   const allOrders = (orders ?? []) as (SupplierOrder & { supplier: { name: string } | null; buyer: { name: string } | null })[];
 
-  const pendingCount = allBusinesses.filter((b) => b.status === "pending").length;
-  const approvedCount = allBusinesses.filter((b) => b.status === "approved").length;
+  const monthlyRevenue = (subscriptionPayments ?? []).reduce((sum, p) => sum + Number(p.amount), 0);
+  const newThisMonthCount = allBusinesses.filter((b) => {
+    const isoMonth = new Date(b.created_at).toLocaleDateString("en-CA", { timeZone: "Asia/Kolkata" }).slice(0, 7);
+    return isoMonth === currentPeriod().slice(0, 7);
+  }).length;
   const gmv = allOrders
     .filter((o) => o.status === "completed" || o.status === "delivered")
     .reduce((sum, o) => sum + Number(o.grand_total), 0);
@@ -70,8 +75,8 @@ export default async function DashboardPage() {
 
       <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
         <StatCard label="Total businesses" value={formatNumber(allBusinesses.length)} icon={Building2} tone="primary" />
-        <StatCard label="Approved businesses" value={formatNumber(approvedCount)} icon={Building2} tone="success" />
-        <StatCard label="Pending approvals" value={formatNumber(pendingCount)} icon={Clock} tone="warning" />
+        <StatCard label="New businesses (this month)" value={formatNumber(newThisMonthCount)} icon={UserPlus} tone="success" />
+        <StatCard label="Total revenue (this month)" value={formatCurrency(monthlyRevenue)} icon={Receipt} tone="primary" />
         <StatCard label="Platform GMV" value={formatCurrency(gmv)} icon={IndianRupee} tone="success" />
       </div>
 

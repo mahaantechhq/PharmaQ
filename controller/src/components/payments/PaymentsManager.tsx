@@ -32,7 +32,6 @@ export function PaymentsManager({ rows, monthlyFee }: { rows: PaymentRow[]; mont
   const { toast } = useToast();
 
   const filtered = rows.filter((r) => r.businessName.toLowerCase().includes(search.toLowerCase()));
-  const paidCount = rows.filter((r) => r.status === "paid").length;
 
   const handleMarkPaid = async () => {
     if (!markPaidTarget || !amount) return;
@@ -87,14 +86,9 @@ export function PaymentsManager({ rows, monthlyFee }: { rows: PaymentRow[]; mont
           <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
           <Input placeholder="Search businesses..." className="pl-9" value={search} onChange={(e) => setSearch(e.target.value)} />
         </div>
-        <div className="flex items-center gap-3">
-          <p className="text-sm text-slate-500">
-            <span className="font-semibold text-slate-800">{paidCount}</span> / {rows.length} paid this month
-          </p>
-          <Button size="sm" variant="outline" onClick={() => { setFeeInput(String(monthlyFee)); setFeeModalOpen(true); }}>
-            <Settings2 className="h-3.5 w-3.5" /> Monthly fee: {formatCurrency(monthlyFee)}
-          </Button>
-        </div>
+        <Button size="sm" variant="outline" onClick={() => { setFeeInput(String(monthlyFee)); setFeeModalOpen(true); }}>
+          <Settings2 className="h-3.5 w-3.5" /> Monthly fee: {formatCurrency(monthlyFee)}
+        </Button>
       </div>
 
       <div className="overflow-x-auto">
