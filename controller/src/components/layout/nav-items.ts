@@ -3,7 +3,7 @@ import {
   Building2,
   Tags,
   Megaphone,
-  Wallet,
+  Receipt,
   BarChart3,
   Bell,
   ScrollText,
@@ -37,7 +37,7 @@ export const NAV_GROUPS: NavGroup[] = [
   {
     label: "Finance",
     items: [
-      { label: "Wallet & Credit", href: "/wallet", icon: Wallet },
+      { label: "Payments", href: "/payments", icon: Receipt },
       { label: "Reports", href: "/reports", icon: BarChart3 },
     ],
   },
