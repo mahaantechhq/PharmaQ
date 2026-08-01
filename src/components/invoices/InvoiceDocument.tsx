@@ -66,7 +66,7 @@ export function InvoiceDocument({ invoice, orderNumber, items, supplier, buyer }
           </View>
         </View>
 
-        <Text style={styles.muted}>Order Reference: {orderNumber}</Text>
+        <Text style={styles.muted}>Order No: {orderNumber}</Text>
 
         <View style={styles.table}>
           <View style={styles.tableHeader}>
