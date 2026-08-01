@@ -1,19 +1,27 @@
 "use client";
 
+import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
+import { KeyRound } from "lucide-react";
 import { businessProfileSchema, type BusinessProfileFormValues } from "@/lib/validations/business";
 import { Field } from "@/components/ui/Field";
 import { Input } from "@/components/ui/Input";
 import { Button } from "@/components/ui/Button";
+import { Modal } from "@/components/ui/Modal";
 import { useToast } from "@/components/ui/Toast";
-import { updateBusinessProfile } from "@/app/(dashboard)/businesses/actions";
+import { updateBusinessProfile, updateBusinessOwnerPassword } from "@/app/(dashboard)/businesses/actions";
 import type { Business, BusinessOwner } from "@/lib/types/database";
 
 export function BusinessProfileForm({ business, owner }: { business: Business; owner: BusinessOwner }) {
   const router = useRouter();
   const { toast } = useToast();
+  const [passwordModalOpen, setPasswordModalOpen] = useState(false);
+  const [newPassword, setNewPassword] = useState("");
+  const [confirmPassword, setConfirmPassword] = useState("");
+  const [passwordError, setPasswordError] = useState("");
+  const [passwordSaving, setPasswordSaving] = useState(false);
 
   const {
     register,
@@ -42,6 +50,34 @@ export function BusinessProfileForm({ business, owner }: { business: Business; o
       router.refresh();
     } catch (err) {
       toast(err instanceof Error ? err.message : "Failed to update profile", "error");
+    }
+  };
+
+  const closePasswordModal = () => {
+    setPasswordModalOpen(false);
+    setNewPassword("");
+    setConfirmPassword("");
+    setPasswordError("");
+  };
+
+  const handleChangePassword = async () => {
+    if (newPassword.length < 8) {
+      setPasswordError("Password must be at least 8 characters");
+      return;
+    }
+    if (newPassword !== confirmPassword) {
+      setPasswordError("Passwords do not match");
+      return;
+    }
+    setPasswordSaving(true);
+    try {
+      await updateBusinessOwnerPassword(business.id, owner.id, newPassword);
+      toast("Password updated", "success");
+      closePasswordModal();
+    } catch (err) {
+      setPasswordError(err instanceof Error ? err.message : "Failed to update password");
+    } finally {
+      setPasswordSaving(false);
     }
   };
 
@@ -79,9 +115,37 @@ export function BusinessProfileForm({ business, owner }: { business: Business; o
           <Input id="pincode" {...register("pincode")} />
         </Field>
       </div>
-      <div className="flex justify-end border-t border-slate-100 pt-5">
+      <div className="flex justify-end gap-2 border-t border-slate-100 pt-5">
+        <Button type="button" variant="outline" onClick={() => setPasswordModalOpen(true)}>
+          <KeyRound className="h-4 w-4" /> Change password
+        </Button>
         <Button type="submit" loading={isSubmitting}>Save changes</Button>
       </div>
+
+      <Modal open={passwordModalOpen} onClose={closePasswordModal} title={`Change password — ${owner.full_name}`} size="sm">
+        <div className="flex flex-col gap-4">
+          <Field label="New password" htmlFor="new-password" required error={passwordError || undefined}>
+            <Input
+              id="new-password"
+              type="password"
+              value={newPassword}
+              onChange={(e) => setNewPassword(e.target.value)}
+            />
+          </Field>
+          <Field label="Confirm password" htmlFor="confirm-password" required>
+            <Input
+              id="confirm-password"
+              type="password"
+              value={confirmPassword}
+              onChange={(e) => setConfirmPassword(e.target.value)}
+            />
+          </Field>
+        </div>
+        <div className="mt-4 flex justify-end gap-2">
+          <Button type="button" variant="outline" onClick={closePasswordModal}>Cancel</Button>
+          <Button type="button" onClick={handleChangePassword} loading={passwordSaving}>Update password</Button>
+        </div>
+      </Modal>
     </form>
   );
 }

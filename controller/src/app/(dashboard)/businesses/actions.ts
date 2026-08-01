@@ -143,3 +143,20 @@ export async function updateBusinessProfile(businessId: string, ownerId: string,
 
   revalidatePath(`/businesses/${businessId}`);
 }
+
+export async function updateBusinessOwnerPassword(businessId: string, ownerId: string, newPassword: string) {
+  const admin = await getCurrentAdmin();
+  if (!admin) throw new Error("Not authenticated as super admin");
+  if (newPassword.length < 8) throw new Error("Password must be at least 8 characters");
+
+  const adminClient = createAdminClient();
+  const { error } = await adminClient.auth.admin.updateUserById(ownerId, { password: newPassword });
+  if (error) throw new Error(error.message);
+
+  await logAudit({
+    actorId: admin.adminId,
+    action: "business.reset_owner_password",
+    entityType: "business",
+    entityId: businessId,
+  });
+}
