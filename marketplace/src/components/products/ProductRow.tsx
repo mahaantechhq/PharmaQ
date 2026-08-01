@@ -107,8 +107,13 @@ export function ProductRow({
       <input
         type="number"
         min={1}
+        max={product.totalStock || 1}
         value={qty}
         onChange={(e) => setQty(e.target.value)}
+        onBlur={() => {
+          const clamped = Math.min(Math.max(1, parseInt(qty, 10) || 1), product.totalStock || 1);
+          setQty(String(clamped));
+        }}
         disabled={outOfStock}
         className="h-10 w-16 shrink-0 rounded-lg border border-slate-200 px-2 text-center text-sm disabled:bg-slate-50"
       />

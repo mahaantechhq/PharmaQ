@@ -3,6 +3,7 @@
 import { revalidatePath } from "next/cache";
 import { createClient } from "@/lib/supabase/server";
 import { getCurrentBusiness } from "@/lib/supabase/current-business";
+import { getAvailableStock } from "@/lib/stock";
 
 export async function addToCart(productId: string, quantity: number) {
   const ctx = await getCurrentBusiness();
@@ -18,10 +19,16 @@ export async function addToCart(productId: string, quantity: number) {
     .eq("product_id", productId)
     .maybeSingle();
 
+  const newQuantity = (existing?.quantity ?? 0) + quantity;
+  const availableStock = await getAvailableStock(productId);
+  if (newQuantity > availableStock) {
+    throw new Error(`Only ${availableStock} unit${availableStock === 1 ? "" : "s"} available`);
+  }
+
   if (existing) {
     const { error } = await supabase
       .from("cart_items")
-      .update({ quantity: existing.quantity + quantity, updated_at: new Date().toISOString() })
+      .update({ quantity: newQuantity, updated_at: new Date().toISOString() })
       .eq("id", existing.id);
     if (error) throw new Error(error.message);
   } else {
@@ -46,6 +53,19 @@ export async function updateCartItemQuantity(cartItemId: string, quantity: numbe
     const { error } = await supabase.from("cart_items").delete().eq("id", cartItemId).eq("buyer_business_id", ctx.business.id);
     if (error) throw new Error(error.message);
   } else {
+    const { data: cartItem } = await supabase
+      .from("cart_items")
+      .select("product_id")
+      .eq("id", cartItemId)
+      .eq("buyer_business_id", ctx.business.id)
+      .maybeSingle();
+    if (!cartItem) throw new Error("Cart item not found");
+
+    const availableStock = await getAvailableStock(cartItem.product_id);
+    if (quantity > availableStock) {
+      throw new Error(`Only ${availableStock} unit${availableStock === 1 ? "" : "s"} available`);
+    }
+
     const { error } = await supabase
       .from("cart_items")
       .update({ quantity, updated_at: new Date().toISOString() })

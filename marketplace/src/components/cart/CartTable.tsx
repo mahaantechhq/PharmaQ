@@ -21,6 +21,7 @@ export function CartTable({ lines, subtotal, discountTotal, taxTotal, grandTotal
   const router = useRouter();
   const { toast } = useToast();
   const [pendingId, setPendingId] = useState<string | null>(null);
+  const [qtyInputs, setQtyInputs] = useState<Record<string, string>>({});
 
   const handleQtyChange = async (cartItemId: string, quantity: number) => {
     setPendingId(cartItemId);
@@ -32,6 +33,18 @@ export function CartTable({ lines, subtotal, discountTotal, taxTotal, grandTotal
     } finally {
       setPendingId(null);
     }
+  };
+
+  const commitQtyInput = (line: CartLine) => {
+    const raw = qtyInputs[line.cartItemId];
+    setQtyInputs((prev) => {
+      const next = { ...prev };
+      delete next[line.cartItemId];
+      return next;
+    });
+    if (raw === undefined) return;
+    const clamped = Math.min(Math.max(1, parseInt(raw, 10) || 1), line.availableStock || 1);
+    if (clamped !== line.quantity) handleQtyChange(line.cartItemId, clamped);
   };
 
   const handleRemove = async (cartItemId: string) => {
@@ -100,11 +113,21 @@ export function CartTable({ lines, subtotal, discountTotal, taxTotal, grandTotal
                     >
                       <Minus className="h-3.5 w-3.5" />
                     </button>
-                    <span className="w-8 text-center text-sm font-medium">{line.quantity}</span>
-                    <button
+                    <input
+                      type="number"
+                      min={1}
+                      max={line.availableStock || 1}
                       disabled={pendingId === line.cartItemId}
+                      value={qtyInputs[line.cartItemId] ?? String(line.quantity)}
+                      onChange={(e) => setQtyInputs((prev) => ({ ...prev, [line.cartItemId]: e.target.value }))}
+                      onBlur={() => commitQtyInput(line)}
+                      onKeyDown={(e) => e.key === "Enter" && (e.target as HTMLInputElement).blur()}
+                      className="w-10 border-0 bg-transparent text-center text-sm font-medium focus:outline-none [appearance:textfield] [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none"
+                    />
+                    <button
+                      disabled={pendingId === line.cartItemId || line.quantity >= line.availableStock}
                       onClick={() => handleQtyChange(line.cartItemId, line.quantity + 1)}
-                      className="flex h-9 w-9 items-center justify-center text-slate-500 hover:bg-slate-50"
+                      className="flex h-9 w-9 items-center justify-center text-slate-500 hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-40"
                     >
                       <Plus className="h-3.5 w-3.5" />
                     </button>
