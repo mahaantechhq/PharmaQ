@@ -1,9 +1,32 @@
+"use client";
+
+import { useState } from "react";
 import Link from "next/link";
-import { ShoppingCart } from "lucide-react";
+import { useRouter } from "next/navigation";
+import { ShoppingCart, X } from "lucide-react";
+import { useToast } from "@/components/ui/Toast";
+import { removeCartItem } from "@/app/(site)/cart/actions";
 import { formatCurrency } from "@/lib/format";
 import type { CartSummary } from "@/lib/checkout";
 
 export function CartSidePanel({ summary }: { summary: CartSummary }) {
+  const router = useRouter();
+  const { toast } = useToast();
+  const [pendingId, setPendingId] = useState<string | null>(null);
+
+  const handleRemove = async (cartItemId: string) => {
+    setPendingId(cartItemId);
+    try {
+      await removeCartItem(cartItemId);
+      toast("Removed from cart", "success");
+      router.refresh();
+    } catch (err) {
+      toast(err instanceof Error ? err.message : "Failed to remove item", "error");
+    } finally {
+      setPendingId(null);
+    }
+  };
+
   if (summary.lines.length === 0) {
     return (
       <div className="flex h-full flex-col items-center justify-center gap-2 rounded-xl border border-slate-100 bg-white p-8 text-center">
@@ -24,7 +47,17 @@ export function CartSidePanel({ summary }: { summary: CartSummary }) {
               <p className="truncate text-sm font-medium text-slate-700">{line.productName}</p>
               <p className="text-xs text-slate-400">Qty {line.quantity} · {line.businessName}</p>
             </div>
-            <span className="shrink-0 text-sm font-semibold text-slate-800">{formatCurrency(line.lineTotal)}</span>
+            <div className="flex shrink-0 items-center gap-2">
+              <span className="text-sm font-semibold text-slate-800">{formatCurrency(line.lineTotal)}</span>
+              <button
+                disabled={pendingId === line.cartItemId}
+                onClick={() => handleRemove(line.cartItemId)}
+                aria-label={`Remove ${line.productName}`}
+                className="flex h-6 w-6 items-center justify-center rounded-full text-danger-500 hover:bg-danger-50 disabled:opacity-50"
+              >
+                <X className="h-3.5 w-3.5" />
+              </button>
+            </div>
           </div>
         ))}
       </div>
