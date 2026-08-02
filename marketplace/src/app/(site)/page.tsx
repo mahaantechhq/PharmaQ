@@ -8,7 +8,7 @@ import { CategoryGrid } from "@/components/home/CategoryGrid";
 import { BrandGrid } from "@/components/home/BrandGrid";
 import { Stats } from "@/components/home/Stats";
 import { BenefitsAndHowItWorks } from "@/components/home/BenefitsAndHowItWorks";
-import { TestimonialsAndFaq } from "@/components/home/TestimonialsAndFaq";
+import { Faq } from "@/components/home/Faq";
 import { DownloadAndContact } from "@/components/home/DownloadAndContact";
 
 export default async function HomePage() {
@@ -39,7 +39,7 @@ export default async function HomePage() {
       <CategoryGrid categories={categories ?? []} />
       <Stats />
       <BenefitsAndHowItWorks />
-      <TestimonialsAndFaq />
+      <Faq />
       <DownloadAndContact />
     </div>
   );

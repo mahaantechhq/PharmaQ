@@ -10,7 +10,6 @@ import { Dropdown, DropdownItem } from "@/components/ui/Dropdown";
 const NAV_LINKS = [
   { label: "Home", href: "/" },
   { label: "How it works", href: "/#how-it-works" },
-  { label: "Testimonials", href: "/#testimonials" },
   { label: "FAQ", href: "/#faq" },
   { label: "Contact", href: "/#contact" },
 ];
