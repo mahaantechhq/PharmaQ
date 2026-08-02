@@ -8,6 +8,7 @@ import { Button } from "@/components/ui/Button";
 import { StatCard } from "@/components/dashboard/StatCard";
 import { CatalogStatCard } from "@/components/products/CatalogStatCard";
 import { ProductsExplorer, type ProductRow } from "@/components/products/ProductsExplorer";
+import { ExportProductsButton } from "@/components/products/ExportProductsButton";
 import { formatNumber } from "@/lib/format";
 
 export default async function ProductsPage() {
@@ -86,6 +87,7 @@ export default async function ProductsPage() {
         description="Manage the products your business lists on Pharma Q."
         action={
           <div className="flex gap-2">
+            <ExportProductsButton products={rows} />
             <Link href="/products/bulk-upload">
               <Button variant="outline" size="sm">
                 <Upload className="h-4 w-4" /> Bulk upload
