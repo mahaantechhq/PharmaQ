@@ -87,7 +87,7 @@ export default async function ProductsPage() {
         description="Manage the products your business lists on Pharma Q."
         action={
           <div className="flex gap-2">
-            <ExportProductsButton products={rows} />
+            <ExportProductsButton products={rows} businessName={ctx.business.name} />
             <Link href="/products/bulk-upload">
               <Button variant="outline" size="sm">
                 <Upload className="h-4 w-4" /> Bulk upload
