@@ -14,6 +14,12 @@ export async function uploadBannerImage(formData: FormData) {
   if (!(file instanceof File)) throw new Error("No file provided");
 
   const supabase = await createClient();
+  // Storage requests need this client's session hydrated in memory first --
+  // unlike PostgREST calls (which read the session straight from cookies
+  // per-request), the storage-js sub-client silently sends unauthenticated
+  // requests on a fresh client instance otherwise, which trips the
+  // is_super_admin() storage RLS policy even for a real admin.
+  await supabase.auth.getUser();
   const path = `${Date.now()}-${file.name.replace(/[^a-zA-Z0-9._-]/g, "_")}`;
 
   const { error } = await supabase.storage.from("banners").upload(path, file, { upsert: true });
