@@ -50,7 +50,7 @@ export default function LoginPage() {
         >
           <h2 className="mb-1 text-lg font-semibold text-slate-900">Sign in</h2>
           <p className="mb-6 text-sm text-slate-500">
-            Use the credentials issued to your business by Pharma Q.
+            Use your Pharma Q-issued email address and password.
           </p>
 
           <div className="flex flex-col gap-4">

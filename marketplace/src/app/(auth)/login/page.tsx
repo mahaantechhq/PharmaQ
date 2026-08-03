@@ -49,7 +49,7 @@ function LoginForm() {
         <form onSubmit={handleSubmit} className="rounded-2xl bg-white p-8 shadow-2xl">
           <h2 className="mb-1 text-lg font-semibold text-slate-900">Sign in</h2>
           <p className="mb-6 text-sm text-slate-500">
-            Same login as your Pharma Q Business Dashboard.
+            Use your Pharma Q-issued email address and password.
           </p>
 
           <div className="flex flex-col gap-4">
@@ -96,10 +96,6 @@ function LoginForm() {
             </Button>
           </div>
         </form>
-
-        <p className="mt-6 text-center text-xs text-primary-100">
-          You can still browse products without signing in.
-        </p>
       </div>
     </div>
   );
