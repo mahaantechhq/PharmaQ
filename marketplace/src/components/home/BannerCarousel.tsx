@@ -6,7 +6,7 @@ import Link from "next/link";
 import { ChevronLeft, ChevronRight } from "lucide-react";
 import type { Banner } from "@/lib/types/database";
 
-const AUTO_ROTATE_MS = 3000;
+const AUTO_ROTATE_MS = 3500;
 
 export function BannerCarousel({ banners }: { banners: Banner[] }) {
   const [index, setIndex] = useState(0);
