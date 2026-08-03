@@ -4,7 +4,6 @@ import { useState } from "react";
 import ExcelJS from "exceljs";
 import { Download } from "lucide-react";
 import { Button } from "@/components/ui/Button";
-import { formatExpiryDate } from "@/lib/format";
 import type { ProductRow } from "@/components/products/ProductsExplorer";
 
 // Mirrors the bulk-upload template's column headers (see
@@ -28,6 +27,21 @@ const COLUMNS: { header: string; key: string; width: number }[] = [
   { header: "Status", key: "status", width: 10 },
 ];
 
+// bulkImportProducts' parseExpiryDate only recognizes a 4-digit-year
+// DD-MM-YYYY, MM/YYYY, or "Mon-YY" form -- NOT the 2-digit-year D-M-YY
+// format formatExpiryDate() uses for on-screen display. Using that here
+// would silently break re-importing an unmodified export.
+function toReimportableExpiryDate(value: string): string {
+  const parts = new Intl.DateTimeFormat("en-GB", {
+    timeZone: "Asia/Kolkata",
+    day: "2-digit",
+    month: "2-digit",
+    year: "numeric",
+  }).formatToParts(new Date(value));
+  const get = (type: string) => parts.find((p) => p.type === type)?.value ?? "";
+  return `${get("day")}-${get("month")}-${get("year")}`;
+}
+
 function toRow(p: ProductRow) {
   return {
     name: p.name,
@@ -43,7 +57,7 @@ function toRow(p: ProductRow) {
     scheme: p.scheme ?? "",
     discountPercent: p.discountPercent ?? "",
     stockQty: p.stockQty,
-    expiryDate: p.expiryDate ? formatExpiryDate(p.expiryDate) : "",
+    expiryDate: p.expiryDate ? toReimportableExpiryDate(p.expiryDate) : "",
     status: p.status,
   };
 }
