@@ -22,7 +22,7 @@ export function Hero() {
           </span>
           <h1 className="mt-5 font-display text-4xl font-semibold leading-[1.08] tracking-tight text-white sm:text-6xl">
             Source pharma products
-            <span className="block text-primary-200">directly from verified businesses</span>
+            <span className="block text-white">directly from verified businesses</span>
           </h1>
           <p className="mt-5 max-w-xl text-base leading-relaxed text-primary-100/90 sm:text-lg">
             Compare prices across suppliers, order from multiple businesses in one cart, and manage everything in one place.
