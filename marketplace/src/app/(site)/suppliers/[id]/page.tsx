@@ -1,7 +1,7 @@
 import { notFound } from "next/navigation";
 import { Building2, MapPin, ShieldCheck, Package, Tags, Building } from "lucide-react";
 import { createClient } from "@/lib/supabase/server";
-import { getCurrentBusiness } from "@/lib/supabase/current-business";
+import { requireCurrentBusiness } from "@/lib/supabase/require-business";
 import { getActiveOffersByBusiness } from "@/lib/offers";
 import { ProductRow } from "@/components/products/ProductRow";
 import { SupplierStatCard } from "@/components/products/SupplierStatCard";
@@ -10,7 +10,7 @@ import type { ProductListing } from "@/lib/marketplace";
 export default async function SupplierProfilePage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
   const supabase = await createClient();
-  const ctx = await getCurrentBusiness();
+  const ctx = await requireCurrentBusiness(`/suppliers/${id}`);
 
   const { data: business } = await supabase
     .from("businesses")

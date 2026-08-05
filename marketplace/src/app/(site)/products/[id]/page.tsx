@@ -2,7 +2,7 @@ import { notFound } from "next/navigation";
 import Link from "next/link";
 import { Pill, MapPin, ShieldCheck } from "lucide-react";
 import { createClient } from "@/lib/supabase/server";
-import { getCurrentBusiness } from "@/lib/supabase/current-business";
+import { requireCurrentBusiness } from "@/lib/supabase/require-business";
 import { getActiveOffersByBusiness } from "@/lib/offers";
 import { Badge } from "@/components/ui/Badge";
 import { Card, CardBody } from "@/components/ui/Card";
@@ -12,7 +12,7 @@ import { formatCurrency } from "@/lib/format";
 export default async function ProductDetailPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
   const supabase = await createClient();
-  const ctx = await getCurrentBusiness();
+  const ctx = await requireCurrentBusiness(`/products/${id}`);
 
   const { data: product } = await supabase
     .from("products")
