@@ -5,6 +5,7 @@ import { createClient } from "@/lib/supabase/server";
 import { getCurrentBusiness } from "@/lib/supabase/current-business";
 import { getCartSummary, type CartLine } from "@/lib/checkout";
 import { getEligibleOffersByBusiness, pickBestOffer } from "@/lib/offers";
+import { getLinkedWholesalerIds } from "@/lib/links";
 
 export async function placeOrder() {
   const ctx = await getCurrentBusiness();
@@ -25,6 +26,16 @@ export async function placeOrder() {
     bySupplier.set(line.businessId, existing);
   }
   const supplierGroups = Array.from(bySupplier.values());
+
+  // A link can be revoked after items are already in the cart -- re-check
+  // here so checkout can't complete an order with a wholesaler the buyer
+  // is no longer linked to, even though addToCart/updateCartItemQuantity
+  // already check this on the way in.
+  const linkedWholesalerIds = await getLinkedWholesalerIds(ctx.business.id);
+  const unlinkedGroup = supplierGroups.find((g) => !linkedWholesalerIds.includes(g.businessId));
+  if (unlinkedGroup) {
+    throw new Error(`You're no longer linked to ${unlinkedGroup.businessName}. Remove their items from your cart to continue.`);
+  }
 
   // Discount is recomputed here server-side (not trusted from the client) --
   // same logic as applyOfferDiscounts, applied per supplier group since

@@ -64,11 +64,16 @@ export async function updateCartItemQuantity(cartItemId: string, quantity: numbe
   } else {
     const { data: cartItem } = await supabase
       .from("cart_items")
-      .select("product_id")
+      .select("product_id, products:product_id(business_id)")
       .eq("id", cartItemId)
       .eq("buyer_business_id", ctx.business.id)
       .maybeSingle();
     if (!cartItem) throw new Error("Cart item not found");
+
+    const linkedWholesalerIds = await getLinkedWholesalerIds(ctx.business.id);
+    if (!linkedWholesalerIds.includes((cartItem as any).products?.business_id)) {
+      throw new Error("You're no longer linked to this supplier");
+    }
 
     const availableStock = await getAvailableStock(cartItem.product_id);
     if (quantity > availableStock) {

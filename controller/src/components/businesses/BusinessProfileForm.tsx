@@ -8,6 +8,7 @@ import { KeyRound } from "lucide-react";
 import { businessProfileSchema, type BusinessProfileFormValues } from "@/lib/validations/business";
 import { Field } from "@/components/ui/Field";
 import { Input } from "@/components/ui/Input";
+import { Select } from "@/components/ui/Select";
 import { Button } from "@/components/ui/Button";
 import { Modal } from "@/components/ui/Modal";
 import { useToast } from "@/components/ui/Toast";
@@ -86,6 +87,15 @@ export function BusinessProfileForm({ business, owner }: { business: Business; o
       <div className="grid grid-cols-1 gap-5 sm:grid-cols-2">
         <Field label="Business name" htmlFor="name" required error={errors.name?.message} className="sm:col-span-2">
           <Input id="name" {...register("name")} />
+        </Field>
+        <Field label="Business type" htmlFor="business_type" required error={errors.business_type?.message} className="sm:col-span-2">
+          <Select id="business_type" defaultValue={business.business_type ?? ""} {...register("business_type")}>
+            <option value="" disabled>
+              Select a business type
+            </option>
+            <option value="wholesaler">Wholesaler</option>
+            <option value="retailer">Retailer</option>
+          </Select>
         </Field>
         <Field label="Owner name" htmlFor="ownerName" required error={errors.ownerName?.message}>
           <Input id="ownerName" {...register("ownerName")} />

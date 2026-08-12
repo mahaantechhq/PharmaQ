@@ -115,6 +115,7 @@ export async function updateBusinessProfile(businessId: string, ownerId: string,
       .from("businesses")
       .update({
         name: parsed.name,
+        business_type: parsed.business_type,
         phone: parsed.phone || null,
         email: parsed.email || null,
         gstin: parsed.gstin || null,
