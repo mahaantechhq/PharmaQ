@@ -4,6 +4,7 @@ import { createClient } from "@/lib/supabase/server";
 import { requireCurrentBusiness } from "@/lib/supabase/require-business";
 import { getActiveOffersByBusiness } from "@/lib/offers";
 import { getLinkedWholesalerIds } from "@/lib/links";
+import { fetchInChunks } from "@/lib/chunk";
 import { ProductRow } from "@/components/products/ProductRow";
 import { SupplierStatCard } from "@/components/products/SupplierStatCard";
 import type { ProductListing } from "@/lib/marketplace";
@@ -33,15 +34,27 @@ export default async function SupplierProfilePage({ params }: { params: Promise<
     .order("created_at", { ascending: false });
 
   const productIds = (products ?? []).map((p) => p.id);
-  const [{ data: batches }, { data: wishlistRows }] = await Promise.all([
-    productIds.length
-      ? supabase.from("product_batches").select("product_id, stock_qty, selling_price, expiry_date").in("product_id", productIds).gt("stock_qty", 0)
-      : Promise.resolve({ data: [] as { product_id: string; stock_qty: number; selling_price: number; expiry_date: string }[] }),
-    ctx && productIds.length
-      ? supabase.from("wishlist_items").select("product_id").eq("business_id", ctx.business.id).in("product_id", productIds)
-      : Promise.resolve({ data: [] as { product_id: string }[] }),
+  const [batches, wishlistRows] = await Promise.all([
+    fetchInChunks(productIds, async (chunk) => {
+      const { data } = await supabase
+        .from("product_batches")
+        .select("product_id, stock_qty, selling_price, expiry_date")
+        .in("product_id", chunk)
+        .gt("stock_qty", 0);
+      return data ?? [];
+    }),
+    ctx
+      ? fetchInChunks(productIds, async (chunk) => {
+          const { data } = await supabase
+            .from("wishlist_items")
+            .select("product_id")
+            .eq("business_id", ctx.business.id)
+            .in("product_id", chunk);
+          return data ?? [];
+        })
+      : Promise.resolve([] as { product_id: string }[]),
   ]);
-  const wishlistedIds = new Set((wishlistRows ?? []).map((w) => w.product_id));
+  const wishlistedIds = new Set(wishlistRows.map((w) => w.product_id));
 
   const today = new Date().toISOString().slice(0, 10);
   const stockByProduct = new Map<string, { stock: number; minPrice: number | null }>();
