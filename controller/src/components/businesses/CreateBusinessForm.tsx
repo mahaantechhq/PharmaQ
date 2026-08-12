@@ -8,6 +8,7 @@ import { Copy, CheckCircle2 } from "lucide-react";
 import { createBusinessSchema, type CreateBusinessFormValues } from "@/lib/validations/business";
 import { Field } from "@/components/ui/Field";
 import { Input } from "@/components/ui/Input";
+import { Select } from "@/components/ui/Select";
 import { Button } from "@/components/ui/Button";
 import { Modal } from "@/components/ui/Modal";
 import { useToast } from "@/components/ui/Toast";
@@ -46,6 +47,16 @@ export function CreateBusinessForm() {
         <div className="grid grid-cols-1 gap-5 sm:grid-cols-2">
           <Field label="Business name" htmlFor="name" required error={errors.name?.message} className="sm:col-span-2">
             <Input id="name" placeholder="e.g. ABC Medicals" {...register("name")} />
+          </Field>
+
+          <Field label="Business type" htmlFor="business_type" required error={errors.business_type?.message} className="sm:col-span-2">
+            <Select id="business_type" defaultValue="" {...register("business_type")}>
+              <option value="" disabled>
+                Select a business type
+              </option>
+              <option value="wholesaler">Wholesaler</option>
+              <option value="retailer">Retailer</option>
+            </Select>
           </Field>
 
           <Field label="Owner full name" htmlFor="ownerName" required error={errors.ownerName?.message}>

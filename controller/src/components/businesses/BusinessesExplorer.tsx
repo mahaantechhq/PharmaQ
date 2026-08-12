@@ -9,6 +9,7 @@ import { DataTable } from "@/components/ui/DataTable";
 import { Input } from "@/components/ui/Input";
 import { Select } from "@/components/ui/Select";
 import { BusinessStatusBadge } from "@/components/businesses/BusinessStatusBadge";
+import { BusinessTypeBadge } from "@/components/businesses/BusinessTypeBadge";
 import { formatDate } from "@/lib/format";
 import type { Business } from "@/lib/types/database";
 
@@ -36,6 +37,7 @@ export function BusinessesExplorer({ businesses }: { businesses: Business[] }) {
       ),
     },
     { accessorKey: "email", header: "Email", cell: ({ row }) => row.original.email ?? "—" },
+    { accessorKey: "business_type", header: "Type", cell: ({ row }) => <BusinessTypeBadge businessType={row.original.business_type} /> },
     {
       accessorKey: "city",
       header: "Location",

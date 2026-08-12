@@ -3,6 +3,7 @@ import { z } from "zod";
 export const createBusinessSchema = z
   .object({
     name: z.string().min(2, "Business name is required"),
+    business_type: z.enum(["retailer", "wholesaler"]),
     ownerName: z.string().min(2, "Owner name is required"),
     email: z.string().email("Enter a valid email"),
     password: z.string().min(8, "Password must be at least 8 characters"),

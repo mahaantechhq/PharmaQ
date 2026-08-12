@@ -1,4 +1,5 @@
 export type BusinessStatus = "pending" | "approved" | "suspended";
+export type BusinessRole = "retailer" | "wholesaler";
 export type ProductStatus = "draft" | "active" | "inactive";
 export type SupplierOrderStatus =
   | "placed"
@@ -31,6 +32,7 @@ export interface Business {
   pincode: string | null;
   logo_url: string | null;
   access_code: string;
+  business_type: BusinessRole | null;
   created_at: string;
   approved_at: string | null;
 }

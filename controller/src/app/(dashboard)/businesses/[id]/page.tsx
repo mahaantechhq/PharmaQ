@@ -4,6 +4,7 @@ import { PageHeader } from "@/components/layout/PageHeader";
 import { Card, CardHeader, CardBody } from "@/components/ui/Card";
 import { StatCard } from "@/components/dashboard/StatCard";
 import { BusinessStatusBadge } from "@/components/businesses/BusinessStatusBadge";
+import { BusinessTypeBadge } from "@/components/businesses/BusinessTypeBadge";
 import { BusinessActions } from "@/components/businesses/BusinessActions";
 import { BusinessProfileForm } from "@/components/businesses/BusinessProfileForm";
 import { AccessCodeCard } from "@/components/businesses/AccessCodeCard";
@@ -46,6 +47,7 @@ export default async function BusinessDetailPage({ params }: { params: Promise<{
         description={`Joined ${formatDate(b.created_at, { day: "2-digit", month: "long", year: "numeric" })}`}
         action={
           <div className="flex items-center gap-3">
+            <BusinessTypeBadge businessType={b.business_type} />
             <BusinessStatusBadge status={b.status} />
             <BusinessActions businessId={b.id} status={b.status} />
           </div>

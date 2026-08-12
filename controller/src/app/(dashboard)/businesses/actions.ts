@@ -54,6 +54,7 @@ export async function createBusiness(values: CreateBusinessFormValues) {
     p_city: parsed.city || null,
     p_state: parsed.state || null,
     p_pincode: parsed.pincode || null,
+    p_business_type: parsed.business_type,
   });
 
   if (provisionError) {

@@ -34,6 +34,7 @@ export function LinkedRetailersCard({ wholesalerBusinessId, retailers }: { whole
   const [linking, setLinking] = useState(false);
   const [removingId, setRemovingId] = useState<string | null>(null);
   const [found, setFound] = useState<CheckedBusiness | null>(null);
+  const [unlinkTarget, setUnlinkTarget] = useState<LinkedRetailer | null>(null);
 
   const handleCheck = async () => {
     if (!code.trim()) return;
@@ -64,11 +65,13 @@ export function LinkedRetailersCard({ wholesalerBusinessId, retailers }: { whole
     }
   };
 
-  const handleUnlink = async (linkId: string) => {
-    setRemovingId(linkId);
+  const handleConfirmUnlink = async () => {
+    if (!unlinkTarget) return;
+    setRemovingId(unlinkTarget.linkId);
     try {
-      await unlinkRetailer(linkId, wholesalerBusinessId);
+      await unlinkRetailer(unlinkTarget.linkId, wholesalerBusinessId);
       toast("Retailer unlinked", "success");
+      setUnlinkTarget(null);
       router.refresh();
     } catch (err) {
       toast(err instanceof Error ? err.message : "Failed to unlink retailer", "error");
@@ -114,7 +117,7 @@ export function LinkedRetailersCard({ wholesalerBusinessId, retailers }: { whole
                   size="icon"
                   className="shrink-0 text-danger-600 hover:bg-danger-50"
                   loading={removingId === r.linkId}
-                  onClick={() => handleUnlink(r.linkId)}
+                  onClick={() => setUnlinkTarget(r)}
                   aria-label={`Unlink ${r.name}`}
                 >
                   <X className="h-4 w-4" />
@@ -151,6 +154,36 @@ export function LinkedRetailersCard({ wholesalerBusinessId, retailers }: { whole
               <p className="text-xs text-slate-500">
                 {[found.city, found.state].filter(Boolean).join(", ") || "Location not specified"} · {found.status}
               </p>
+            </div>
+          </div>
+        )}
+      </Modal>
+
+      <Modal
+        open={!!unlinkTarget}
+        onClose={() => setUnlinkTarget(null)}
+        title="Unlink this retailer?"
+        description={unlinkTarget ? `${unlinkTarget.name} will no longer see this business's products in the marketplace.` : undefined}
+        size="sm"
+        footer={
+          <>
+            <Button variant="outline" onClick={() => setUnlinkTarget(null)}>
+              Cancel
+            </Button>
+            <Button variant="danger" onClick={handleConfirmUnlink} loading={!!removingId}>
+              Unlink
+            </Button>
+          </>
+        }
+      >
+        {unlinkTarget && (
+          <div className="flex items-center gap-3 rounded-lg border border-slate-200 bg-slate-50 p-4">
+            <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-danger-50 text-danger-600">
+              <Building2 className="h-5 w-5" />
+            </div>
+            <div>
+              <p className="text-sm font-semibold text-slate-800">{unlinkTarget.name}</p>
+              <p className="font-mono text-xs text-slate-400">{unlinkTarget.accessCode}</p>
             </div>
           </div>
         )}
