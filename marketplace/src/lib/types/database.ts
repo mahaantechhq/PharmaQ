@@ -29,6 +29,7 @@ export interface Business {
   state: string | null;
   pincode: string | null;
   logo_url: string | null;
+  access_code: string;
   created_at: string;
   approved_at: string | null;
 }

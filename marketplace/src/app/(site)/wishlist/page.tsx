@@ -1,12 +1,14 @@
 import { Heart } from "lucide-react";
 import { requireCurrentBusiness } from "@/lib/supabase/require-business";
 import { createClient } from "@/lib/supabase/server";
+import { getLinkedWholesalerIds } from "@/lib/links";
 import { ProductCard } from "@/components/products/ProductCard";
 import type { ProductListing } from "@/lib/marketplace";
 
 export default async function WishlistPage() {
   const ctx = await requireCurrentBusiness("/wishlist");
   const supabase = await createClient();
+  const linkedWholesalerIds = await getLinkedWholesalerIds(ctx.business.id);
 
   const { data: items } = await supabase.from("wishlist_items").select("product_id").eq("business_id", ctx.business.id);
   const productIds = (items ?? []).map((i) => i.product_id);
@@ -16,6 +18,7 @@ export default async function WishlistPage() {
         .from("products")
         .select("id, name, composition, pack_size, gst_rate, created_at, business_id, businesses:business_id(name, city), categories:category_id(name), brands:brand_id(name)")
         .in("id", productIds)
+        .in("business_id", linkedWholesalerIds)
         .eq("status", "active")
     : { data: [] };
 

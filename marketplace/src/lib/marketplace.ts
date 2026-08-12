@@ -1,6 +1,7 @@
 import { createClient } from "@/lib/supabase/server";
 import { getCurrentBusiness } from "@/lib/supabase/current-business";
 import { getActiveOffersByBusiness, type OfferSummary } from "@/lib/offers";
+import { getLinkedWholesalerIds } from "@/lib/links";
 
 export interface ProductListing {
   id: string;
@@ -30,18 +31,22 @@ export interface ProductSearchFilters {
 export async function searchProducts(filters: ProductSearchFilters): Promise<ProductListing[]> {
   const supabase = await createClient();
   const ctx = await getCurrentBusiness();
+  if (!ctx) return [];
+
+  // A retailer only ever sees products from wholesalers a super admin has
+  // linked them to (see 0022_retailer_wholesaler_links.sql) — this is a
+  // private linked network, not an open marketplace.
+  const linkedWholesalerIds = await getLinkedWholesalerIds(ctx.business.id);
+  if (linkedWholesalerIds.length === 0) return [];
 
   let query = supabase
     .from("products")
     .select(
       "id, name, composition, pack_size, gst_rate, created_at, business_id, category_id, brand_id, businesses:business_id(name, city), categories:category_id(name), brands:brand_id(name)",
     )
-    .eq("status", "active");
-
-  // A business shouldn't see its own listings when browsing to buy — it
-  // can't order from itself, and supplier_orders has no self-order guard,
-  // so filtering it out of discovery here is the simplest way to prevent it.
-  if (ctx) query = query.neq("business_id", ctx.business.id);
+    .eq("status", "active")
+    .in("business_id", linkedWholesalerIds)
+    .neq("business_id", ctx.business.id);
 
   if (filters.q) query = query.ilike("name", `%${filters.q}%`);
   if (filters.category) query = query.eq("category_id", filters.category);

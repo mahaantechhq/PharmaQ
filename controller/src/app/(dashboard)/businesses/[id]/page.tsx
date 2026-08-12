@@ -6,6 +6,8 @@ import { StatCard } from "@/components/dashboard/StatCard";
 import { BusinessStatusBadge } from "@/components/businesses/BusinessStatusBadge";
 import { BusinessActions } from "@/components/businesses/BusinessActions";
 import { BusinessProfileForm } from "@/components/businesses/BusinessProfileForm";
+import { AccessCodeCard } from "@/components/businesses/AccessCodeCard";
+import { LinkedRetailersCard, type LinkedRetailer } from "@/components/businesses/LinkedRetailersCard";
 import { Package, ShoppingCart, Wallet } from "lucide-react";
 import { formatCurrency, formatNumber, formatDate } from "@/lib/format";
 import type { Business, BusinessOwner } from "@/lib/types/database";
@@ -14,19 +16,30 @@ export default async function BusinessDetailPage({ params }: { params: Promise<{
   const { id } = await params;
   const supabase = await createClient();
 
-  const [{ data: business }, { count: productCount }, { count: orderCount }, { data: wallet }, { data: owner }] = await Promise.all([
-    supabase.from("businesses").select("*").eq("id", id).single(),
-    supabase.from("products").select("id", { count: "exact", head: true }).eq("business_id", id),
-    supabase.from("supplier_orders").select("id", { count: "exact", head: true }).eq("supplier_business_id", id),
-    supabase.from("wallets").select("*").eq("business_id", id).maybeSingle(),
-    supabase.from("business_owners").select("*").eq("business_id", id).maybeSingle(),
-  ]);
+  const [{ data: business }, { count: productCount }, { count: orderCount }, { data: wallet }, { data: owner }, { data: links }] =
+    await Promise.all([
+      supabase.from("businesses").select("*").eq("id", id).single(),
+      supabase.from("products").select("id", { count: "exact", head: true }).eq("business_id", id),
+      supabase.from("supplier_orders").select("id", { count: "exact", head: true }).eq("supplier_business_id", id),
+      supabase.from("wallets").select("*").eq("business_id", id).maybeSingle(),
+      supabase.from("business_owners").select("*").eq("business_id", id).maybeSingle(),
+      supabase
+        .from("retailer_wholesaler_links")
+        .select("id, retailer:retailer_business_id(id, name, access_code)")
+        .eq("wholesaler_business_id", id),
+    ]);
 
   if (!business) notFound();
   if (!owner) notFound();
 
   const b = business as Business;
   const o = owner as BusinessOwner;
+  const linkedRetailers: LinkedRetailer[] = (links ?? []).map((l: any) => ({
+    linkId: l.id,
+    businessId: l.retailer.id,
+    name: l.retailer.name,
+    accessCode: l.retailer.access_code,
+  }));
 
   return (
     <div>
@@ -53,6 +66,9 @@ export default async function BusinessDetailPage({ params }: { params: Promise<{
           <BusinessProfileForm business={b} owner={o} />
         </CardBody>
       </Card>
+
+      <AccessCodeCard code={b.access_code} />
+      <LinkedRetailersCard wholesalerBusinessId={b.id} retailers={linkedRetailers} />
     </div>
   );
 }

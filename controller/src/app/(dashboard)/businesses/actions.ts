@@ -144,6 +144,73 @@ export async function updateBusinessProfile(businessId: string, ownerId: string,
   revalidatePath(`/businesses/${businessId}`);
 }
 
+export async function lookupBusinessByAccessCode(accessCode: string) {
+  const admin = await getCurrentAdmin();
+  if (!admin) throw new Error("Not authenticated as super admin");
+
+  const supabase = await createClient();
+  const code = accessCode.trim().toUpperCase();
+  const { data: business } = await supabase
+    .from("businesses")
+    .select("id, name, city, state, status")
+    .eq("access_code", code)
+    .maybeSingle();
+
+  if (!business) throw new Error("No business found with that access code");
+  return business;
+}
+
+export async function linkRetailerByCode(wholesalerBusinessId: string, retailerAccessCode: string) {
+  const admin = await getCurrentAdmin();
+  if (!admin) throw new Error("Not authenticated as super admin");
+
+  const supabase = await createClient();
+
+  const code = retailerAccessCode.trim().toUpperCase();
+  const { data: retailer } = await supabase.from("businesses").select("id, name").eq("access_code", code).maybeSingle();
+  if (!retailer) throw new Error("No business found with that access code");
+  if (retailer.id === wholesalerBusinessId) throw new Error("A business can't be linked to itself");
+
+  const { error } = await supabase.from("retailer_wholesaler_links").insert({
+    wholesaler_business_id: wholesalerBusinessId,
+    retailer_business_id: retailer.id,
+  });
+  if (error) {
+    if (error.code === "23505") throw new Error(`${retailer.name} is already linked`);
+    throw new Error(error.message);
+  }
+
+  await logAudit({
+    actorId: admin.adminId,
+    action: "business.link_retailer",
+    entityType: "business",
+    entityId: wholesalerBusinessId,
+    metadata: { retailerBusinessId: retailer.id, retailerName: retailer.name },
+  });
+
+  revalidatePath(`/businesses/${wholesalerBusinessId}`);
+  return { retailerId: retailer.id, retailerName: retailer.name };
+}
+
+export async function unlinkRetailer(linkId: string, wholesalerBusinessId: string) {
+  const admin = await getCurrentAdmin();
+  if (!admin) throw new Error("Not authenticated as super admin");
+
+  const supabase = await createClient();
+  const { error } = await supabase.from("retailer_wholesaler_links").delete().eq("id", linkId);
+  if (error) throw new Error(error.message);
+
+  await logAudit({
+    actorId: admin.adminId,
+    action: "business.unlink_retailer",
+    entityType: "business",
+    entityId: wholesalerBusinessId,
+    metadata: { linkId },
+  });
+
+  revalidatePath(`/businesses/${wholesalerBusinessId}`);
+}
+
 export async function updateBusinessOwnerPassword(businessId: string, ownerId: string, newPassword: string) {
   const admin = await getCurrentAdmin();
   if (!admin) throw new Error("Not authenticated as super admin");

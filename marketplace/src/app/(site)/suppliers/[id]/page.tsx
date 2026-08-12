@@ -3,6 +3,7 @@ import { Building2, MapPin, ShieldCheck, Package, Tags, Building } from "lucide-
 import { createClient } from "@/lib/supabase/server";
 import { requireCurrentBusiness } from "@/lib/supabase/require-business";
 import { getActiveOffersByBusiness } from "@/lib/offers";
+import { getLinkedWholesalerIds } from "@/lib/links";
 import { ProductRow } from "@/components/products/ProductRow";
 import { SupplierStatCard } from "@/components/products/SupplierStatCard";
 import type { ProductListing } from "@/lib/marketplace";
@@ -11,6 +12,9 @@ export default async function SupplierProfilePage({ params }: { params: Promise<
   const { id } = await params;
   const supabase = await createClient();
   const ctx = await requireCurrentBusiness(`/suppliers/${id}`);
+
+  const linkedWholesalerIds = await getLinkedWholesalerIds(ctx.business.id);
+  if (!linkedWholesalerIds.includes(id)) notFound();
 
   const { data: business } = await supabase
     .from("businesses")

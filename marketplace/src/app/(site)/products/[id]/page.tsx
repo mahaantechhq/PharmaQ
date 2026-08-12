@@ -4,6 +4,7 @@ import { Pill, MapPin, ShieldCheck } from "lucide-react";
 import { createClient } from "@/lib/supabase/server";
 import { requireCurrentBusiness } from "@/lib/supabase/require-business";
 import { getActiveOffersByBusiness } from "@/lib/offers";
+import { getLinkedWholesalerIds } from "@/lib/links";
 import { Badge } from "@/components/ui/Badge";
 import { Card, CardBody } from "@/components/ui/Card";
 import { AddToCart } from "@/components/products/AddToCart";
@@ -22,6 +23,9 @@ export default async function ProductDetailPage({ params }: { params: Promise<{ 
     .maybeSingle();
 
   if (!product) notFound();
+
+  const linkedWholesalerIds = await getLinkedWholesalerIds(ctx.business.id);
+  if (!linkedWholesalerIds.includes(product.business_id)) notFound();
 
   const { data: batches } = await supabase
     .from("product_batches")

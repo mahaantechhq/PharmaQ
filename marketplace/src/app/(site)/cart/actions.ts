@@ -4,6 +4,7 @@ import { revalidatePath } from "next/cache";
 import { createClient } from "@/lib/supabase/server";
 import { getCurrentBusiness } from "@/lib/supabase/current-business";
 import { getAvailableStock } from "@/lib/stock";
+import { getLinkedWholesalerIds } from "@/lib/links";
 
 export async function addToCart(productId: string, quantity: number) {
   const ctx = await getCurrentBusiness();
@@ -11,6 +12,14 @@ export async function addToCart(productId: string, quantity: number) {
   if (quantity <= 0) throw new Error("Quantity must be greater than 0");
 
   const supabase = await createClient();
+
+  const { data: product } = await supabase.from("products").select("business_id").eq("id", productId).maybeSingle();
+  if (!product) throw new Error("Product not found");
+
+  const linkedWholesalerIds = await getLinkedWholesalerIds(ctx.business.id);
+  if (!linkedWholesalerIds.includes(product.business_id)) {
+    throw new Error("You're not linked to this supplier");
+  }
 
   const { data: existing } = await supabase
     .from("cart_items")

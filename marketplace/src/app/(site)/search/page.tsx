@@ -1,9 +1,10 @@
 import { Suspense } from "react";
-import { SearchX } from "lucide-react";
+import { SearchX, Link2Off } from "lucide-react";
 import { createClient } from "@/lib/supabase/server";
 import { requireCurrentBusiness } from "@/lib/supabase/require-business";
 import { getCartSummary } from "@/lib/checkout";
 import { searchProducts } from "@/lib/marketplace";
+import { getLinkedWholesalerIds } from "@/lib/links";
 import { ProductRow } from "@/components/products/ProductRow";
 import { CartSidePanel } from "@/components/cart/CartSidePanel";
 import { SearchFilters } from "@/components/search/SearchFilters";
@@ -17,6 +18,7 @@ export default async function SearchPage({ searchParams }: SearchPageProps) {
   const params = await searchParams;
   const supabase = await createClient();
   const ctx = await requireCurrentBusiness("/search");
+  const linkedWholesalerIds = await getLinkedWholesalerIds(ctx.business.id);
 
   const [{ data: categories }, { data: brands }, products] = await Promise.all([
     supabase.from("categories").select("id, name").order("name"),
@@ -72,7 +74,14 @@ export default async function SearchPage({ searchParams }: SearchPageProps) {
         </aside>
 
         <div className="overflow-hidden rounded-xl border border-slate-100 bg-white">
-          {products.length === 0 ? (
+          {linkedWholesalerIds.length === 0 ? (
+            <div className="flex flex-col items-center gap-2 py-24 text-center text-slate-400">
+              <Link2Off className="h-8 w-8" />
+              <p className="max-w-xs text-sm">
+                You&apos;re not linked to any wholesaler yet. Contact Pharma Q support to get connected.
+              </p>
+            </div>
+          ) : products.length === 0 ? (
             <div className="flex flex-col items-center gap-2 py-24 text-slate-400">
               <SearchX className="h-8 w-8" />
               <p className="text-sm">No products found. Try a different search or filter.</p>
