@@ -8,26 +8,24 @@ import { BusinessActions } from "@/components/businesses/BusinessActions";
 import { BusinessProfileForm } from "@/components/businesses/BusinessProfileForm";
 import { AccessCodeCard } from "@/components/businesses/AccessCodeCard";
 import { LinkedRetailersCard, type LinkedRetailer } from "@/components/businesses/LinkedRetailersCard";
-import { Package, ShoppingCart, Wallet } from "lucide-react";
-import { formatCurrency, formatNumber, formatDate } from "@/lib/format";
+import { Package, ShoppingCart, Link2 } from "lucide-react";
+import { formatNumber, formatDate } from "@/lib/format";
 import type { Business, BusinessOwner } from "@/lib/types/database";
 
 export default async function BusinessDetailPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
   const supabase = await createClient();
 
-  const [{ data: business }, { count: productCount }, { count: orderCount }, { data: wallet }, { data: owner }, { data: links }] =
-    await Promise.all([
-      supabase.from("businesses").select("*").eq("id", id).single(),
-      supabase.from("products").select("id", { count: "exact", head: true }).eq("business_id", id),
-      supabase.from("supplier_orders").select("id", { count: "exact", head: true }).eq("supplier_business_id", id),
-      supabase.from("wallets").select("*").eq("business_id", id).maybeSingle(),
-      supabase.from("business_owners").select("*").eq("business_id", id).maybeSingle(),
-      supabase
-        .from("retailer_wholesaler_links")
-        .select("id, retailer:retailer_business_id(id, name, access_code)")
-        .eq("wholesaler_business_id", id),
-    ]);
+  const [{ data: business }, { count: productCount }, { count: orderCount }, { data: owner }, { data: links }] = await Promise.all([
+    supabase.from("businesses").select("*").eq("id", id).single(),
+    supabase.from("products").select("id", { count: "exact", head: true }).eq("business_id", id),
+    supabase.from("supplier_orders").select("id", { count: "exact", head: true }).eq("supplier_business_id", id),
+    supabase.from("business_owners").select("*").eq("business_id", id).maybeSingle(),
+    supabase
+      .from("retailer_wholesaler_links")
+      .select("id, retailer:retailer_business_id(id, name, access_code)")
+      .eq("wholesaler_business_id", id),
+  ]);
 
   if (!business) notFound();
   if (!owner) notFound();
@@ -57,7 +55,7 @@ export default async function BusinessDetailPage({ params }: { params: Promise<{
       <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
         <StatCard label="Products listed" value={formatNumber(productCount ?? 0)} icon={Package} tone="primary" />
         <StatCard label="Orders as supplier" value={formatNumber(orderCount ?? 0)} icon={ShoppingCart} tone="primary" />
-        <StatCard label="Wallet balance" value={formatCurrency(Number(wallet?.balance ?? 0))} icon={Wallet} tone="success" />
+        <StatCard label="Linked businesses" value={formatNumber(linkedRetailers.length)} icon={Link2} tone="success" />
       </div>
 
       <Card className="mt-6">
