@@ -15,39 +15,33 @@ export default async function ProductDetailPage({ params }: { params: Promise<{ 
   const supabase = await createClient();
   const ctx = await requireCurrentBusiness(`/products/${id}`);
 
-  const { data: product } = await supabase
-    .from("products")
-    .select("*, businesses:business_id(id, name, city, state), categories:category_id(name), brands:brand_id(name)")
-    .eq("id", id)
-    .eq("status", "active")
-    .maybeSingle();
+  // None of these four depend on each other -- product doesn't need to
+  // resolve first for batches/wishlist since both only need the route's
+  // product id, and the link check only needs ctx.business.id.
+  const [{ data: product }, linkedWholesalerIds, { data: batches }, { data: wishlistRow }] = await Promise.all([
+    supabase
+      .from("products")
+      .select("*, businesses:business_id(id, name, city, state), categories:category_id(name), brands:brand_id(name)")
+      .eq("id", id)
+      .eq("status", "active")
+      .maybeSingle(),
+    getLinkedWholesalerIds(ctx.business.id),
+    supabase
+      .from("product_batches")
+      .select("stock_qty, selling_price, mrp, expiry_date")
+      .eq("product_id", id)
+      .gt("stock_qty", 0)
+      .gte("expiry_date", new Date().toISOString().slice(0, 10))
+      .order("expiry_date", { ascending: true }),
+    supabase.from("wishlist_items").select("id").eq("business_id", ctx.business.id).eq("product_id", id).maybeSingle(),
+  ]);
 
   if (!product) notFound();
-
-  const linkedWholesalerIds = await getLinkedWholesalerIds(ctx.business.id);
   if (!linkedWholesalerIds.includes(product.business_id)) notFound();
-
-  const { data: batches } = await supabase
-    .from("product_batches")
-    .select("stock_qty, selling_price, mrp, expiry_date")
-    .eq("product_id", id)
-    .gt("stock_qty", 0)
-    .gte("expiry_date", new Date().toISOString().slice(0, 10))
-    .order("expiry_date", { ascending: true });
 
   const totalStock = (batches ?? []).reduce((sum, b) => sum + b.stock_qty, 0);
   const cheapest = batches?.[0];
-
-  let wishlisted = false;
-  if (ctx) {
-    const { data } = await supabase
-      .from("wishlist_items")
-      .select("id")
-      .eq("business_id", ctx.business.id)
-      .eq("product_id", id)
-      .maybeSingle();
-    wishlisted = !!data;
-  }
+  const wishlisted = !!wishlistRow;
 
   const business = (product as any).businesses;
   const offersByBusiness = await getActiveOffersByBusiness([business.id]);

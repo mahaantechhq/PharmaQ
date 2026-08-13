@@ -99,18 +99,23 @@ export async function getCartSummary(buyerBusinessId: string): Promise<CartSumma
 
   const productIds = cartItems.map((c) => c.product_id);
 
-  const [{ data: products }, { data: batches }] = await Promise.all([
-    supabase
-      .from("products")
-      .select("id, name, pack_size, gst_rate, status, business_id, businesses:business_id(name)")
-      .in("id", productIds),
-    supabase
-      .from("product_batches")
-      .select("id, product_id, batch_number, stock_qty, selling_price, expiry_date")
-      .in("product_id", productIds)
-      .gt("stock_qty", 0)
-      .order("expiry_date", { ascending: true }),
-  ]);
+  // batches only needs productIds (already known from cartItems), so kick
+  // it off immediately rather than waiting on the products query below --
+  // the two have no dependency on each other.
+  const batchesPromise = supabase
+    .from("product_batches")
+    .select("id, product_id, batch_number, stock_qty, selling_price, expiry_date")
+    .in("product_id", productIds)
+    .gt("stock_qty", 0)
+    .order("expiry_date", { ascending: true });
+
+  const { data: products } = await supabase
+    .from("products")
+    .select("id, name, pack_size, gst_rate, status, business_id, businesses:business_id(name)")
+    .in("id", productIds);
+
+  const businessIds = Array.from(new Set((products ?? []).map((p: any) => p.business_id)));
+  const [{ data: batches }, offersByBusiness] = await Promise.all([batchesPromise, getEligibleOffersByBusiness(businessIds)]);
 
   const today = new Date().toISOString().slice(0, 10);
   const bestBatchByProduct = new Map<string, { id: string; batch_number: string; selling_price: number }>();
@@ -153,7 +158,6 @@ export async function getCartSummary(buyerBusinessId: string): Promise<CartSumma
   const subtotal = Math.round(lines.reduce((sum, l) => sum + l.lineTotal, 0) * 100) / 100;
   const supplierCount = new Set(lines.map((l) => l.businessId)).size;
 
-  const offersByBusiness = await getEligibleOffersByBusiness(Array.from(new Set(lines.map((l) => l.businessId))));
   const { discountTotal, taxTotal, appliedOffers } = applyOfferDiscounts(lines, offersByBusiness);
   const grandTotal = Math.round((subtotal - discountTotal + taxTotal) * 100) / 100;
 

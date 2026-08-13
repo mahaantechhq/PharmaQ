@@ -28,23 +28,25 @@ export default async function SupplierProfilePage({ params, searchParams }: Supp
   const linkedWholesalerIds = await getLinkedWholesalerIds(ctx.business.id);
   if (!linkedWholesalerIds.includes(id)) notFound();
 
-  const { data: business } = await supabase
-    .from("businesses")
-    .select("*")
-    .eq("id", id)
-    .eq("status", "approved")
-    .maybeSingle();
+  // None of these four depend on each other -- business.id is already
+  // known to equal `id`, so offers/cartSummary don't need to wait on the
+  // business row, and products doesn't either. Fire them all together
+  // instead of awaiting one at a time.
+  const [{ data: business }, { data: products }, offersByBusiness, cartSummary] = await Promise.all([
+    supabase.from("businesses").select("*").eq("id", id).eq("status", "approved").maybeSingle(),
+    supabase
+      .from("products")
+      .select(
+        "id, name, composition, pack_size, gst_rate, created_at, business_id, category_id, brand_id, categories:category_id(name), brands:brand_id(name)",
+      )
+      .eq("business_id", id)
+      .eq("status", "active")
+      .order("created_at", { ascending: false }),
+    getActiveOffersByBusiness([id]),
+    getCartSummary(ctx.business.id),
+  ]);
 
   if (!business) notFound();
-
-  const { data: products } = await supabase
-    .from("products")
-    .select(
-      "id, name, composition, pack_size, gst_rate, created_at, business_id, category_id, brand_id, categories:category_id(name), brands:brand_id(name)",
-    )
-    .eq("business_id", id)
-    .eq("status", "active")
-    .order("created_at", { ascending: false });
 
   const productIds = (products ?? []).map((p) => p.id);
   const [batches, wishlistRows] = await Promise.all([
@@ -79,9 +81,7 @@ export default async function SupplierProfilePage({ params, searchParams }: Supp
     stockByProduct.set(b.product_id, existing);
   }
 
-  const offersByBusiness = await getActiveOffersByBusiness([business.id]);
   const offer = offersByBusiness.get(business.id) ?? null;
-  const cartSummary = await getCartSummary(ctx.business.id);
 
   type SupplierProductListing = ProductListing & { categoryId: string | null; brandId: string | null };
 

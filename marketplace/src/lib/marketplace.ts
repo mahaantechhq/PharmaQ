@@ -58,11 +58,16 @@ export async function searchProducts(filters: ProductSearchFilters): Promise<Pro
   if (!products || products.length === 0) return [];
 
   const productIds = products.map((p) => p.id);
-  const { data: batches } = await supabase
-    .from("product_batches")
-    .select("product_id, stock_qty, selling_price, mrp, expiry_date")
-    .in("product_id", productIds)
-    .gt("stock_qty", 0);
+  const businessIds = Array.from(new Set(products.map((p) => p.business_id)));
+
+  const [{ data: batches }, offersByBusiness] = await Promise.all([
+    supabase
+      .from("product_batches")
+      .select("product_id, stock_qty, selling_price, mrp, expiry_date")
+      .in("product_id", productIds)
+      .gt("stock_qty", 0),
+    getActiveOffersByBusiness(businessIds),
+  ]);
 
   const today = new Date().toISOString().slice(0, 10);
   const stockByProduct = new Map<string, { stock: number; minPrice: number | null; mrp: number | null }>();
@@ -76,9 +81,6 @@ export async function searchProducts(filters: ProductSearchFilters): Promise<Pro
     }
     stockByProduct.set(b.product_id, existing);
   }
-
-  const businessIds = Array.from(new Set(products.map((p) => p.business_id)));
-  const offersByBusiness = await getActiveOffersByBusiness(businessIds);
 
   let listings: ProductListing[] = products.map((p: any) => ({
     id: p.id,

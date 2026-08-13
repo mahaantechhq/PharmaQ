@@ -20,6 +20,10 @@ export default async function SearchPage({ searchParams }: SearchPageProps) {
   const ctx = await requireCurrentBusiness("/search");
   const linkedWholesalerIds = await getLinkedWholesalerIds(ctx.business.id);
 
+  // Doesn't depend on the search results, so fire it off now instead of
+  // waiting until after searchProducts resolves below.
+  const cartSummaryPromise = getCartSummary(ctx.business.id);
+
   const [{ data: categories }, { data: brands }, products] = await Promise.all([
     supabase.from("categories").select("id, name").order("name"),
     supabase.from("brands").select("id, name").order("name"),
@@ -31,19 +35,14 @@ export default async function SearchPage({ searchParams }: SearchPageProps) {
     }),
   ]);
 
-  let wishlistedIds = new Set<string>();
-  let cartSummary = null;
-  if (ctx) {
-    const productIds = products.map((p) => p.id);
-    const [{ data: wishlistRows }, summary] = await Promise.all([
-      productIds.length
-        ? supabase.from("wishlist_items").select("product_id").eq("business_id", ctx.business.id).in("product_id", productIds)
-        : Promise.resolve({ data: [] as { product_id: string }[] }),
-      getCartSummary(ctx.business.id),
-    ]);
-    wishlistedIds = new Set((wishlistRows ?? []).map((w) => w.product_id));
-    cartSummary = summary;
-  }
+  const productIds = products.map((p) => p.id);
+  const [{ data: wishlistRows }, cartSummary] = await Promise.all([
+    productIds.length
+      ? supabase.from("wishlist_items").select("product_id").eq("business_id", ctx.business.id).in("product_id", productIds)
+      : Promise.resolve({ data: [] as { product_id: string }[] }),
+    cartSummaryPromise,
+  ]);
+  const wishlistedIds = new Set((wishlistRows ?? []).map((w) => w.product_id));
 
   return (
     <div className="mx-auto max-w-7xl px-4 py-8 sm:px-6">

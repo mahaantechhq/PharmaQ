@@ -13,23 +13,20 @@ export async function addToCart(productId: string, quantity: number) {
 
   const supabase = await createClient();
 
-  const { data: product } = await supabase.from("products").select("business_id").eq("id", productId).maybeSingle();
+  // None of these four depend on each other -- run them together instead
+  // of one at a time.
+  const [{ data: product }, linkedWholesalerIds, { data: existing }, availableStock] = await Promise.all([
+    supabase.from("products").select("business_id").eq("id", productId).maybeSingle(),
+    getLinkedWholesalerIds(ctx.business.id),
+    supabase.from("cart_items").select("id, quantity").eq("buyer_business_id", ctx.business.id).eq("product_id", productId).maybeSingle(),
+    getAvailableStock(productId),
+  ]);
   if (!product) throw new Error("Product not found");
-
-  const linkedWholesalerIds = await getLinkedWholesalerIds(ctx.business.id);
   if (!linkedWholesalerIds.includes(product.business_id)) {
     throw new Error("You're not linked to this supplier");
   }
 
-  const { data: existing } = await supabase
-    .from("cart_items")
-    .select("id, quantity")
-    .eq("buyer_business_id", ctx.business.id)
-    .eq("product_id", productId)
-    .maybeSingle();
-
   const newQuantity = (existing?.quantity ?? 0) + quantity;
-  const availableStock = await getAvailableStock(productId);
   if (newQuantity > availableStock) {
     throw new Error(`Only ${availableStock} unit${availableStock === 1 ? "" : "s"} available`);
   }
@@ -70,12 +67,13 @@ export async function updateCartItemQuantity(cartItemId: string, quantity: numbe
       .maybeSingle();
     if (!cartItem) throw new Error("Cart item not found");
 
-    const linkedWholesalerIds = await getLinkedWholesalerIds(ctx.business.id);
+    const [linkedWholesalerIds, availableStock] = await Promise.all([
+      getLinkedWholesalerIds(ctx.business.id),
+      getAvailableStock(cartItem.product_id),
+    ]);
     if (!linkedWholesalerIds.includes((cartItem as any).products?.business_id)) {
       throw new Error("You're no longer linked to this supplier");
     }
-
-    const availableStock = await getAvailableStock(cartItem.product_id);
     if (quantity > availableStock) {
       throw new Error(`Only ${availableStock} unit${availableStock === 1 ? "" : "s"} available`);
     }
