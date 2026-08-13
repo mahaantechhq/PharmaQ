@@ -187,7 +187,7 @@ export default async function SupplierProfilePage({ params, searchParams }: Supp
         />
       </div>
 
-      <div className="mb-6">
+      <div className="mb-6 mx-[20%]">
         <Suspense>
           <SearchBox isLoggedIn={!!ctx} />
         </Suspense>
