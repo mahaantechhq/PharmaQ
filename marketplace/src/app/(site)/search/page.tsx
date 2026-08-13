@@ -50,7 +50,8 @@ export default async function SearchPage({ searchParams }: SearchPageProps) {
           {params.q ? `Suppliers matching "${params.q}"` : "Your suppliers"}
         </h1>
         <p className="mt-1 text-sm text-slate-500">
-          {suppliers.length} supplier{suppliers.length !== 1 ? "s" : ""} you&apos;re linked to
+          {suppliers.length} supplier{suppliers.length !== 1 ? "s" : ""}{" "}
+          you&apos;re linked to
         </p>
       </div>
 
