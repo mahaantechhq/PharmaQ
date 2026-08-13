@@ -1,5 +1,6 @@
+import { Suspense } from "react";
 import { notFound } from "next/navigation";
-import { Building2, MapPin, ShieldCheck, Package, Tags, Building } from "lucide-react";
+import { Building2, MapPin, ShieldCheck, Package, Tags, Building, SearchX } from "lucide-react";
 import { createClient } from "@/lib/supabase/server";
 import { requireCurrentBusiness } from "@/lib/supabase/require-business";
 import { getActiveOffersByBusiness } from "@/lib/offers";
@@ -9,10 +10,18 @@ import { getCartSummary } from "@/lib/checkout";
 import { ProductRow } from "@/components/products/ProductRow";
 import { SupplierStatCard } from "@/components/products/SupplierStatCard";
 import { CartSidePanel } from "@/components/cart/CartSidePanel";
+import { SearchFilters } from "@/components/search/SearchFilters";
+import { SearchBox } from "@/components/search/SearchBox";
 import type { ProductListing } from "@/lib/marketplace";
 
-export default async function SupplierProfilePage({ params }: { params: Promise<{ id: string }> }) {
+interface SupplierProfilePageProps {
+  params: Promise<{ id: string }>;
+  searchParams: Promise<{ q?: string; category?: string; brand?: string; sort?: string }>;
+}
+
+export default async function SupplierProfilePage({ params, searchParams }: SupplierProfilePageProps) {
   const { id } = await params;
+  const query = await searchParams;
   const supabase = await createClient();
   const ctx = await requireCurrentBusiness(`/suppliers/${id}`);
 
@@ -30,7 +39,9 @@ export default async function SupplierProfilePage({ params }: { params: Promise<
 
   const { data: products } = await supabase
     .from("products")
-    .select("id, name, composition, pack_size, gst_rate, created_at, business_id, categories:category_id(name), brands:brand_id(name)")
+    .select(
+      "id, name, composition, pack_size, gst_rate, created_at, business_id, category_id, brand_id, categories:category_id(name), brands:brand_id(name)",
+    )
     .eq("business_id", id)
     .eq("status", "active")
     .order("created_at", { ascending: false });
@@ -72,12 +83,16 @@ export default async function SupplierProfilePage({ params }: { params: Promise<
   const offer = offersByBusiness.get(business.id) ?? null;
   const cartSummary = await getCartSummary(ctx.business.id);
 
-  const listings: ProductListing[] = (products ?? []).map((p: any) => ({
+  type SupplierProductListing = ProductListing & { categoryId: string | null; brandId: string | null };
+
+  const allListings: SupplierProductListing[] = (products ?? []).map((p: any) => ({
     id: p.id,
     name: p.name,
     composition: p.composition,
     packSize: p.pack_size,
     gstRate: Number(p.gst_rate),
+    categoryId: p.category_id as string | null,
+    brandId: p.brand_id as string | null,
     categoryName: p.categories?.name ?? null,
     brandName: p.brands?.name ?? null,
     businessId: business.id,
@@ -101,8 +116,28 @@ export default async function SupplierProfilePage({ params }: { params: Promise<
       .sort((a, b) => b.count - a.count);
   };
 
-  const categoryBreakdown = countByName(listings.map((l) => l.categoryName));
-  const companyBreakdown = countByName(listings.map((l) => l.brandName));
+  const categoryBreakdown = countByName(allListings.map((l) => l.categoryName));
+  const companyBreakdown = countByName(allListings.map((l) => l.brandName));
+
+  const categories = Array.from(new Map(allListings.filter((l) => l.categoryId).map((l) => [l.categoryId!, l.categoryName!])))
+    .map(([idValue, name]) => ({ id: idValue, name }))
+    .sort((a, b) => a.name.localeCompare(b.name));
+  const brands = Array.from(new Map(allListings.filter((l) => l.brandId).map((l) => [l.brandId!, l.brandName!])))
+    .map(([idValue, name]) => ({ id: idValue, name }))
+    .sort((a, b) => a.name.localeCompare(b.name));
+
+  let listings = allListings.filter((l) => {
+    if (query.q && !l.name.toLowerCase().includes(query.q.toLowerCase())) return false;
+    if (query.category && l.categoryId !== query.category) return false;
+    if (query.brand && l.brandId !== query.brand) return false;
+    return true;
+  });
+
+  if (query.sort === "price_low") {
+    listings = [...listings].sort((a, b) => (a.minPrice ?? Infinity) - (b.minPrice ?? Infinity));
+  } else if (query.sort === "price_high") {
+    listings = [...listings].sort((a, b) => (b.minPrice ?? -1) - (a.minPrice ?? -1));
+  }
 
   return (
     <div className="mx-auto max-w-7xl px-4 py-8 sm:px-6">
@@ -133,7 +168,7 @@ export default async function SupplierProfilePage({ params }: { params: Promise<
           </div>
           <div>
             <p className="text-xs font-medium uppercase tracking-wide text-slate-400">Total products</p>
-            <p className="mt-0.5 text-xl font-semibold text-slate-900">{listings.length}</p>
+            <p className="mt-0.5 text-xl font-semibold text-slate-900">{allListings.length}</p>
           </div>
         </div>
         <SupplierStatCard
@@ -152,13 +187,30 @@ export default async function SupplierProfilePage({ params }: { params: Promise<
         />
       </div>
 
-      <div className="grid grid-cols-1 gap-6 xl:grid-cols-[1fr_320px]">
-        {listings.length === 0 ? (
+      <div className="mb-6">
+        <Suspense>
+          <SearchBox isLoggedIn={!!ctx} />
+        </Suspense>
+      </div>
+
+      <div className="grid grid-cols-1 gap-6 lg:grid-cols-[240px_1fr] xl:grid-cols-[240px_1fr_320px]">
+        <aside className="lg:sticky lg:top-20 lg:h-fit">
+          <Suspense>
+            <SearchFilters categories={categories} brands={brands} />
+          </Suspense>
+        </aside>
+
+        {allListings.length === 0 ? (
           <p className="py-16 text-center text-sm text-slate-400">This supplier hasn&apos;t listed any products yet.</p>
+        ) : listings.length === 0 ? (
+          <div className="flex flex-col items-center gap-2 rounded-xl border border-slate-100 bg-white py-24 text-slate-400">
+            <SearchX className="h-8 w-8" />
+            <p className="text-sm">No products found. Try a different search or filter.</p>
+          </div>
         ) : (
           <div className="overflow-hidden rounded-xl border border-slate-100 bg-white">
             {listings.map((p) => (
-              <ProductRow key={p.id} product={p} isLoggedIn={!!ctx} initialWishlisted={wishlistedIds.has(p.id)} />
+              <ProductRow key={p.id} product={p} isLoggedIn={!!ctx} initialWishlisted={wishlistedIds.has(p.id)} query={query.q} />
             ))}
           </div>
         )}
