@@ -1,9 +1,9 @@
 import type { BusinessRole } from "@/lib/types/database";
 import { Badge } from "@/components/ui/Badge";
 
-const CONFIG: Record<BusinessRole, { label: string; tone: "primary" | "slate" }> = {
+const CONFIG: Record<BusinessRole, { label: string; tone: "primary" | "danger" }> = {
   wholesaler: { label: "Wholesaler", tone: "primary" },
-  retailer: { label: "Retailer", tone: "slate" },
+  retailer: { label: "Retailer", tone: "danger" },
 };
 
 export function BusinessTypeBadge({ businessType }: { businessType: BusinessRole | null }) {
