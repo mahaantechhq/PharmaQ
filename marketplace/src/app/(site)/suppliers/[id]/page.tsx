@@ -5,8 +5,10 @@ import { requireCurrentBusiness } from "@/lib/supabase/require-business";
 import { getActiveOffersByBusiness } from "@/lib/offers";
 import { getLinkedWholesalerIds } from "@/lib/links";
 import { fetchInChunks } from "@/lib/chunk";
+import { getCartSummary } from "@/lib/checkout";
 import { ProductRow } from "@/components/products/ProductRow";
 import { SupplierStatCard } from "@/components/products/SupplierStatCard";
+import { CartSidePanel } from "@/components/cart/CartSidePanel";
 import type { ProductListing } from "@/lib/marketplace";
 
 export default async function SupplierProfilePage({ params }: { params: Promise<{ id: string }> }) {
@@ -68,6 +70,7 @@ export default async function SupplierProfilePage({ params }: { params: Promise<
 
   const offersByBusiness = await getActiveOffersByBusiness([business.id]);
   const offer = offersByBusiness.get(business.id) ?? null;
+  const cartSummary = await getCartSummary(ctx.business.id);
 
   const listings: ProductListing[] = (products ?? []).map((p: any) => ({
     id: p.id,
@@ -149,15 +152,21 @@ export default async function SupplierProfilePage({ params }: { params: Promise<
         />
       </div>
 
-      {listings.length === 0 ? (
-        <p className="py-16 text-center text-sm text-slate-400">This supplier hasn&apos;t listed any products yet.</p>
-      ) : (
-        <div className="overflow-hidden rounded-xl border border-slate-100 bg-white">
-          {listings.map((p) => (
-            <ProductRow key={p.id} product={p} isLoggedIn={!!ctx} initialWishlisted={wishlistedIds.has(p.id)} />
-          ))}
+      <div className="grid grid-cols-1 gap-6 xl:grid-cols-[1fr_320px]">
+        {listings.length === 0 ? (
+          <p className="py-16 text-center text-sm text-slate-400">This supplier hasn&apos;t listed any products yet.</p>
+        ) : (
+          <div className="overflow-hidden rounded-xl border border-slate-100 bg-white">
+            {listings.map((p) => (
+              <ProductRow key={p.id} product={p} isLoggedIn={!!ctx} initialWishlisted={wishlistedIds.has(p.id)} />
+            ))}
+          </div>
+        )}
+
+        <div className="hidden xl:block xl:sticky xl:top-20 xl:h-fit">
+          <CartSidePanel summary={cartSummary} />
         </div>
-      )}
+      </div>
     </div>
   );
 }
