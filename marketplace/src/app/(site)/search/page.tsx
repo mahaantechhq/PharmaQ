@@ -3,15 +3,13 @@ import { SearchX, Link2Off } from "lucide-react";
 import { createClient } from "@/lib/supabase/server";
 import { requireCurrentBusiness } from "@/lib/supabase/require-business";
 import { getCartSummary } from "@/lib/checkout";
-import { searchProducts } from "@/lib/marketplace";
 import { getLinkedWholesalerIds } from "@/lib/links";
-import { ProductRow } from "@/components/products/ProductRow";
 import { CartSidePanel } from "@/components/cart/CartSidePanel";
-import { SearchFilters } from "@/components/search/SearchFilters";
 import { SearchBox } from "@/components/search/SearchBox";
+import { SupplierCard, type SupplierCardData } from "@/components/suppliers/SupplierCard";
 
 interface SearchPageProps {
-  searchParams: Promise<{ q?: string; category?: string; brand?: string; sort?: string }>;
+  searchParams: Promise<{ q?: string }>;
 }
 
 export default async function SearchPage({ searchParams }: SearchPageProps) {
@@ -20,83 +18,79 @@ export default async function SearchPage({ searchParams }: SearchPageProps) {
   const ctx = await requireCurrentBusiness("/search");
   const linkedWholesalerIds = await getLinkedWholesalerIds(ctx.business.id);
 
-  // Doesn't depend on the search results, so fire it off now instead of
-  // waiting until after searchProducts resolves below.
+  // Doesn't depend on the supplier results, so fire it off now instead of
+  // waiting until after the businesses query below resolves.
   const cartSummaryPromise = getCartSummary(ctx.business.id);
 
-  const [{ data: categories }, { data: brands }, products] = await Promise.all([
-    supabase.from("categories").select("id, name").order("name"),
-    supabase.from("brands").select("id, name").order("name"),
-    searchProducts({
-      q: params.q,
-      category: params.category,
-      brand: params.brand,
-      sort: (params.sort as "price_low" | "price_high" | "newest") ?? "newest",
-    }),
-  ]);
+  const businessesPromise = (async () => {
+    if (linkedWholesalerIds.length === 0) return { data: [] as { id: string; name: string; city: string | null; state: string | null }[] };
+    let query = supabase.from("businesses").select("id, name, city, state").eq("status", "approved").in("id", linkedWholesalerIds).order("name");
+    if (params.q) query = query.ilike("name", `%${params.q}%`);
+    return query;
+  })();
 
-  const productIds = products.map((p) => p.id);
-  const [{ data: wishlistRows }, cartSummary] = await Promise.all([
-    productIds.length
-      ? supabase.from("wishlist_items").select("product_id").eq("business_id", ctx.business.id).in("product_id", productIds)
-      : Promise.resolve({ data: [] as { product_id: string }[] }),
-    cartSummaryPromise,
-  ]);
-  const wishlistedIds = new Set((wishlistRows ?? []).map((w) => w.product_id));
+  const [{ data: businesses }, cartSummary] = await Promise.all([businessesPromise, cartSummaryPromise]);
+
+  const businessIds = (businesses ?? []).map((b) => b.id);
+  const { data: activeProducts } = businessIds.length
+    ? await supabase.from("products").select("business_id").in("business_id", businessIds).eq("status", "active")
+    : { data: [] as { business_id: string }[] };
+
+  const productCountByBusiness = new Map<string, number>();
+  for (const p of activeProducts ?? []) {
+    productCountByBusiness.set(p.business_id, (productCountByBusiness.get(p.business_id) ?? 0) + 1);
+  }
+
+  const suppliers: SupplierCardData[] = (businesses ?? []).map((b) => ({
+    id: b.id,
+    name: b.name,
+    city: b.city,
+    state: b.state,
+    productCount: productCountByBusiness.get(b.id) ?? 0,
+  }));
 
   return (
     <div className="mx-auto max-w-7xl px-4 py-8 sm:px-6">
       <div className="mb-6 flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
         <div>
           <h1 className="text-2xl font-semibold text-slate-900">
-            {params.q ? `Results for "${params.q}"` : "All products"}
+            {params.q ? `Suppliers matching "${params.q}"` : "Your suppliers"}
           </h1>
           <p className="mt-1 text-sm text-slate-500">
-            {products.length} listing{products.length !== 1 && "s"} from independent suppliers
+            {suppliers.length} supplier{suppliers.length !== 1 ? "s" : ""} you&apos;re linked to
           </p>
         </div>
-        <div className="relative left-[-383px] w-full sm:w-[calc(24rem+170px)] sm:max-w-none">
+        <div className="w-full sm:max-w-md">
           <Suspense>
             <SearchBox isLoggedIn={!!ctx} />
           </Suspense>
         </div>
       </div>
 
-      <div className={`grid grid-cols-1 gap-6 lg:grid-cols-[240px_1fr]${cartSummary ? " xl:grid-cols-[240px_1fr_320px]" : ""}`}>
-        <aside className="lg:sticky lg:top-20 lg:h-fit">
-          <Suspense>
-            <SearchFilters
-              categories={categories ?? []}
-              brands={brands ?? []}
-            />
-          </Suspense>
-        </aside>
-
-        <div className="overflow-hidden rounded-xl border border-slate-100 bg-white">
-          {linkedWholesalerIds.length === 0 ? (
-            <div className="flex flex-col items-center gap-2 py-24 text-center text-slate-400">
-              <Link2Off className="h-8 w-8" />
-              <p className="max-w-xs text-sm">
-                You&apos;re not linked to any wholesaler yet. Contact Pharma Q support to get connected.
-              </p>
-            </div>
-          ) : products.length === 0 ? (
-            <div className="flex flex-col items-center gap-2 py-24 text-slate-400">
-              <SearchX className="h-8 w-8" />
-              <p className="text-sm">No products found. Try a different search or filter.</p>
-            </div>
-          ) : (
-            products.map((p) => (
-              <ProductRow key={p.id} product={p} isLoggedIn={!!ctx} initialWishlisted={wishlistedIds.has(p.id)} query={params.q} />
-            ))
-          )}
-        </div>
-
-        {cartSummary && (
-          <div className="hidden xl:block xl:sticky xl:top-20 xl:h-fit">
-            <CartSidePanel summary={cartSummary} />
+      <div className="grid grid-cols-1 gap-6 xl:grid-cols-[1fr_320px]">
+        {linkedWholesalerIds.length === 0 ? (
+          <div className="flex flex-col items-center gap-2 rounded-xl border border-slate-100 bg-white py-24 text-center text-slate-400">
+            <Link2Off className="h-8 w-8" />
+            <p className="max-w-xs text-sm">
+              You&apos;re not linked to any wholesaler yet. Contact Pharma Q support to get connected.
+            </p>
+          </div>
+        ) : suppliers.length === 0 ? (
+          <div className="flex flex-col items-center gap-2 rounded-xl border border-slate-100 bg-white py-24 text-slate-400">
+            <SearchX className="h-8 w-8" />
+            <p className="text-sm">No suppliers found. Try a different search.</p>
+          </div>
+        ) : (
+          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
+            {suppliers.map((s) => (
+              <SupplierCard key={s.id} supplier={s} />
+            ))}
           </div>
         )}
+
+        <div className="hidden xl:block xl:sticky xl:top-20 xl:h-fit">
+          <CartSidePanel summary={cartSummary} />
+        </div>
       </div>
     </div>
   );
