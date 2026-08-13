@@ -187,6 +187,12 @@ export default async function SupplierProfilePage({ params, searchParams }: Supp
         />
       </div>
 
+      <div className="mb-6">
+        <Suspense>
+          <SearchBox isLoggedIn={!!ctx} />
+        </Suspense>
+      </div>
+
       <div className="grid grid-cols-1 gap-6 lg:grid-cols-[240px_1fr] xl:grid-cols-[240px_1fr_320px]">
         <aside className="lg:sticky lg:top-20 lg:h-fit">
           <Suspense>
@@ -194,26 +200,20 @@ export default async function SupplierProfilePage({ params, searchParams }: Supp
           </Suspense>
         </aside>
 
-        <div className="flex flex-col gap-6">
-          <Suspense>
-            <SearchBox isLoggedIn={!!ctx} />
-          </Suspense>
-
-          {allListings.length === 0 ? (
-            <p className="py-16 text-center text-sm text-slate-400">This supplier hasn&apos;t listed any products yet.</p>
-          ) : listings.length === 0 ? (
-            <div className="flex flex-col items-center gap-2 rounded-xl border border-slate-100 bg-white py-24 text-slate-400">
-              <SearchX className="h-8 w-8" />
-              <p className="text-sm">No products found. Try a different search or filter.</p>
-            </div>
-          ) : (
-            <div className="overflow-hidden rounded-xl border border-slate-100 bg-white">
-              {listings.map((p) => (
-                <ProductRow key={p.id} product={p} isLoggedIn={!!ctx} initialWishlisted={wishlistedIds.has(p.id)} query={query.q} />
-              ))}
-            </div>
-          )}
-        </div>
+        {allListings.length === 0 ? (
+          <p className="py-16 text-center text-sm text-slate-400">This supplier hasn&apos;t listed any products yet.</p>
+        ) : listings.length === 0 ? (
+          <div className="flex flex-col items-center gap-2 rounded-xl border border-slate-100 bg-white py-24 text-slate-400">
+            <SearchX className="h-8 w-8" />
+            <p className="text-sm">No products found. Try a different search or filter.</p>
+          </div>
+        ) : (
+          <div className="overflow-hidden rounded-xl border border-slate-100 bg-white">
+            {listings.map((p) => (
+              <ProductRow key={p.id} product={p} isLoggedIn={!!ctx} initialWishlisted={wishlistedIds.has(p.id)} query={query.q} />
+            ))}
+          </div>
+        )}
 
         <div className="hidden xl:block xl:sticky xl:top-20 xl:h-fit">
           <CartSidePanel summary={cartSummary} />
