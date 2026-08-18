@@ -2,24 +2,23 @@
 
 import { useState } from "react";
 import Link from "next/link";
-import { useRouter } from "next/navigation";
 import { ShoppingCart, X } from "lucide-react";
 import { useToast } from "@/components/ui/Toast";
 import { removeCartItem } from "@/app/(site)/cart/actions";
 import { formatCurrency } from "@/lib/format";
-import type { CartSummary } from "@/lib/checkout";
+import { useCart } from "@/components/cart/CartContext";
 
-export function CartSidePanel({ summary }: { summary: CartSummary }) {
-  const router = useRouter();
+export function CartSidePanel() {
+  const { summary, setSummary } = useCart();
   const { toast } = useToast();
   const [pendingId, setPendingId] = useState<string | null>(null);
 
   const handleRemove = async (cartItemId: string) => {
     setPendingId(cartItemId);
     try {
-      await removeCartItem(cartItemId);
+      const updated = await removeCartItem(cartItemId);
+      setSummary(updated);
       toast("Removed from cart", "success");
-      router.refresh();
     } catch (err) {
       toast(err instanceof Error ? err.message : "Failed to remove item", "error");
     } finally {

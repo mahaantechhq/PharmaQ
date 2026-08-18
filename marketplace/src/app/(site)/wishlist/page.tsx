@@ -13,18 +13,17 @@ export default async function WishlistPage() {
   const { data: items } = await supabase.from("wishlist_items").select("product_id").eq("business_id", ctx.business.id);
   const productIds = (items ?? []).map((i) => i.product_id);
 
-  const { data: products } = productIds.length
-    ? await supabase
-        .from("products")
-        .select("id, name, composition, pack_size, gst_rate, created_at, business_id, businesses:business_id(name, city), categories:category_id(name), brands:brand_id(name)")
-        .in("id", productIds)
-        .in("business_id", linkedWholesalerIds)
-        .eq("status", "active")
-    : { data: [] };
-
-  const { data: batches } = productIds.length
-    ? await supabase.from("product_batches").select("product_id, stock_qty, selling_price, expiry_date").in("product_id", productIds).gt("stock_qty", 0)
-    : { data: [] };
+  const [{ data: products }, { data: batches }] = productIds.length
+    ? await Promise.all([
+        supabase
+          .from("products")
+          .select("id, name, composition, pack_size, gst_rate, created_at, business_id, businesses:business_id(name, city), categories:category_id(name), brands:brand_id(name)")
+          .in("id", productIds)
+          .in("business_id", linkedWholesalerIds)
+          .eq("status", "active"),
+        supabase.from("product_batches").select("product_id, stock_qty, selling_price, expiry_date").in("product_id", productIds).gt("stock_qty", 0),
+      ])
+    : [{ data: [] }, { data: [] }];
 
   const today = new Date().toISOString().slice(0, 10);
   const stockByProduct = new Map<string, { stock: number; minPrice: number | null }>();

@@ -30,17 +30,21 @@ export async function placeOrder() {
   // A link can be revoked after items are already in the cart -- re-check
   // here so checkout can't complete an order with a wholesaler the buyer
   // is no longer linked to, even though addToCart/updateCartItemQuantity
-  // already check this on the way in.
-  const linkedWholesalerIds = await getLinkedWholesalerIds(ctx.business.id);
+  // already check this on the way in. Fetched alongside offers (also
+  // needed either way) rather than blocking on it first -- on the rare
+  // unlinked-group error path this fires one query that goes unused, a
+  // fine tradeoff for not stacking two round trips on the common path.
+  const [linkedWholesalerIds, offersByBusiness] = await Promise.all([
+    getLinkedWholesalerIds(ctx.business.id),
+    // Discount is recomputed here server-side (not trusted from the client)
+    // -- same logic as applyOfferDiscounts, applied per supplier group
+    // since offers are business-owned.
+    getEligibleOffersByBusiness(supplierGroups.map((g) => g.businessId)),
+  ]);
   const unlinkedGroup = supplierGroups.find((g) => !linkedWholesalerIds.includes(g.businessId));
   if (unlinkedGroup) {
     throw new Error(`You're no longer linked to ${unlinkedGroup.businessName}. Remove their items from your cart to continue.`);
   }
-
-  // Discount is recomputed here server-side (not trusted from the client) --
-  // same logic as applyOfferDiscounts, applied per supplier group since
-  // offers are business-owned.
-  const offersByBusiness = await getEligibleOffersByBusiness(supplierGroups.map((g) => g.businessId));
 
   // Derive the MASTER totals as the sum of each supplier group's already-
   // rounded figures (not recomputed independently from all lines), so the
