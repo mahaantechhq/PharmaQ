@@ -2,23 +2,17 @@
 
 import { useState } from "react";
 import Link from "next/link";
-import { useRouter } from "next/navigation";
 import { Minus, Plus, Trash2, ShoppingBag } from "lucide-react";
 import { Button } from "@/components/ui/Button";
 import { useToast } from "@/components/ui/Toast";
 import { updateCartItemQuantity, removeCartItem } from "@/app/(site)/cart/actions";
 import { formatCurrency } from "@/lib/format";
+import { useCart } from "@/components/cart/CartContext";
 import type { CartLine } from "@/lib/checkout";
 
-export function CartTable({ lines, subtotal, discountTotal, taxTotal, grandTotal, supplierCount }: {
-  lines: CartLine[];
-  subtotal: number;
-  discountTotal: number;
-  taxTotal: number;
-  grandTotal: number;
-  supplierCount: number;
-}) {
-  const router = useRouter();
+export function CartTable() {
+  const { summary, setSummary } = useCart();
+  const { lines, subtotal, discountTotal, taxTotal, grandTotal, supplierCount } = summary;
   const { toast } = useToast();
   const [pendingId, setPendingId] = useState<string | null>(null);
   const [qtyInputs, setQtyInputs] = useState<Record<string, string>>({});
@@ -26,8 +20,8 @@ export function CartTable({ lines, subtotal, discountTotal, taxTotal, grandTotal
   const handleQtyChange = async (cartItemId: string, quantity: number) => {
     setPendingId(cartItemId);
     try {
-      await updateCartItemQuantity(cartItemId, quantity);
-      router.refresh();
+      const updated = await updateCartItemQuantity(cartItemId, quantity);
+      setSummary(updated);
     } catch (err) {
       toast(err instanceof Error ? err.message : "Failed to update quantity", "error");
     } finally {
@@ -50,9 +44,9 @@ export function CartTable({ lines, subtotal, discountTotal, taxTotal, grandTotal
   const handleRemove = async (cartItemId: string) => {
     setPendingId(cartItemId);
     try {
-      await removeCartItem(cartItemId);
+      const updated = await removeCartItem(cartItemId);
+      setSummary(updated);
       toast("Removed from cart", "success");
-      router.refresh();
     } catch (err) {
       toast(err instanceof Error ? err.message : "Failed to remove item", "error");
     } finally {
@@ -80,8 +74,8 @@ export function CartTable({ lines, subtotal, discountTotal, taxTotal, grandTotal
   }
 
   return (
-    <div className="grid grid-cols-1 gap-8 lg:grid-cols-[1fr_340px]">
-      <div className="flex flex-col gap-6">
+    <div className="grid grid-cols-1 gap-8 lg:grid-cols-[minmax(0,1fr)_340px]">
+      <div className="flex min-w-0 flex-col gap-6">
         {Array.from(bySupplier.entries()).map(([businessId, group]) => (
           <div key={businessId} className="rounded-xl border border-slate-100 bg-white">
             <div className="border-b border-slate-100 px-5 py-3">

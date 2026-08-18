@@ -6,6 +6,7 @@ import { useRouter } from "next/navigation";
 import { ShoppingCart, Heart, Bell, User, LogOut, Package } from "lucide-react";
 import { createClient } from "@/lib/supabase/client";
 import { Dropdown, DropdownItem } from "@/components/ui/Dropdown";
+import { useCart } from "@/components/cart/CartContext";
 
 const NAV_LINKS = [
   { label: "Home", href: "/" },
@@ -16,15 +17,14 @@ const NAV_LINKS = [
 
 export function Navbar({
   businessName,
-  cartCount = 0,
   unreadCount = 0,
 }: {
   businessName: string | null;
-  cartCount?: number;
   unreadCount?: number;
 }) {
   const router = useRouter();
   const supabase = createClient();
+  const { count: cartCount } = useCart();
 
   const handleLogout = async () => {
     await supabase.auth.signOut();
