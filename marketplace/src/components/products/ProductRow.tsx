@@ -24,7 +24,7 @@ export function ProductRow({
   initialWishlisted?: boolean;
   query?: string;
 }) {
-  const [qty, setQty] = useState("1");
+  const [qty, setQty] = useState("");
   const [loading, setLoading] = useState(false);
   const [wishlisted, setWishlisted] = useState(initialWishlisted);
   const router = useRouter();
@@ -33,7 +33,8 @@ export function ProductRow({
 
   const outOfStock = product.totalStock <= 0;
 
-  const handleAdd = async () => {
+  const handleAdd = async (e: React.FormEvent) => {
+    e.preventDefault();
     if (!isLoggedIn) {
       router.push(`/login?next=/search`);
       return;
@@ -65,7 +66,7 @@ export function ProductRow({
   };
 
   return (
-    <div className="flex items-center gap-4 border-b border-slate-100 px-4 py-4 last:border-b-0 sm:px-5">
+    <form onSubmit={handleAdd} className="flex items-center gap-4 border-b border-slate-100 px-4 py-4 last:border-b-0 sm:px-5">
       <div className="min-w-0 flex-1">
         <Link href={`/products/${product.id}`} className="truncate text-sm font-semibold text-slate-800 hover:text-primary-600">
           {highlightMatch(product.name, query)}
@@ -99,6 +100,7 @@ export function ProductRow({
       </div>
 
       <button
+        type="button"
         onClick={handleWishlist}
         className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-lg ${wishlisted ? "text-danger-500" : "text-slate-300 hover:bg-slate-50 hover:text-slate-400"}`}
         aria-label="Toggle wishlist"
@@ -110,19 +112,26 @@ export function ProductRow({
         type="number"
         min={1}
         max={product.totalStock || 1}
+        required
         value={qty}
-        onChange={(e) => setQty(e.target.value)}
+        onChange={(e) => {
+          setQty(e.target.value);
+          e.target.setCustomValidity("");
+        }}
+        onInvalid={(e) => (e.target as HTMLInputElement).setCustomValidity("Please enter a quantity!")}
         onBlur={() => {
+          if (qty === "") return;
           const clamped = Math.min(Math.max(1, parseInt(qty, 10) || 1), product.totalStock || 1);
           setQty(String(clamped));
         }}
+        placeholder="Qty"
         disabled={outOfStock}
         className="h-10 w-16 shrink-0 rounded-lg border border-slate-200 px-2 text-center text-sm disabled:bg-slate-50"
       />
 
-      <Button onClick={handleAdd} loading={loading} disabled={outOfStock} className="shrink-0">
+      <Button type="submit" loading={loading} disabled={outOfStock} className="shrink-0">
         {outOfStock ? "Unavailable" : "Add"}
       </Button>
-    </div>
+    </form>
   );
 }

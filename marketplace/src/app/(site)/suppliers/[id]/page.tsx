@@ -20,15 +20,12 @@ export default async function SupplierProfilePage({ params }: SupplierProfilePag
   const supabase = await createClient();
   const ctx = await requireCurrentBusiness(`/suppliers/${id}`);
 
-  const linkedWholesalerIds = await getLinkedWholesalerIds(ctx.business.id);
-  if (!linkedWholesalerIds.includes(id)) notFound();
-
-  // Lightweight (no product_batches join) -- this is all that's needed for
-  // the category/brand breakdown and the client-side search/filter below.
-  // Stock/price is fetched by the client only for whatever's actually
-  // visible (see SupplierCatalog + getCatalogPageStock), not the whole
-  // catalog upfront.
-  const [{ data: business }, { data: products }, offersByBusiness] = await Promise.all([
+  // The link check doesn't need to block before starting the rest -- it
+  // only needs ctx.business.id (already known), same as the other three.
+  // Running all four together instead of gating on the link check first
+  // removes a full sequential round trip from every supplier page load.
+  const [linkedWholesalerIds, { data: business }, { data: products }, offersByBusiness] = await Promise.all([
+    getLinkedWholesalerIds(ctx.business.id),
     supabase.from("businesses").select("*").eq("id", id).eq("status", "approved").maybeSingle(),
     supabase
       .from("products")
@@ -41,6 +38,7 @@ export default async function SupplierProfilePage({ params }: SupplierProfilePag
     getActiveOffersByBusiness([id]),
   ]);
 
+  if (!linkedWholesalerIds.includes(id)) notFound();
   if (!business) notFound();
 
   const offer = offersByBusiness.get(business.id) ?? null;
