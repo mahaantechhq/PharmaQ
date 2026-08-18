@@ -17,16 +17,18 @@ export default async function BusinessDetailPage({ params }: { params: Promise<{
   const { id } = await params;
   const supabase = await createClient();
 
-  const [{ data: business }, { count: productCount }, { count: orderCount }, { data: owner }, { data: links }] = await Promise.all([
-    supabase.from("businesses").select("*").eq("id", id).single(),
-    supabase.from("products").select("id", { count: "exact", head: true }).eq("business_id", id),
-    supabase.from("supplier_orders").select("id", { count: "exact", head: true }).eq("supplier_business_id", id),
-    supabase.from("business_owners").select("*").eq("business_id", id).maybeSingle(),
-    supabase
-      .from("retailer_wholesaler_links")
-      .select("id, retailer:retailer_business_id(id, name, access_code)")
-      .eq("wholesaler_business_id", id),
-  ]);
+  const [{ data: business }, { count: productCount }, { count: orderCount }, { data: owner }, { data: links }, { data: accessCodeRow }] =
+    await Promise.all([
+      supabase.from("businesses").select("*").eq("id", id).single(),
+      supabase.from("products").select("id", { count: "exact", head: true }).eq("business_id", id),
+      supabase.from("supplier_orders").select("id", { count: "exact", head: true }).eq("supplier_business_id", id),
+      supabase.from("business_owners").select("*").eq("business_id", id).maybeSingle(),
+      supabase
+        .from("retailer_wholesaler_links")
+        .select("id, retailer:retailer_business_id(id, name, business_access_codes(access_code))")
+        .eq("wholesaler_business_id", id),
+      supabase.from("business_access_codes").select("access_code").eq("business_id", id).maybeSingle(),
+    ]);
 
   if (!business) notFound();
   if (!owner) notFound();
@@ -37,7 +39,7 @@ export default async function BusinessDetailPage({ params }: { params: Promise<{
     linkId: l.id,
     businessId: l.retailer.id,
     name: l.retailer.name,
-    accessCode: l.retailer.access_code,
+    accessCode: l.retailer.business_access_codes?.access_code ?? "",
   }));
 
   return (
@@ -67,7 +69,7 @@ export default async function BusinessDetailPage({ params }: { params: Promise<{
         </CardBody>
       </Card>
 
-      <AccessCodeCard code={b.access_code} />
+      <AccessCodeCard code={accessCodeRow?.access_code ?? ""} />
       <LinkedRetailersCard wholesalerBusinessId={b.id} retailers={linkedRetailers} />
     </div>
   );

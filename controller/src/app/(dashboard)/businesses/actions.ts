@@ -152,14 +152,14 @@ export async function lookupBusinessByAccessCode(accessCode: string) {
 
   const supabase = await createClient();
   const code = accessCode.trim().toUpperCase();
-  const { data: business } = await supabase
-    .from("businesses")
-    .select("id, name, city, state, status")
+  const { data: row } = await supabase
+    .from("business_access_codes")
+    .select("business:business_id(id, name, city, state, status)")
     .eq("access_code", code)
     .maybeSingle();
 
-  if (!business) throw new Error("No business found with that access code");
-  return business;
+  if (!row) throw new Error("No business found with that access code");
+  return row.business as unknown as { id: string; name: string; city: string | null; state: string | null; status: string };
 }
 
 export async function linkRetailerByCode(wholesalerBusinessId: string, retailerAccessCode: string) {
@@ -169,7 +169,12 @@ export async function linkRetailerByCode(wholesalerBusinessId: string, retailerA
   const supabase = await createClient();
 
   const code = retailerAccessCode.trim().toUpperCase();
-  const { data: retailer } = await supabase.from("businesses").select("id, name").eq("access_code", code).maybeSingle();
+  const { data: row } = await supabase
+    .from("business_access_codes")
+    .select("business:business_id(id, name)")
+    .eq("access_code", code)
+    .maybeSingle();
+  const retailer = row?.business as unknown as { id: string; name: string } | null;
   if (!retailer) throw new Error("No business found with that access code");
   if (retailer.id === wholesalerBusinessId) throw new Error("A business can't be linked to itself");
 
