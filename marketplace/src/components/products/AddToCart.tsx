@@ -7,7 +7,6 @@ import { Button } from "@/components/ui/Button";
 import { useToast } from "@/components/ui/Toast";
 import { addToCart } from "@/app/(site)/cart/actions";
 import { toggleWishlist } from "@/app/(site)/wishlist/actions";
-import { useCart } from "@/components/cart/CartContext";
 
 export function AddToCart({
   productId,
@@ -25,7 +24,6 @@ export function AddToCart({
   const [wishlisted, setWishlisted] = useState(initialWishlisted);
   const router = useRouter();
   const { toast } = useToast();
-  const { setSummary } = useCart();
 
   const outOfStock = maxQty <= 0;
 
@@ -36,9 +34,9 @@ export function AddToCart({
     }
     setLoading(true);
     try {
-      const updated = await addToCart(productId, qty);
-      setSummary(updated);
+      await addToCart(productId, qty);
       toast("Added to cart", "success");
+      router.refresh();
     } catch (err) {
       toast(err instanceof Error ? err.message : "Failed to add to cart", "error");
     } finally {

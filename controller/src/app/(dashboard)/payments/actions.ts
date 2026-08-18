@@ -27,23 +27,20 @@ export async function markSubscriptionPaid(businessId: string, amount: number) {
   );
   if (error) throw new Error(error.message);
 
-  // Independent writes -- neither depends on the other's result, just on
-  // the upsert above having already succeeded.
-  await Promise.all([
-    supabase.from("notifications").insert({
-      business_id: businessId,
-      title: "Subscription payment recorded",
-      message: `Your ₹${amount.toLocaleString("en-IN")} monthly subscription payment has been marked as paid by Pharma Q.`,
-      type: "system",
-    }),
-    logAudit({
-      actorId: admin.adminId,
-      action: "subscription.mark_paid",
-      entityType: "business",
-      entityId: businessId,
-      metadata: { period, amount },
-    }),
-  ]);
+  await supabase.from("notifications").insert({
+    business_id: businessId,
+    title: "Subscription payment recorded",
+    message: `Your ₹${amount.toLocaleString("en-IN")} monthly subscription payment has been marked as paid by Pharma Q.`,
+    type: "system",
+  });
+
+  await logAudit({
+    actorId: admin.adminId,
+    action: "subscription.mark_paid",
+    entityType: "business",
+    entityId: businessId,
+    metadata: { period, amount },
+  });
 
   revalidatePath("/payments");
 }

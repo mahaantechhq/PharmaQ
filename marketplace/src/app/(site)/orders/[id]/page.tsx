@@ -13,14 +13,19 @@ export default async function OrderDetailPage({ params }: { params: Promise<{ id
   const ctx = await requireCurrentBusiness(`/orders/${id}`);
   const supabase = await createClient();
 
-  // supplierOrders is keyed off the route param alone, not order's result --
-  // fetch both together instead of one after the other.
-  const [{ data: order }, { data: supplierOrders }] = await Promise.all([
-    supabase.from("orders").select("*").eq("id", id).eq("buyer_business_id", ctx.business.id).maybeSingle(),
-    supabase.from("supplier_orders").select("*, businesses:supplier_business_id(name, city, state)").eq("order_id", id),
-  ]);
+  const { data: order } = await supabase
+    .from("orders")
+    .select("*")
+    .eq("id", id)
+    .eq("buyer_business_id", ctx.business.id)
+    .maybeSingle();
 
   if (!order) notFound();
+
+  const { data: supplierOrders } = await supabase
+    .from("supplier_orders")
+    .select("*, businesses:supplier_business_id(name, city, state)")
+    .eq("order_id", id);
 
   const supplierOrderIds = (supplierOrders ?? []).map((so) => so.id);
   const [{ data: allItems }, { data: allHistory }] = await Promise.all([

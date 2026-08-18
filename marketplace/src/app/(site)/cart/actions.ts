@@ -5,7 +5,6 @@ import { createClient } from "@/lib/supabase/server";
 import { getCurrentBusiness } from "@/lib/supabase/current-business";
 import { getAvailableStock } from "@/lib/stock";
 import { getLinkedWholesalerIds } from "@/lib/links";
-import { getCartSummary } from "@/lib/checkout";
 
 export async function addToCart(productId: string, quantity: number) {
   const ctx = await getCurrentBusiness();
@@ -48,7 +47,6 @@ export async function addToCart(productId: string, quantity: number) {
   }
 
   revalidatePath("/cart");
-  return getCartSummary(ctx.business.id);
 }
 
 export async function updateCartItemQuantity(cartItemId: string, quantity: number) {
@@ -89,7 +87,6 @@ export async function updateCartItemQuantity(cartItemId: string, quantity: numbe
   }
 
   revalidatePath("/cart");
-  return getCartSummary(ctx.business.id);
 }
 
 export async function removeCartItem(cartItemId: string) {
@@ -101,5 +98,4 @@ export async function removeCartItem(cartItemId: string) {
   if (error) throw new Error(error.message);
 
   revalidatePath("/cart");
-  return getCartSummary(ctx.business.id);
 }

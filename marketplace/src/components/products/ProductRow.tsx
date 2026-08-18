@@ -10,7 +10,6 @@ import { addToCart } from "@/app/(site)/cart/actions";
 import { toggleWishlist } from "@/app/(site)/wishlist/actions";
 import { formatCurrency } from "@/lib/format";
 import { highlightMatch } from "@/lib/highlight";
-import { useCart } from "@/components/cart/CartContext";
 import type { ProductListing } from "@/lib/marketplace";
 
 export function ProductRow({
@@ -29,7 +28,6 @@ export function ProductRow({
   const [wishlisted, setWishlisted] = useState(initialWishlisted);
   const router = useRouter();
   const { toast } = useToast();
-  const { setSummary } = useCart();
 
   const outOfStock = product.totalStock <= 0;
 
@@ -41,9 +39,9 @@ export function ProductRow({
     const quantity = Math.max(1, parseInt(qty, 10) || 1);
     setLoading(true);
     try {
-      const updated = await addToCart(product.id, quantity);
-      setSummary(updated);
+      await addToCart(product.id, quantity);
       toast("Added to cart", "success");
+      router.refresh();
     } catch (err) {
       toast(err instanceof Error ? err.message : "Failed to add to cart", "error");
     } finally {

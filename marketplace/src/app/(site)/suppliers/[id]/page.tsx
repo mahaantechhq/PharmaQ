@@ -6,6 +6,7 @@ import { requireCurrentBusiness } from "@/lib/supabase/require-business";
 import { getActiveOffersByBusiness } from "@/lib/offers";
 import { getLinkedWholesalerIds } from "@/lib/links";
 import { fetchInChunks } from "@/lib/chunk";
+import { getCartSummary } from "@/lib/checkout";
 import { ProductRow } from "@/components/products/ProductRow";
 import { SupplierStatCard } from "@/components/products/SupplierStatCard";
 import { CartSidePanel } from "@/components/cart/CartSidePanel";
@@ -27,12 +28,11 @@ export default async function SupplierProfilePage({ params, searchParams }: Supp
   const linkedWholesalerIds = await getLinkedWholesalerIds(ctx.business.id);
   if (!linkedWholesalerIds.includes(id)) notFound();
 
-  // None of these three depend on each other -- business.id is already
-  // known to equal `id`, so offers doesn't need to wait on the business
-  // row, and products doesn't either. Fire them all together instead of
-  // awaiting one at a time. (Cart data now lives in CartContext, seeded by
-  // the layout, so this page no longer fetches it itself.)
-  const [{ data: business }, { data: products }, offersByBusiness] = await Promise.all([
+  // None of these four depend on each other -- business.id is already
+  // known to equal `id`, so offers/cartSummary don't need to wait on the
+  // business row, and products doesn't either. Fire them all together
+  // instead of awaiting one at a time.
+  const [{ data: business }, { data: products }, offersByBusiness, cartSummary] = await Promise.all([
     supabase.from("businesses").select("*").eq("id", id).eq("status", "approved").maybeSingle(),
     supabase
       .from("products")
@@ -43,6 +43,7 @@ export default async function SupplierProfilePage({ params, searchParams }: Supp
       .eq("status", "active")
       .order("created_at", { ascending: false }),
     getActiveOffersByBusiness([id]),
+    getCartSummary(ctx.business.id),
   ]);
 
   if (!business) notFound();
@@ -215,7 +216,7 @@ export default async function SupplierProfilePage({ params, searchParams }: Supp
         )}
 
         <div className="hidden xl:block xl:sticky xl:top-20 xl:h-fit">
-          <CartSidePanel />
+          <CartSidePanel summary={cartSummary} />
         </div>
       </div>
     </div>
