@@ -102,6 +102,7 @@ export function SupplierCatalog({
     ...p,
     totalStock: stockByProduct[p.id]?.stock ?? 0,
     minPrice: stockByProduct[p.id]?.minPrice ?? null,
+    scheme: stockByProduct[p.id]?.scheme ?? null,
   }));
 
   return (

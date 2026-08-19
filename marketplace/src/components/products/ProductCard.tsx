@@ -23,6 +23,11 @@ export function ProductCard({ product }: { product: ProductListing }) {
             <Percent className="h-2.5 w-2.5" /> {offerLabel(product.offer)}
           </span>
         )}
+        {product.scheme && (
+          <span className="absolute right-2 top-2 rounded-md bg-accent-50 px-2 py-1 text-[10px] font-semibold text-accent-600 shadow-sm">
+            {product.scheme}
+          </span>
+        )}
       </div>
       <div className="flex flex-1 flex-col gap-1.5 p-4">
         <p className="line-clamp-2 text-sm font-medium text-slate-800 group-hover:text-primary-600">{product.name}</p>

@@ -14,6 +14,7 @@ export interface ProductListing {
   totalStock: number;
   minPrice: number | null;
   mrp: number | null;
+  scheme: string | null;
   createdAt: string;
   offer?: OfferSummary | null;
 }

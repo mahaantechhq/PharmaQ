@@ -5,7 +5,7 @@ import { getCurrentBusiness } from "@/lib/supabase/current-business";
 import { fetchInChunks } from "@/lib/chunk";
 
 export interface CatalogPageStock {
-  stockByProduct: Record<string, { stock: number; minPrice: number | null }>;
+  stockByProduct: Record<string, { stock: number; minPrice: number | null; scheme: string | null }>;
   wishlistedIds: string[];
 }
 
@@ -24,7 +24,7 @@ export async function getCatalogPageStock(productIds: string[]): Promise<Catalog
     fetchInChunks(productIds, async (chunk) => {
       const { data } = await supabase
         .from("product_batches")
-        .select("product_id, stock_qty, selling_price, expiry_date")
+        .select("product_id, stock_qty, selling_price, expiry_date, scheme")
         .in("product_id", chunk)
         .gt("stock_qty", 0);
       return data ?? [];
@@ -38,12 +38,15 @@ export async function getCatalogPageStock(productIds: string[]): Promise<Catalog
   ]);
 
   const today = new Date().toISOString().slice(0, 10);
-  const stockByProduct: Record<string, { stock: number; minPrice: number | null }> = {};
+  const stockByProduct: Record<string, { stock: number; minPrice: number | null; scheme: string | null }> = {};
   for (const b of batches ?? []) {
     if (b.expiry_date < today) continue;
-    const existing = stockByProduct[b.product_id] ?? { stock: 0, minPrice: null };
+    const existing = stockByProduct[b.product_id] ?? { stock: 0, minPrice: null, scheme: null };
     existing.stock += b.stock_qty;
-    if (existing.minPrice == null || Number(b.selling_price) < existing.minPrice) existing.minPrice = Number(b.selling_price);
+    if (existing.minPrice == null || Number(b.selling_price) < existing.minPrice) {
+      existing.minPrice = Number(b.selling_price);
+      existing.scheme = b.scheme ?? null;
+    }
     stockByProduct[b.product_id] = existing;
   }
 

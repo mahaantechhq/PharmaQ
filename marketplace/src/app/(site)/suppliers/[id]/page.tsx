@@ -59,6 +59,7 @@ export default async function SupplierProfilePage({ params }: SupplierProfilePag
     totalStock: 0,
     minPrice: null,
     mrp: null,
+    scheme: null,
     createdAt: p.created_at,
     offer,
   }));

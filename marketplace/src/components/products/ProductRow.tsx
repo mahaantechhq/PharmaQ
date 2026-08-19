@@ -99,6 +99,10 @@ export function ProductRow({
         </div>
       </div>
 
+      {product.scheme && (
+        <span className="shrink-0 rounded-md bg-accent-50 px-2 py-1 text-xs font-semibold text-accent-600">{product.scheme}</span>
+      )}
+
       <button
         type="button"
         onClick={handleWishlist}

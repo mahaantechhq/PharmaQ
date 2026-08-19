@@ -23,16 +23,19 @@ export default async function WishlistPage() {
     : { data: [] };
 
   const { data: batches } = productIds.length
-    ? await supabase.from("product_batches").select("product_id, stock_qty, selling_price, expiry_date").in("product_id", productIds).gt("stock_qty", 0)
+    ? await supabase.from("product_batches").select("product_id, stock_qty, selling_price, expiry_date, scheme").in("product_id", productIds).gt("stock_qty", 0)
     : { data: [] };
 
   const today = new Date().toISOString().slice(0, 10);
-  const stockByProduct = new Map<string, { stock: number; minPrice: number | null }>();
+  const stockByProduct = new Map<string, { stock: number; minPrice: number | null; scheme: string | null }>();
   for (const b of batches ?? []) {
     if (b.expiry_date < today) continue;
-    const existing = stockByProduct.get(b.product_id) ?? { stock: 0, minPrice: null };
+    const existing = stockByProduct.get(b.product_id) ?? { stock: 0, minPrice: null, scheme: null };
     existing.stock += b.stock_qty;
-    if (existing.minPrice == null || Number(b.selling_price) < existing.minPrice) existing.minPrice = Number(b.selling_price);
+    if (existing.minPrice == null || Number(b.selling_price) < existing.minPrice) {
+      existing.minPrice = Number(b.selling_price);
+      existing.scheme = b.scheme ?? null;
+    }
     stockByProduct.set(b.product_id, existing);
   }
 
@@ -50,6 +53,7 @@ export default async function WishlistPage() {
     totalStock: stockByProduct.get(p.id)?.stock ?? 0,
     minPrice: stockByProduct.get(p.id)?.minPrice ?? null,
     mrp: null,
+    scheme: stockByProduct.get(p.id)?.scheme ?? null,
     createdAt: p.created_at,
   }));
 
