@@ -71,11 +71,11 @@ export function ProductRow({
         <Link href={`/products/${product.id}`} className="truncate text-sm font-semibold text-slate-800 hover:text-primary-600">
           {highlightMatch(product.name, query)}
         </Link>
-        <div className="mt-1 flex flex-wrap items-center gap-x-2 gap-y-1 text-xs">
+        <div className="mt-1 flex flex-wrap items-center gap-x-5 gap-y-1 text-xs">
           <Link href={`/suppliers/${product.businessId}`} className="font-medium text-primary-600 hover:underline">
             {product.businessName}
           </Link>
-          {product.brandName && <span className="text-slate-400">{product.brandName}</span>}
+          {product.brandName && <span className="tracking-wide text-slate-400">{product.brandName.toUpperCase()}</span>}
           {product.packSize && <span className="text-slate-400">{product.packSize}</span>}
         </div>
         {product.offer && (
@@ -84,7 +84,7 @@ export function ProductRow({
             {product.offer.discountType === "percentage" ? `${product.offer.discountValue}% OFF` : `₹${product.offer.discountValue} OFF`} — {product.offer.displayText}
           </p>
         )}
-        <div className="mt-1.5 flex items-center gap-3 text-xs text-slate-500">
+        <div className="mt-1.5 flex items-center gap-5 text-xs text-slate-500">
           {product.minPrice != null ? (
             <span className="text-sm font-semibold text-slate-900">{formatCurrency(product.minPrice)}</span>
           ) : (
