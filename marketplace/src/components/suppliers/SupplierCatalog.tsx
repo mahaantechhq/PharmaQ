@@ -117,20 +117,20 @@ export function SupplierCatalog({
             className="h-10 w-full rounded-lg pl-9 pr-3 text-sm text-slate-700 placeholder:text-slate-400 focus:outline-none"
           />
         </div>
-        <div className="flex shrink-0 gap-2">
-          <Select value={category} onChange={(e) => setCategory(e.target.value)} className="h-10 w-32 text-xs">
+        <div className="flex gap-2">
+          <Select value={category} onChange={(e) => setCategory(e.target.value)} className="w-40">
             <option value="">All categories</option>
             {categories.map((c) => (
               <option key={c.id} value={c.id}>{c.name}</option>
             ))}
           </Select>
-          <Select value={brand} onChange={(e) => setBrand(e.target.value)} className="h-10 w-32 text-xs">
+          <Select value={brand} onChange={(e) => setBrand(e.target.value)} className="w-40">
             <option value="">All brands</option>
             {brands.map((b) => (
               <option key={b.id} value={b.id}>{b.name}</option>
             ))}
           </Select>
-          <Select value={sort} onChange={(e) => setSort(e.target.value as typeof sort)} className="h-10 w-36 text-xs">
+          <Select value={sort} onChange={(e) => setSort(e.target.value as typeof sort)} className="w-44">
             <option value="newest">Newest</option>
             <option value="price_low">Price: Low to High</option>
             <option value="price_high">Price: High to Low</option>
