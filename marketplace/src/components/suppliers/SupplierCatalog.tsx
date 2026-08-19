@@ -107,30 +107,30 @@ export function SupplierCatalog({
   return (
     <div className="flex flex-col gap-6">
       <div className="flex flex-col gap-3 sm:flex-row">
-        <div className="relative flex-1 rounded-xl border border-slate-200 bg-white p-1.5 shadow-[var(--shadow-card)]">
+        <div className="relative flex-[2] rounded-xl border border-slate-200 bg-white p-2 shadow-[var(--shadow-card)]">
           <Search className="pointer-events-none absolute left-4 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
           <input
             type="search"
             value={q}
             onChange={(e) => setQ(e.target.value)}
             placeholder="Search this supplier's products..."
-            className="h-10 w-full rounded-lg pl-9 pr-3 text-sm text-slate-700 placeholder:text-slate-400 focus:outline-none"
+            className="h-11 w-full rounded-lg pl-9 pr-3 text-sm text-slate-700 placeholder:text-slate-400 focus:outline-none"
           />
         </div>
         <div className="flex gap-2">
-          <Select value={category} onChange={(e) => setCategory(e.target.value)} className="w-40">
+          <Select value={category} onChange={(e) => setCategory(e.target.value)} className="h-9 w-32 pl-2.5 pr-7 text-xs">
             <option value="">All categories</option>
             {categories.map((c) => (
               <option key={c.id} value={c.id}>{c.name}</option>
             ))}
           </Select>
-          <Select value={brand} onChange={(e) => setBrand(e.target.value)} className="w-40">
+          <Select value={brand} onChange={(e) => setBrand(e.target.value)} className="h-9 w-32 pl-2.5 pr-7 text-xs">
             <option value="">All brands</option>
             {brands.map((b) => (
               <option key={b.id} value={b.id}>{b.name}</option>
             ))}
           </Select>
-          <Select value={sort} onChange={(e) => setSort(e.target.value as typeof sort)} className="w-44">
+          <Select value={sort} onChange={(e) => setSort(e.target.value as typeof sort)} className="h-9 w-36 pl-2.5 pr-7 text-xs">
             <option value="newest">Newest</option>
             <option value="price_low">Price: Low to High</option>
             <option value="price_high">Price: High to Low</option>
