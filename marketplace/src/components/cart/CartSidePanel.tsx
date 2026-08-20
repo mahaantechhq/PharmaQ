@@ -4,12 +4,14 @@ import { useState } from "react";
 import Link from "next/link";
 import { ShoppingCart, X } from "lucide-react";
 import { useToast } from "@/components/ui/Toast";
+import { Button } from "@/components/ui/Button";
 import { removeCartItem } from "@/app/(site)/cart/actions";
 import { formatCurrency } from "@/lib/format";
 import { useCart } from "@/components/cart/CartContext";
+import type { CartLine } from "@/lib/checkout";
 
 export function CartSidePanel() {
-  const { summary, setSummary } = useCart();
+  const { summary, setSummary, lastAdded } = useCart();
   const { toast } = useToast();
   const [pendingId, setPendingId] = useState<string | null>(null);
 
@@ -36,37 +38,71 @@ export function CartSidePanel() {
     );
   }
 
+  const bySupplier = new Map<string, { name: string; lines: CartLine[]; total: number }>();
+  for (const line of summary.lines) {
+    const group = bySupplier.get(line.businessId) ?? { name: line.businessName, lines: [], total: 0 };
+    group.lines.push(line);
+    group.total += line.lineTotal;
+    bySupplier.set(line.businessId, group);
+  }
+
   return (
     <div className="rounded-xl border border-slate-100 bg-white p-5">
       <p className="mb-3 text-sm font-semibold text-slate-800">Your cart</p>
-      <div className="flex flex-col divide-y divide-slate-50">
-        {summary.lines.map((line) => (
-          <div key={line.cartItemId} className="flex items-center justify-between gap-2 py-2.5">
-            <div className="min-w-0">
-              <p className="truncate text-sm font-medium text-slate-700">{line.productName}</p>
-              <p className="text-xs text-slate-400">Qty {line.quantity} · {line.businessName}</p>
+
+      <div className="flex flex-col gap-4">
+        {Array.from(bySupplier.entries()).map(([businessId, group]) => (
+          <div key={businessId}>
+            <div className="mb-1.5 flex items-center justify-between">
+              <p className="truncate text-xs font-semibold text-slate-500">{group.name}</p>
+              <p className="text-xs font-semibold text-slate-700">{formatCurrency(group.total)}</p>
             </div>
-            <div className="flex shrink-0 items-center gap-2">
-              <span className="text-sm font-semibold text-slate-800">{formatCurrency(line.lineTotal)}</span>
-              <button
-                disabled={pendingId === line.cartItemId}
-                onClick={() => handleRemove(line.cartItemId)}
-                aria-label={`Remove ${line.productName}`}
-                className="flex h-6 w-6 items-center justify-center rounded-full text-danger-500 hover:bg-danger-50 disabled:opacity-50"
-              >
-                <X className="h-3.5 w-3.5" />
-              </button>
+            <div className="flex flex-col divide-y divide-slate-50">
+              {group.lines.map((line) => (
+                <div key={line.cartItemId} className="flex items-center justify-between gap-2 py-2">
+                  <div className="min-w-0">
+                    <p className="truncate text-sm font-medium text-slate-700">{line.productName}</p>
+                    <p className="text-xs text-slate-400">Qty {line.quantity}</p>
+                  </div>
+                  <div className="flex shrink-0 items-center gap-2">
+                    <span className="text-sm font-semibold text-slate-800">{formatCurrency(line.lineTotal)}</span>
+                    <button
+                      disabled={pendingId === line.cartItemId}
+                      onClick={() => handleRemove(line.cartItemId)}
+                      aria-label={`Remove ${line.productName}`}
+                      className="flex h-6 w-6 items-center justify-center rounded-full text-danger-500 hover:bg-danger-50 disabled:opacity-50"
+                    >
+                      <X className="h-3.5 w-3.5" />
+                    </button>
+                  </div>
+                </div>
+              ))}
             </div>
           </div>
         ))}
       </div>
-      <div className="mt-3 flex items-center justify-between border-t border-slate-100 pt-3 text-sm">
-        <span className="text-slate-500">Total ({summary.lines.length} item{summary.lines.length !== 1 && "s"})</span>
-        <span className="font-semibold text-slate-900">{formatCurrency(summary.grandTotal)}</span>
+
+      {lastAdded && (
+        <div className="mt-4 flex items-center justify-between rounded-lg bg-primary-50 px-3 py-2 text-xs">
+          <span className="min-w-0 truncate text-primary-700">
+            Last added: <span className="font-semibold">{lastAdded.productName}</span>
+            {lastAdded.packSize && ` | ${lastAdded.packSize}`}
+          </span>
+          <span className="shrink-0 font-semibold text-primary-700">Qty:{lastAdded.quantity}</span>
+        </div>
+      )}
+
+      <div className="mt-4 flex items-center justify-between border-t border-slate-100 pt-3">
+        <div>
+          <p className="text-lg font-bold text-slate-900">{formatCurrency(summary.grandTotal)}</p>
+          <p className="text-xs text-slate-400">
+            {summary.supplierCount} Distributor{summary.supplierCount !== 1 && "s"} · {summary.lines.length} Item{summary.lines.length !== 1 && "s"}
+          </p>
+        </div>
+        <Link href="/cart">
+          <Button>View Cart</Button>
+        </Link>
       </div>
-      <Link href="/cart" className="mt-4 block rounded-lg bg-primary-600 py-2.5 text-center text-sm font-semibold text-white hover:bg-primary-700">
-        View cart
-      </Link>
     </div>
   );
 }

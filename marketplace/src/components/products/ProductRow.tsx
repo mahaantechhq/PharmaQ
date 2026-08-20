@@ -3,10 +3,10 @@
 import { useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { Heart, Package, Percent } from "lucide-react";
+import { Heart, Package, Percent, Plus, Check } from "lucide-react";
 import { Button } from "@/components/ui/Button";
 import { useToast } from "@/components/ui/Toast";
-import { addToCart } from "@/app/(site)/cart/actions";
+import { addToCart, updateCartItemQuantity } from "@/app/(site)/cart/actions";
 import { toggleWishlist } from "@/app/(site)/wishlist/actions";
 import { formatCurrency, hasScheme } from "@/lib/format";
 import { highlightMatch } from "@/lib/highlight";
@@ -24,12 +24,14 @@ export function ProductRow({
   initialWishlisted?: boolean;
   query?: string;
 }) {
-  const [qty, setQty] = useState("");
+  const { summary, setSummary, setLastAdded } = useCart();
+  const cartLine = summary.lines.find((l) => l.productId === product.id);
+
+  const [qty, setQty] = useState(cartLine ? String(cartLine.quantity) : "");
   const [loading, setLoading] = useState(false);
   const [wishlisted, setWishlisted] = useState(initialWishlisted);
   const router = useRouter();
   const { toast } = useToast();
-  const { setSummary } = useCart();
 
   const outOfStock = product.totalStock <= 0;
 
@@ -42,9 +44,14 @@ export function ProductRow({
     const quantity = Math.max(1, parseInt(qty, 10) || 1);
     setLoading(true);
     try {
-      const updated = await addToCart(product.id, quantity);
+      const updated = cartLine
+        ? await updateCartItemQuantity(cartLine.cartItemId, quantity)
+        : await addToCart(product.id, quantity);
       setSummary(updated);
-      toast("Added to cart", "success");
+      const newLine = updated.lines.find((l) => l.productId === product.id);
+      setQty(newLine ? String(newLine.quantity) : String(quantity));
+      setLastAdded({ productName: product.name, packSize: product.packSize, quantity });
+      toast(cartLine ? "Cart updated" : "Added to cart", "success");
     } catch (err) {
       toast(err instanceof Error ? err.message : "Failed to add to cart", "error");
     } finally {
@@ -68,9 +75,16 @@ export function ProductRow({
   return (
     <form onSubmit={handleAdd} className="flex items-center gap-4 border-b border-slate-100 px-4 py-4 last:border-b-0 sm:px-5">
       <div className="min-w-0 flex-1">
-        <Link href={`/products/${product.id}`} className="truncate text-sm font-semibold text-slate-800 hover:text-primary-600">
-          {highlightMatch(product.name, query)}
-        </Link>
+        <div className="flex flex-wrap items-center gap-2">
+          <Link href={`/products/${product.id}`} className="truncate text-sm font-semibold text-slate-800 hover:text-primary-600">
+            {highlightMatch(product.name, query)}
+          </Link>
+          {cartLine && (
+            <span className="flex shrink-0 items-center gap-1 rounded-full bg-success-50 px-2 py-0.5 text-[11px] font-semibold text-success-600">
+              <Check className="h-3 w-3" /> Added
+            </span>
+          )}
+        </div>
         <div className="mt-1 flex flex-wrap items-center gap-x-2 gap-y-1 text-xs">
           <Link href={`/suppliers/${product.businessId}`} className="font-medium text-primary-600 hover:underline">
             {product.businessName}
@@ -130,11 +144,13 @@ export function ProductRow({
         }}
         placeholder="Qty"
         disabled={outOfStock}
-        className="h-10 w-16 shrink-0 rounded-lg border border-slate-200 px-2 text-center text-sm disabled:bg-slate-50"
+        className={`h-10 w-16 shrink-0 rounded-lg border px-2 text-center text-sm font-medium disabled:bg-slate-50 ${
+          cartLine ? "border-primary-300 bg-primary-50 text-primary-700" : "border-slate-200"
+        }`}
       />
 
-      <Button type="submit" loading={loading} disabled={outOfStock} className="shrink-0">
-        {outOfStock ? "Unavailable" : "Add"}
+      <Button type="submit" size="icon" loading={loading} disabled={outOfStock} className="shrink-0" aria-label={cartLine ? "Update quantity" : "Add to cart"}>
+        <Plus className="h-4 w-4" />
       </Button>
     </form>
   );

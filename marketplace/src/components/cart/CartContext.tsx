@@ -13,10 +13,18 @@ const EMPTY_SUMMARY: CartSummary = {
   appliedOffers: [],
 };
 
+export interface LastAdded {
+  productName: string;
+  packSize: string | null;
+  quantity: number;
+}
+
 interface CartContextValue {
   summary: CartSummary;
   count: number;
   setSummary: (summary: CartSummary) => void;
+  lastAdded: LastAdded | null;
+  setLastAdded: (info: LastAdded) => void;
 }
 
 const CartContext = createContext<CartContextValue | null>(null);
@@ -29,9 +37,10 @@ const CartContext = createContext<CartContextValue | null>(null);
 // client-side navigation since it lives in the shared layout.
 export function CartProvider({ initialSummary, children }: { initialSummary: CartSummary | null; children: ReactNode }) {
   const [summary, setSummary] = useState<CartSummary>(initialSummary ?? EMPTY_SUMMARY);
+  const [lastAdded, setLastAdded] = useState<LastAdded | null>(null);
   const count = useMemo(() => summary.lines.reduce((sum, l) => sum + l.quantity, 0), [summary.lines]);
 
-  const value = useMemo(() => ({ summary, count, setSummary }), [summary, count]);
+  const value = useMemo(() => ({ summary, count, setSummary, lastAdded, setLastAdded }), [summary, count, lastAdded]);
 
   return <CartContext.Provider value={value}>{children}</CartContext.Provider>;
 }
