@@ -138,7 +138,7 @@ export default async function SupplierProfilePage({ params }: SupplierProfilePag
         />
       </div>
 
-      <div className="grid grid-cols-1 gap-6 xl:grid-cols-[minmax(0,1fr)_320px]">
+      <div className="grid grid-cols-1 gap-6 xl:grid-cols-[minmax(0,1fr)_380px]">
         <SupplierCatalog
           allListings={allListings}
           categories={categories}
