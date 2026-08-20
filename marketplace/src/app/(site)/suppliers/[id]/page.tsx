@@ -91,7 +91,7 @@ export default async function SupplierProfilePage({ params }: SupplierProfilePag
   const initialPageStock = await getCatalogPageStock(allListings.slice(0, PAGE_SIZE).map((l) => l.id));
 
   return (
-    <div className="mx-auto max-w-7xl px-4 py-8 sm:px-6">
+    <div className="w-full px-4 py-8 sm:px-6 lg:px-8">
       <div className="mb-6 flex items-start gap-4 rounded-2xl border border-slate-100 bg-white p-6 shadow-[var(--shadow-card)]">
         <div className="flex h-16 w-16 shrink-0 items-center justify-center rounded-xl bg-primary-50 text-primary-600">
           <Building2 className="h-8 w-8" />
