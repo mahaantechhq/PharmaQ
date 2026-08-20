@@ -1,7 +1,7 @@
 import Link from "next/link";
 import { Pill, MapPin, Percent } from "lucide-react";
 import { Badge } from "@/components/ui/Badge";
-import { formatCurrency } from "@/lib/format";
+import { formatCurrency, hasScheme } from "@/lib/format";
 import type { ProductListing } from "@/lib/marketplace";
 
 function offerLabel(offer: NonNullable<ProductListing["offer"]>) {
@@ -23,7 +23,7 @@ export function ProductCard({ product }: { product: ProductListing }) {
             <Percent className="h-2.5 w-2.5" /> {offerLabel(product.offer)}
           </span>
         )}
-        {product.scheme && (
+        {hasScheme(product.scheme) && (
           <span className="absolute right-2 top-2 rounded-md bg-accent-50 px-2 py-1 text-[10px] font-semibold text-accent-600 shadow-sm">
             {product.scheme}
           </span>

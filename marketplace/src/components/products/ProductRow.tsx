@@ -8,7 +8,7 @@ import { Button } from "@/components/ui/Button";
 import { useToast } from "@/components/ui/Toast";
 import { addToCart } from "@/app/(site)/cart/actions";
 import { toggleWishlist } from "@/app/(site)/wishlist/actions";
-import { formatCurrency } from "@/lib/format";
+import { formatCurrency, hasScheme } from "@/lib/format";
 import { highlightMatch } from "@/lib/highlight";
 import { useCart } from "@/components/cart/CartContext";
 import type { ProductListing } from "@/lib/marketplace";
@@ -99,7 +99,7 @@ export function ProductRow({
         </div>
       </div>
 
-      {product.scheme && (
+      {hasScheme(product.scheme) && (
         <span className="shrink-0 rounded-md bg-accent-50 px-2 py-1 text-xs font-semibold text-accent-600">{product.scheme}</span>
       )}
 
