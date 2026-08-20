@@ -143,7 +143,7 @@ export function ProductRow({
         }}
         placeholder="Qty"
         disabled={outOfStock}
-        className={`h-10 w-16 shrink-0 rounded-lg border px-2 text-center text-sm font-medium disabled:bg-slate-50 ${
+        className={`h-10 w-16 shrink-0 rounded-lg border px-2 text-center text-sm font-medium disabled:bg-slate-50 [appearance:textfield] [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none ${
           cartLine ? "border-primary-300 bg-primary-50 text-primary-700" : "border-slate-200"
         }`}
       />
