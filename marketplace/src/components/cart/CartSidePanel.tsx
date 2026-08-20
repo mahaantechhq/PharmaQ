@@ -11,7 +11,7 @@ import { useCart } from "@/components/cart/CartContext";
 import type { CartLine } from "@/lib/checkout";
 
 export function CartSidePanel() {
-  const { summary, setSummary, lastAdded } = useCart();
+  const { summary, setSummary } = useCart();
   const { toast } = useToast();
   const [pendingId, setPendingId] = useState<string | null>(null);
 
@@ -81,16 +81,6 @@ export function CartSidePanel() {
           </div>
         ))}
       </div>
-
-      {lastAdded && (
-        <div className="mt-4 flex items-center justify-between rounded-lg bg-primary-50 px-3 py-2 text-xs">
-          <span className="min-w-0 truncate text-primary-700">
-            Last added: <span className="font-semibold">{lastAdded.productName}</span>
-            {lastAdded.packSize && ` | ${lastAdded.packSize}`}
-          </span>
-          <span className="shrink-0 font-semibold text-primary-700">Qty:{lastAdded.quantity}</span>
-        </div>
-      )}
 
       <div className="mt-4 flex items-center justify-between border-t border-slate-100 pt-3">
         <div>
