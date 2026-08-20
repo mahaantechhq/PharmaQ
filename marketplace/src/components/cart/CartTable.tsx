@@ -2,10 +2,11 @@
 
 import { useState } from "react";
 import Link from "next/link";
-import { Minus, Plus, Trash2, ShoppingBag } from "lucide-react";
+import { useRouter } from "next/navigation";
+import { CheckCircle2, Minus, Plus, Trash2, ShoppingBag } from "lucide-react";
 import { Button } from "@/components/ui/Button";
 import { useToast } from "@/components/ui/Toast";
-import { updateCartItemQuantity, removeCartItem } from "@/app/(site)/cart/actions";
+import { updateCartItemQuantity, removeCartItem, placeOrder } from "@/app/(site)/cart/actions";
 import { formatCurrency } from "@/lib/format";
 import { useCart } from "@/components/cart/CartContext";
 import type { CartLine } from "@/lib/checkout";
@@ -14,8 +15,22 @@ export function CartTable() {
   const { summary, setSummary } = useCart();
   const { lines, subtotal, discountTotal, taxTotal, grandTotal, supplierCount } = summary;
   const { toast } = useToast();
+  const router = useRouter();
   const [pendingId, setPendingId] = useState<string | null>(null);
   const [qtyInputs, setQtyInputs] = useState<Record<string, string>>({});
+  const [placing, setPlacing] = useState(false);
+
+  const handlePlaceOrder = async () => {
+    setPlacing(true);
+    try {
+      const result = await placeOrder();
+      toast(`Order ${result.orderNumber} placed successfully`, "success");
+      router.push(`/orders/${result.orderId}`);
+    } catch (err) {
+      toast(err instanceof Error ? err.message : "Failed to place order", "error");
+      setPlacing(false);
+    }
+  };
 
   const handleQtyChange = async (cartItemId: string, quantity: number) => {
     setPendingId(cartItemId);
@@ -170,9 +185,9 @@ export function CartTable() {
           Splitting into {supplierCount} order{supplierCount !== 1 && "s"} across {supplierCount} supplier{supplierCount !== 1 && "s"}
         </p>
 
-        <Link href="/checkout" className="mt-4 block">
-          <Button size="lg" className="w-full">Proceed to checkout</Button>
-        </Link>
+        <Button size="lg" className="mt-4 w-full" onClick={handlePlaceOrder} loading={placing}>
+          <CheckCircle2 className="h-4 w-4" /> Place order
+        </Button>
       </div>
     </div>
   );
