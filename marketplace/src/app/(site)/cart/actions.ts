@@ -110,6 +110,12 @@ export async function placeOrder() {
   if (!ctx) throw new Error("Please sign in to place an order");
 
   const supabase = await createClient();
+
+  // Doesn't depend on the cart contents (only ctx.business.id, already
+  // known), so fire it off now instead of waiting until after
+  // getCartSummary resolves below.
+  const linkedWholesalerIdsPromise = getLinkedWholesalerIds(ctx.business.id);
+
   const summary = await getCartSummary(ctx.business.id);
 
   if (summary.lines.length === 0) throw new Error("Your cart is empty");
@@ -130,7 +136,7 @@ export async function placeOrder() {
   // is no longer linked to, even though addToCart/updateCartItemQuantity
   // already check this on the way in.
   const [linkedWholesalerIds, offersByBusiness] = await Promise.all([
-    getLinkedWholesalerIds(ctx.business.id),
+    linkedWholesalerIdsPromise,
     // Discount is recomputed here server-side (not trusted from the client)
     // -- same logic as applyOfferDiscounts, applied per supplier group
     // since offers are business-owned.
@@ -196,6 +202,8 @@ export async function placeOrder() {
   // dedicated Postgres sequence (0015_order_number_sequence.sql) -- a
   // single atomic operation, so unlike counting existing rows there's no
   // read-then-write race window and no retry-on-collision needed here.
+  // The cart is cleared inside this same function/transaction too
+  // (0027_clear_cart_in_order_rpc.sql), not as a separate round trip.
   const { data, error } = await supabase.rpc("create_order_with_splits", {
     p_buyer_business_id: ctx.business.id,
     p_subtotal: Math.round(masterSubtotal * 100) / 100,
@@ -207,8 +215,6 @@ export async function placeOrder() {
   if (error) throw new Error(error.message);
 
   const result = (data as { id: string; order_number: string }[])[0];
-
-  await supabase.from("cart_items").delete().eq("buyer_business_id", ctx.business.id);
 
   revalidatePath("/cart");
   revalidatePath("/orders");
