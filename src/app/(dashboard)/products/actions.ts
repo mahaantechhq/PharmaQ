@@ -4,6 +4,7 @@ import { revalidatePath } from "next/cache";
 import { createClient } from "@/lib/supabase/server";
 import { getCurrentBusiness } from "@/lib/supabase/current-business";
 import { productSchema, type ProductFormValues } from "@/lib/validations/product";
+import { fetchInChunks } from "@/lib/chunk";
 
 function slugify(name: string) {
   return name
@@ -113,29 +114,32 @@ export async function bulkDeleteProducts(productIds: string[]) {
   // has product_id references products(id) on delete restrict, so deleting
   // one would orphan that order's line item. A single batched DELETE would
   // fail entirely if any row hit this, so skip those up front instead.
-  const { data: ordered } = await supabase
-    .from("supplier_order_items")
-    .select("product_id")
-    .in("product_id", productIds);
-  const blockedIds = new Set((ordered ?? []).map((o) => o.product_id));
+  //
+  // Chunked because a "select all" on a large product list (hundreds of
+  // ids) exceeds Supabase/PostgREST's request size in a single .in() call
+  // and fails the whole action outright.
+  const ordered = await fetchInChunks(productIds, async (chunk) => {
+    const { data } = await supabase.from("supplier_order_items").select("product_id").in("product_id", chunk);
+    return data ?? [];
+  });
+  const blockedIds = new Set(ordered.map((o) => o.product_id));
   const deletableIds = productIds.filter((id) => !blockedIds.has(id));
 
   let blockedNames: string[] = [];
   if (blockedIds.size > 0) {
-    const { data: blockedProducts } = await supabase
-      .from("products")
-      .select("name")
-      .in("id", Array.from(blockedIds));
-    blockedNames = (blockedProducts ?? []).map((p) => p.name);
+    const blockedProducts = await fetchInChunks(Array.from(blockedIds), async (chunk) => {
+      const { data } = await supabase.from("products").select("name").in("id", chunk).eq("business_id", ctx.business.id);
+      return data ?? [];
+    });
+    blockedNames = blockedProducts.map((p) => p.name);
   }
 
   if (deletableIds.length > 0) {
-    const { error } = await supabase
-      .from("products")
-      .delete()
-      .in("id", deletableIds)
-      .eq("business_id", ctx.business.id);
-    if (error) throw new Error(error.message);
+    await fetchInChunks(deletableIds, async (chunk) => {
+      const { error } = await supabase.from("products").delete().in("id", chunk).eq("business_id", ctx.business.id);
+      if (error) throw new Error(error.message);
+      return [];
+    });
   }
   revalidatePath("/products");
   revalidatePath("/inventory");
@@ -149,13 +153,15 @@ export async function bulkUpdateProductStatus(productIds: string[], status: "dra
   if (productIds.length === 0) return;
 
   const supabase = await createClient();
-  const { error } = await supabase
-    .from("products")
-    .update({ status, updated_at: new Date().toISOString() })
-    .in("id", productIds)
-    .eq("business_id", ctx.business.id);
-
-  if (error) throw new Error(error.message);
+  await fetchInChunks(productIds, async (chunk) => {
+    const { error } = await supabase
+      .from("products")
+      .update({ status, updated_at: new Date().toISOString() })
+      .in("id", chunk)
+      .eq("business_id", ctx.business.id);
+    if (error) throw new Error(error.message);
+    return [];
+  });
   revalidatePath("/products");
 }
 
