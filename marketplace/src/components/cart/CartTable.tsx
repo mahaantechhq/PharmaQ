@@ -1,9 +1,10 @@
 "use client";
 
 import { useState } from "react";
+import Image from "next/image";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { CheckCircle2, Minus, Plus, Trash2, ShoppingBag } from "lucide-react";
+import { CheckCircle2, Minus, Plus, Trash2 } from "lucide-react";
 import { Button } from "@/components/ui/Button";
 import { useToast } from "@/components/ui/Toast";
 import { updateCartItemQuantity, removeCartItem, placeOrder } from "@/app/(site)/cart/actions";
@@ -78,10 +79,11 @@ export function CartTable() {
 
   if (lines.length === 0) {
     return (
-      <div className="flex flex-col items-center gap-3 py-24 text-slate-400">
-        <ShoppingBag className="h-10 w-10" />
-        <p className="text-sm">Your cart is empty.</p>
-        <Link href="/search">
+      <div className="flex flex-col items-center gap-3 py-16 text-center text-slate-400">
+        <Image src="/empty-cart.png" alt="" width={1200} height={831} className="h-auto w-56" />
+        <p className="mt-2 text-lg font-semibold text-slate-800">No Items in Cart</p>
+        <p className="text-sm text-slate-400">Add products to place order</p>
+        <Link href="/search" className="mt-2">
           <Button variant="outline">Browse products</Button>
         </Link>
       </div>

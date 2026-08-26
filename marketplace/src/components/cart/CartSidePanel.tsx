@@ -1,8 +1,9 @@
 "use client";
 
 import { useState } from "react";
+import Image from "next/image";
 import Link from "next/link";
-import { ShoppingCart, X } from "lucide-react";
+import { X } from "lucide-react";
 import { useToast } from "@/components/ui/Toast";
 import { Button } from "@/components/ui/Button";
 import { removeCartItem } from "@/app/(site)/cart/actions";
@@ -31,9 +32,9 @@ export function CartSidePanel() {
   if (summary.lines.length === 0) {
     return (
       <div className="flex h-full flex-col items-center justify-center gap-2 rounded-xl border border-slate-100 bg-white p-8 text-center">
-        <ShoppingCart className="h-10 w-10 text-primary-300" />
-        <p className="text-base font-semibold text-slate-800">Your cart is empty!</p>
-        <p className="text-sm text-slate-400">You don&apos;t have any products in the cart.</p>
+        <Image src="/empty-cart.png" alt="" width={1200} height={831} className="h-auto w-40" />
+        <p className="mt-2 text-base font-semibold text-slate-800">No Items in Cart</p>
+        <p className="text-sm text-slate-400">Add products to place order</p>
       </div>
     );
   }
