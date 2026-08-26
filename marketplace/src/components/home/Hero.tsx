@@ -1,88 +1,95 @@
-import { Search, ShieldCheck, FileCheck2, MapPinned, Building2, Package, TrendingUp } from "lucide-react";
+import Link from "next/link";
+import { Search, Check, ShieldCheck, TrendingUp, Pill, Stethoscope, Syringe, Package2 } from "lucide-react";
 import { Button } from "@/components/ui/Button";
 
-const TRUST_POINTS = [
-  { icon: ShieldCheck, label: "Verified businesses only" },
-  { icon: FileCheck2, label: "GST-ready invoicing" },
-  { icon: MapPinned, label: "Pan-India sourcing" },
+const CHECKLIST = [
+  "Digital Ordering — compare prices and order from multiple suppliers in one cart",
+  "Verified Suppliers — GST-ready invoicing from approved businesses only",
 ];
 
 export function Hero() {
   return (
-    <section className="relative overflow-hidden bg-gradient-to-br from-primary-900 via-primary-700 to-primary-500">
-      <div className="pointer-events-none absolute inset-0 bg-dot-grid opacity-40" />
-      <div className="pointer-events-none absolute -left-24 top-10 h-72 w-72 rounded-full bg-accent-500/20 blur-3xl animate-float" />
-      <div className="pointer-events-none absolute -right-16 bottom-0 h-96 w-96 rounded-full bg-primary-300/20 blur-3xl animate-float-delay" />
+    <section className="relative overflow-hidden bg-white">
+      <div className="pointer-events-none absolute -left-32 -top-32 h-[28rem] w-[28rem] rounded-full bg-primary-50" />
+      <div className="pointer-events-none absolute -right-24 bottom-0 h-96 w-96 rounded-full bg-primary-50/70" />
 
-      <div className="relative mx-auto grid max-w-7xl grid-cols-1 gap-12 px-4 py-20 sm:px-6 sm:py-28 lg:grid-cols-[1.1fr_0.9fr] lg:items-center">
-        <div className="max-w-2xl">
-          <span className="inline-flex items-center gap-2 rounded-full border border-white/15 bg-white/10 px-3.5 py-1.5 text-xs font-semibold uppercase tracking-wider text-primary-100">
-            <span className="h-1.5 w-1.5 rounded-full bg-accent-400" />
-            Tamil Nadu&apos;s B2B Pharma Marketplace
-          </span>
-          <h1 className="mt-5 font-display text-4xl font-semibold leading-[1.08] tracking-tight text-white sm:text-6xl">
-            Source pharma products
-            <span className="block text-white">directly from verified businesses</span>
+      <div className="relative mx-auto grid max-w-7xl grid-cols-1 items-center gap-16 px-4 py-20 sm:px-6 lg:grid-cols-[1.1fr_0.9fr] lg:py-28">
+        <div className="max-w-xl">
+          <h1 className="font-display text-4xl font-extrabold leading-[1.1] tracking-tight text-slate-900 sm:text-5xl">
+            Grow Your <span className="text-primary-600">Pharma</span> Business With <span className="text-primary-600">Pharma Q</span>
           </h1>
-          <p className="mt-5 max-w-xl text-base leading-relaxed text-primary-100/90 sm:text-lg">
-            Compare prices across suppliers, order from multiple businesses in one cart, and manage everything in one place.
+          <p className="mt-5 text-base leading-relaxed text-slate-500 sm:text-lg">
+            Browse, Order and Grow with Tamil Nadu&apos;s biggest B2B pharma marketplace — place online orders to your distributors and get:
           </p>
 
-          <div className="mt-9 flex max-w-xl gap-2 rounded-2xl bg-white p-2 shadow-[var(--shadow-glow)]">
+          <ul className="mt-6 flex flex-col gap-3">
+            {CHECKLIST.map((item) => (
+              <li key={item} className="flex items-start gap-2.5 text-sm text-slate-600 sm:text-base">
+                <span className="mt-0.5 flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-success-50 text-success-600">
+                  <Check className="h-3.5 w-3.5" strokeWidth={3} />
+                </span>
+                {item}
+              </li>
+            ))}
+          </ul>
+
+          <div className="mt-8 flex flex-wrap items-center gap-3">
+            <Link href="/login">
+              <Button size="lg" className="rounded-xl">Sign in to get started</Button>
+            </Link>
+          </div>
+
+          <div className="mt-8 flex max-w-md gap-2 rounded-2xl border border-slate-200 bg-slate-50 p-2">
             <div className="relative flex-1">
               <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
               <input
                 type="search"
                 disabled
                 placeholder="Search for Paracetamol, Insulin, Vitamin C..."
-                className="h-12 w-full cursor-not-allowed rounded-xl pl-9 pr-3 text-sm text-slate-700 placeholder:text-slate-400 focus:outline-none"
+                className="h-11 w-full cursor-not-allowed rounded-xl bg-transparent pl-9 pr-3 text-sm text-slate-500 placeholder:text-slate-400 focus:outline-none"
               />
             </div>
-            <Button size="lg" className="rounded-xl disabled:opacity-100" disabled>Search</Button>
-          </div>
-
-          <div className="mt-8 flex flex-wrap items-center gap-x-6 gap-y-3">
-            {TRUST_POINTS.map((t) => (
-              <span key={t.label} className="flex items-center gap-2 text-sm text-primary-100/90">
-                <t.icon className="h-4 w-4 text-accent-400" />
-                {t.label}
-              </span>
-            ))}
+            <Button size="lg" variant="outline" className="rounded-xl bg-white disabled:opacity-100" disabled>Search</Button>
           </div>
         </div>
 
         <div className="relative hidden lg:block">
-          <div className="absolute -top-4 right-8 flex items-center gap-3 rounded-2xl border border-white/15 bg-white/10 px-5 py-4 shadow-[var(--shadow-glow)] backdrop-blur-md animate-float">
-            <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-accent-400/20 text-accent-400">
-              <Building2 className="h-5 w-5" />
+          <div className="mx-auto flex w-64 flex-col gap-3 rounded-[2.5rem] border-8 border-slate-900 bg-slate-900 p-3 shadow-2xl">
+            <div className="flex items-center justify-between px-2 pt-1">
+              <span className="font-display text-sm font-bold text-white">Pharma Q</span>
+              <span className="h-2 w-2 rounded-full bg-success-500" />
+            </div>
+            <div className="grid grid-cols-2 gap-2 rounded-2xl bg-white p-3">
+              {[Pill, Syringe, Stethoscope, Package2].map((Icon, i) => (
+                <div key={i} className="flex aspect-square flex-col items-center justify-center gap-1.5 rounded-xl bg-primary-50">
+                  <Icon className="h-6 w-6 text-primary-600" />
+                </div>
+              ))}
+            </div>
+            <button className="rounded-xl bg-primary-600 py-2.5 text-center text-sm font-semibold text-white" disabled>
+              Order Now
+            </button>
+          </div>
+
+          <div className="absolute -left-6 top-6 flex items-center gap-3 rounded-2xl border border-slate-100 bg-white px-4 py-3 shadow-[var(--shadow-card)] animate-float">
+            <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-success-50 text-success-600">
+              <ShieldCheck className="h-4 w-4" />
             </div>
             <div>
-              <p className="font-display text-lg font-semibold text-white">Verified suppliers</p>
-              <p className="text-xs text-primary-100/80">Onboarded &amp; approved</p>
+              <p className="text-sm font-semibold text-slate-800">Verified suppliers</p>
+              <p className="text-xs text-slate-400">Onboarded &amp; approved</p>
             </div>
           </div>
 
-          <div className="absolute left-2 top-40 flex items-center gap-3 rounded-2xl border border-white/15 bg-white/10 px-5 py-4 shadow-[var(--shadow-glow)] backdrop-blur-md animate-float-delay">
-            <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-primary-200/20 text-primary-100">
-              <Package className="h-5 w-5" />
+          <div className="absolute -right-8 bottom-10 flex items-center gap-3 rounded-2xl border border-slate-100 bg-white px-4 py-3 shadow-[var(--shadow-card)] animate-float-delay">
+            <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-accent-50 text-accent-600">
+              <TrendingUp className="h-4 w-4" />
             </div>
             <div>
-              <p className="font-display text-lg font-semibold text-white">Wide catalog</p>
-              <p className="text-xs text-primary-100/80">Across every category</p>
+              <p className="text-sm font-semibold text-slate-800">Best-price discovery</p>
+              <p className="text-xs text-slate-400">Compare before you order</p>
             </div>
           </div>
-
-          <div className="absolute bottom-4 right-0 flex items-center gap-3 rounded-2xl border border-white/15 bg-white/10 px-5 py-4 shadow-[var(--shadow-glow)] backdrop-blur-md animate-float">
-            <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-success-500/20 text-success-500">
-              <TrendingUp className="h-5 w-5" />
-            </div>
-            <div>
-              <p className="font-display text-lg font-semibold text-white">Best-price discovery</p>
-              <p className="text-xs text-primary-100/80">Compare before you order</p>
-            </div>
-          </div>
-
-          <div className="mx-auto h-[420px] w-[420px] rounded-full border border-white/10" />
         </div>
       </div>
     </section>
