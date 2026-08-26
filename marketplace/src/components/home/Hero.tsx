@@ -1,4 +1,3 @@
-import Link from "next/link";
 import { Search, Check, ShieldCheck, TrendingUp, Pill, Stethoscope, Syringe, Package2 } from "lucide-react";
 import { Button } from "@/components/ui/Button";
 
@@ -16,7 +15,8 @@ export function Hero() {
       <div className="relative mx-auto grid max-w-7xl grid-cols-1 items-center gap-16 px-4 py-20 sm:px-6 lg:grid-cols-[1.1fr_0.9fr] lg:py-28">
         <div className="max-w-xl">
           <h1 className="font-display text-4xl font-extrabold leading-[1.1] tracking-tight text-slate-900 sm:text-5xl">
-            Grow Your <span className="text-primary-600">Pharma</span> Business With <span className="text-primary-600">Pharma Q</span>
+            <span className="block">Grow Your <span className="text-primary-600">Pharma</span> Business</span>
+            <span className="block">With <span className="text-primary-600">Pharma Q</span></span>
           </h1>
           <p className="mt-5 text-base leading-relaxed text-slate-500 sm:text-lg">
             Browse, Order and Grow with Tamil Nadu&apos;s biggest B2B pharma marketplace — place online orders to your distributors and get:
@@ -32,12 +32,6 @@ export function Hero() {
               </li>
             ))}
           </ul>
-
-          <div className="mt-8 flex flex-wrap items-center gap-3">
-            <Link href="/login">
-              <Button size="lg" className="rounded-xl">Sign in to get started</Button>
-            </Link>
-          </div>
 
           <div className="mt-8 flex max-w-md gap-2 rounded-2xl border border-slate-200 bg-slate-50 p-2">
             <div className="relative flex-1">
