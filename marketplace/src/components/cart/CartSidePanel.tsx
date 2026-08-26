@@ -31,10 +31,13 @@ export function CartSidePanel() {
 
   if (summary.lines.length === 0) {
     return (
-      <div className="flex h-full flex-col items-center justify-center gap-2 rounded-xl border border-slate-100 bg-white p-8 text-center">
-        <Image src="/empty-cart.png" alt="" width={1200} height={831} className="h-auto w-40" />
-        <p className="mt-2 text-base font-semibold text-slate-800">No Items in Cart</p>
-        <p className="text-sm text-slate-400">Add products to place order</p>
+      <div className="flex h-full flex-col rounded-xl border border-slate-100 bg-white p-5">
+        <p className="mb-3 text-sm font-semibold text-slate-800">Cart</p>
+        <div className="flex flex-1 flex-col items-center justify-center gap-2 py-4 text-center">
+          <Image src="/empty-cart.png" alt="" width={1200} height={831} className="h-auto w-40" />
+          <p className="mt-2 text-base font-semibold text-slate-800">No Items in Cart</p>
+          <p className="text-sm text-slate-400">Add products to place order</p>
+        </div>
       </div>
     );
   }
