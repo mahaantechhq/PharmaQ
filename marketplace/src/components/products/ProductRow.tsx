@@ -88,7 +88,7 @@ export function ProductRow({
           <Link href={`/suppliers/${product.businessId}`} className="font-medium text-primary-600 hover:underline">
             {product.businessName}
           </Link>
-          {product.brandName && <span className="text-slate-400">{product.brandName}</span>}
+          {product.brandName && <span className="text-slate-600">{product.brandName}</span>}
           {product.packSize && <span className="text-slate-400">{product.packSize}</span>}
         </div>
         {product.offer && (
