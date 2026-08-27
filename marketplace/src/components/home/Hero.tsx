@@ -16,7 +16,7 @@ export function Hero() {
         <div className="max-w-xl">
           <h1 className="font-display text-4xl font-extrabold leading-[1.1] tracking-tight text-slate-900 sm:text-5xl">
             <span className="block">Grow Your</span>
-            <span className="block"><span className="text-primary-600">Pharma</span> Sales with</span>
+            <span className="block">Pharma Sales with</span>
             <span className="block"><span className="text-primary-600">Pharma Q</span></span>
           </h1>
           <p className="mt-5 text-base leading-relaxed text-slate-500 sm:text-lg">
