@@ -89,7 +89,7 @@ export function ProductRow({
             {product.businessName}
           </Link>
           {product.brandName && <span className="text-slate-600">{product.brandName}</span>}
-          {product.packSize && <span className="text-slate-400">{product.packSize}</span>}
+          {product.packSize && <span className="font-semibold text-slate-600">{product.packSize}</span>}
         </div>
         {product.offer && (
           <p className="mt-1 flex items-center gap-1 text-xs font-medium text-accent-600">
