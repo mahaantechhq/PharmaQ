@@ -107,7 +107,8 @@ export function ProductRow({
             <span className="text-slate-400 line-through">{formatCurrency(product.mrp)}</span>
           )}
           <span className={`flex items-center gap-1 ${outOfStock ? "text-danger-500" : "text-success-600"}`}>
-            <Package className="h-3 w-3" /> {outOfStock ? "Out of stock" : `${product.totalStock} in stock`}
+            <Package className="h-3 w-3" />{" "}
+            {outOfStock ? "Out of stock" : <span className="font-semibold">{product.totalStock} in stock</span>}
           </span>
         </div>
       </div>
