@@ -26,7 +26,7 @@ export interface InventoryRow {
   stockQty: number;
 }
 
-type FilterKey = "all" | "expiring" | "expired" | "healthy";
+type FilterKey = "all" | "expiring" | "expired" | "healthy" | "lowStock";
 
 function daysLeft(expiryDate: string) {
   return differenceInCalendarDays(new Date(expiryDate), new Date());
@@ -44,6 +44,7 @@ export function InventoryExplorer({ rows }: { rows: InventoryRow[] }) {
       if (filter === "expiring") return days >= 0 && days <= 30;
       if (filter === "expired") return days < 0;
       if (filter === "healthy") return days > 30;
+      if (filter === "lowStock") return r.stockQty <= 10;
       return true;
     });
   }, [rows, search, filter]);
@@ -120,6 +121,7 @@ export function InventoryExplorer({ rows }: { rows: InventoryRow[] }) {
         </div>
         <Select value={filter} onChange={(e) => setFilter(e.target.value as FilterKey)} className="w-48">
           <option value="all">All batches</option>
+          <option value="lowStock">Low stock (≤10)</option>
           <option value="expiring">Expiring within 30 days</option>
           <option value="expired">Expired</option>
           <option value="healthy">Healthy stock</option>
