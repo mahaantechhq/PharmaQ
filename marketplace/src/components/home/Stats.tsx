@@ -1,7 +1,7 @@
 import { Building2, PackageSearch, CheckCircle2, MapPin } from "lucide-react";
 
 const STATS = [
-  { icon: Building2, label: "Verified businesses", value: "10+" },
+  { icon: Building2, label: "Pharmacies", value: "10+" },
   { icon: PackageSearch, label: "Products listed", value: "10,000+" },
   { icon: CheckCircle2, label: "Orders completed", value: "1000+" },
   { icon: MapPin, label: "Cities covered", value: "2+" },
