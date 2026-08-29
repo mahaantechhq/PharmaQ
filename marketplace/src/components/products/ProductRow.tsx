@@ -139,56 +139,58 @@ export function ProductRow({
         <Heart className="h-4 w-4" fill={wishlisted ? "currentColor" : "none"} />
       </button>
 
-      <input
-        type="number"
-        min={1}
-        max={product.totalStock || 1}
-        required
-        value={qty}
-        onChange={(e) => {
-          setQty(e.target.value);
-          setShowSchemePopup(false);
-          e.target.setCustomValidity("");
-        }}
-        onInvalid={(e) => (e.target as HTMLInputElement).setCustomValidity("Please enter a quantity!")}
-        onBlur={() => {
-          if (qty === "") return;
-          const clamped = Math.min(Math.max(1, parseInt(qty, 10) || 1), product.totalStock || 1);
-          setQty(String(clamped));
-          setShowSchemePopup(!!scheme && clamped < scheme.buy && scheme.buy <= product.totalStock);
-        }}
-        placeholder="Qty"
-        disabled={outOfStock}
-        className={`h-10 w-16 shrink-0 rounded-lg border px-2 text-center text-sm font-medium disabled:bg-slate-50 [appearance:textfield] [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none ${
-          cartLine ? "border-primary-300 bg-primary-50 text-primary-700" : "border-slate-200"
-        }`}
-      />
+      <div className="relative shrink-0">
+        <input
+          type="number"
+          min={1}
+          max={product.totalStock || 1}
+          required
+          value={qty}
+          onChange={(e) => {
+            setQty(e.target.value);
+            setShowSchemePopup(false);
+            e.target.setCustomValidity("");
+          }}
+          onInvalid={(e) => (e.target as HTMLInputElement).setCustomValidity("Please enter a quantity!")}
+          onBlur={() => {
+            if (qty === "") return;
+            const clamped = Math.min(Math.max(1, parseInt(qty, 10) || 1), product.totalStock || 1);
+            setQty(String(clamped));
+            setShowSchemePopup(!!scheme && clamped < scheme.buy && scheme.buy <= product.totalStock);
+          }}
+          placeholder="Qty"
+          disabled={outOfStock}
+          className={`h-10 w-16 rounded-lg border px-2 text-center text-sm font-medium disabled:bg-slate-50 [appearance:textfield] [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none ${
+            cartLine ? "border-primary-300 bg-primary-50 text-primary-700" : "border-slate-200"
+          }`}
+        />
+
+        {showSchemePopup && scheme && (
+          <div className="absolute right-0 top-full z-20 mt-2 w-56 rounded-lg border border-slate-100 bg-white p-2.5 shadow-lg">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-1.5">
+                <span className="flex h-5 w-5 items-center justify-center rounded-full bg-success-50 text-success-600">
+                  <Gift className="h-3 w-3" />
+                </span>
+                <span className="text-xs font-semibold text-slate-800">Get Scheme</span>
+              </div>
+              <button type="button" onClick={() => setShowSchemePopup(false)} aria-label="Dismiss" className="text-slate-400 hover:text-slate-600">
+                <X className="h-3 w-3" />
+              </button>
+            </div>
+            <p className="mt-1.5 rounded-md bg-success-50 px-2 py-1.5 text-[11px] leading-snug text-success-700">
+              Order {scheme.buy - Math.max(1, parseInt(qty, 10) || 1)} more and get {scheme.free} free
+            </p>
+            <Button type="button" onClick={handleGetScheme} loading={loading} size="sm" className="mt-1.5 w-full text-xs">
+              <Plus className="h-3 w-3" /> Add
+            </Button>
+          </div>
+        )}
+      </div>
 
       <Button type="submit" size="icon" loading={loading} disabled={outOfStock} className="shrink-0" aria-label={cartLine ? "Update quantity" : "Add to cart"}>
         <Plus className="h-4 w-4" />
       </Button>
-
-      {showSchemePopup && scheme && (
-        <div className="absolute left-4 right-4 top-full z-20 mt-2 rounded-xl border border-slate-100 bg-white p-4 shadow-lg sm:left-5 sm:right-5">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-2">
-              <span className="flex h-7 w-7 items-center justify-center rounded-full bg-success-50 text-success-600">
-                <Gift className="h-4 w-4" />
-              </span>
-              <span className="text-sm font-semibold text-slate-800">Get Scheme</span>
-            </div>
-            <button type="button" onClick={() => setShowSchemePopup(false)} aria-label="Dismiss" className="text-slate-400 hover:text-slate-600">
-              <X className="h-4 w-4" />
-            </button>
-          </div>
-          <p className="mt-3 rounded-lg bg-success-50 px-3 py-2 text-sm text-success-700">
-            Order {scheme.buy - Math.max(1, parseInt(qty, 10) || 1)} more and get {scheme.free} free
-          </p>
-          <Button type="button" onClick={handleGetScheme} loading={loading} className="mt-3 w-full">
-            <Plus className="h-4 w-4" /> Add
-          </Button>
-        </div>
-      )}
     </form>
   );
 }
