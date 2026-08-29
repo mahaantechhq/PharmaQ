@@ -166,23 +166,23 @@ export function ProductRow({
         />
 
         {showSchemePopup && scheme && (
-          <div className="absolute right-0 top-full z-20 mt-2 w-56 rounded-lg border border-slate-100 bg-white p-2.5 shadow-lg">
+          <div className="absolute right-0 top-full z-20 mt-2 w-64 rounded-xl border border-slate-100 bg-white p-3 shadow-lg">
             <div className="flex items-center justify-between">
-              <div className="flex items-center gap-1.5">
-                <span className="flex h-5 w-5 items-center justify-center rounded-full bg-success-50 text-success-600">
-                  <Gift className="h-3 w-3" />
+              <div className="flex items-center gap-2">
+                <span className="flex h-6 w-6 items-center justify-center rounded-full bg-success-50 text-success-600">
+                  <Gift className="h-3.5 w-3.5" />
                 </span>
-                <span className="text-xs font-semibold text-slate-800">Get Scheme</span>
+                <span className="text-sm font-semibold text-slate-800">Get Scheme</span>
               </div>
               <button type="button" onClick={() => setShowSchemePopup(false)} aria-label="Dismiss" className="text-slate-400 hover:text-slate-600">
-                <X className="h-3 w-3" />
+                <X className="h-3.5 w-3.5" />
               </button>
             </div>
-            <p className="mt-1.5 rounded-md bg-success-50 px-2 py-1.5 text-[11px] leading-snug text-success-700">
+            <p className="mt-2 rounded-md bg-success-50 px-2.5 py-1.5 text-xs leading-snug text-success-700">
               Order {scheme.buy - Math.max(1, parseInt(qty, 10) || 1)} more and get {scheme.free} free
             </p>
-            <Button type="button" onClick={handleGetScheme} loading={loading} size="sm" className="mt-1.5 w-full text-xs">
-              <Plus className="h-3 w-3" /> Add
+            <Button type="button" onClick={handleGetScheme} loading={loading} size="sm" className="mt-2 w-full">
+              <Plus className="h-3.5 w-3.5" /> Add
             </Button>
           </div>
         )}
