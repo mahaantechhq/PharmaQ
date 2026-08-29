@@ -30,6 +30,19 @@ export function hasScheme(scheme: string | null | undefined): scheme is string {
   return trimmed !== "" && trimmed !== "0" && trimmed !== "nil";
 }
 
+// Trade schemes are entered as "buy+free" (e.g. "12+1" = order 12, get 1
+// free). Used to prompt a retailer who's short of the threshold to top up
+// their quantity and actually earn the free units instead of missing them.
+export function parseScheme(scheme: string | null | undefined): { buy: number; free: number } | null {
+  if (!hasScheme(scheme)) return null;
+  const match = scheme.trim().match(/^(\d+)\s*\+\s*(\d+)$/);
+  if (!match) return null;
+  const buy = Number(match[1]);
+  const free = Number(match[2]);
+  if (!buy || !free) return null;
+  return { buy, free };
+}
+
 export function formatDateTime(
   value: string | Date,
   opts: Intl.DateTimeFormatOptions = { day: "2-digit", month: "short", year: "numeric", hour: "2-digit", minute: "2-digit" },

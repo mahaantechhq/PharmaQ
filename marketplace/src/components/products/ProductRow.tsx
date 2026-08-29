@@ -3,12 +3,12 @@
 import { useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { Heart, Package, Percent, Plus, Check } from "lucide-react";
+import { Heart, Package, Percent, Plus, Check, Gift, X } from "lucide-react";
 import { Button } from "@/components/ui/Button";
 import { useToast } from "@/components/ui/Toast";
 import { addToCart, updateCartItemQuantity } from "@/app/(site)/cart/actions";
 import { toggleWishlist } from "@/app/(site)/wishlist/actions";
-import { formatCurrency, hasScheme } from "@/lib/format";
+import { formatCurrency, hasScheme, parseScheme } from "@/lib/format";
 import { highlightMatch } from "@/lib/highlight";
 import { useCart } from "@/components/cart/CartContext";
 import type { ProductListing } from "@/lib/marketplace";
@@ -30,18 +30,18 @@ export function ProductRow({
   const [qty, setQty] = useState(cartLine ? String(cartLine.quantity) : "");
   const [loading, setLoading] = useState(false);
   const [wishlisted, setWishlisted] = useState(initialWishlisted);
+  const [showSchemePopup, setShowSchemePopup] = useState(false);
   const router = useRouter();
   const { toast } = useToast();
 
   const outOfStock = product.totalStock <= 0;
+  const scheme = parseScheme(product.scheme);
 
-  const handleAdd = async (e: React.FormEvent) => {
-    e.preventDefault();
+  const submitQuantity = async (quantity: number) => {
     if (!isLoggedIn) {
       router.push(`/login?next=/search`);
       return;
     }
-    const quantity = Math.max(1, parseInt(qty, 10) || 1);
     setLoading(true);
     try {
       const updated = cartLine
@@ -58,6 +58,19 @@ export function ProductRow({
     }
   };
 
+  const handleAdd = async (e: React.FormEvent) => {
+    e.preventDefault();
+    const quantity = Math.max(1, parseInt(qty, 10) || 1);
+    await submitQuantity(quantity);
+  };
+
+  const handleGetScheme = async () => {
+    if (!scheme) return;
+    setShowSchemePopup(false);
+    setQty(String(scheme.buy));
+    await submitQuantity(scheme.buy);
+  };
+
   const handleWishlist = async () => {
     if (!isLoggedIn) {
       router.push(`/login?next=/search`);
@@ -72,7 +85,7 @@ export function ProductRow({
   };
 
   return (
-    <form onSubmit={handleAdd} className="flex items-center gap-4 border-b border-slate-100 px-4 py-4 last:border-b-0 sm:px-5">
+    <form onSubmit={handleAdd} className="relative flex items-center gap-4 border-b border-slate-100 px-4 py-4 last:border-b-0 sm:px-5">
       <div className="min-w-0 flex-1">
         <div className="flex flex-wrap items-center gap-2">
           <Link href={`/products/${product.id}`} className="truncate text-sm font-semibold text-slate-800 hover:text-primary-600">
@@ -134,6 +147,7 @@ export function ProductRow({
         value={qty}
         onChange={(e) => {
           setQty(e.target.value);
+          setShowSchemePopup(false);
           e.target.setCustomValidity("");
         }}
         onInvalid={(e) => (e.target as HTMLInputElement).setCustomValidity("Please enter a quantity!")}
@@ -141,6 +155,7 @@ export function ProductRow({
           if (qty === "") return;
           const clamped = Math.min(Math.max(1, parseInt(qty, 10) || 1), product.totalStock || 1);
           setQty(String(clamped));
+          setShowSchemePopup(!!scheme && clamped < scheme.buy && scheme.buy <= product.totalStock);
         }}
         placeholder="Qty"
         disabled={outOfStock}
@@ -152,6 +167,28 @@ export function ProductRow({
       <Button type="submit" size="icon" loading={loading} disabled={outOfStock} className="shrink-0" aria-label={cartLine ? "Update quantity" : "Add to cart"}>
         <Plus className="h-4 w-4" />
       </Button>
+
+      {showSchemePopup && scheme && (
+        <div className="absolute left-4 right-4 top-full z-20 mt-2 rounded-xl border border-slate-100 bg-white p-4 shadow-lg sm:left-5 sm:right-5">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-2">
+              <span className="flex h-7 w-7 items-center justify-center rounded-full bg-success-50 text-success-600">
+                <Gift className="h-4 w-4" />
+              </span>
+              <span className="text-sm font-semibold text-slate-800">Get Scheme</span>
+            </div>
+            <button type="button" onClick={() => setShowSchemePopup(false)} aria-label="Dismiss" className="text-slate-400 hover:text-slate-600">
+              <X className="h-4 w-4" />
+            </button>
+          </div>
+          <p className="mt-3 rounded-lg bg-success-50 px-3 py-2 text-sm text-success-700">
+            Order {scheme.buy - Math.max(1, parseInt(qty, 10) || 1)} more and get {scheme.free} free
+          </p>
+          <Button type="button" onClick={handleGetScheme} loading={loading} className="mt-3 w-full">
+            <Plus className="h-4 w-4" /> Add
+          </Button>
+        </div>
+      )}
     </form>
   );
 }
