@@ -183,9 +183,14 @@ export function CartTable() {
           </div>
         </div>
 
-        <p className="mt-3 text-xs text-slate-400">
-          Splitting into {supplierCount} order{supplierCount !== 1 && "s"} across {supplierCount} supplier{supplierCount !== 1 && "s"}
-        </p>
+        <div className="mt-3 flex flex-col gap-1">
+          {discountTotal > 0 && (
+            <p className="text-xs font-medium text-success-600">You saved {formatCurrency(discountTotal)}</p>
+          )}
+          <p className="text-xs text-slate-400">
+            Splitting into {supplierCount} order{supplierCount !== 1 && "s"} across {supplierCount} supplier{supplierCount !== 1 && "s"}
+          </p>
+        </div>
 
         <Button size="lg" className="mt-4 w-full" onClick={handlePlaceOrder} loading={placing}>
           <CheckCircle2 className="h-4 w-4" /> Place order
