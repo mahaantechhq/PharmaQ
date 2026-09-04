@@ -3,7 +3,7 @@
 import { useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { Heart, Package, Percent, Plus, Check, Gift, X } from "lucide-react";
+import { Heart, Package, Plus, Check, Gift, X } from "lucide-react";
 import { Button } from "@/components/ui/Button";
 import { useToast } from "@/components/ui/Toast";
 import { addToCart, updateCartItemQuantity } from "@/app/(site)/cart/actions";
@@ -104,12 +104,6 @@ export function ProductRow({
           {product.brandName && <span className="text-slate-600">{product.brandName}</span>}
           {product.packSize && <span className="font-semibold text-slate-600">{product.packSize}</span>}
         </div>
-        {product.offer && (
-          <p className="mt-1 flex items-center gap-1 text-xs font-medium text-accent-600">
-            <Percent className="h-3 w-3" />
-            {product.offer.discountType === "percentage" ? `${product.offer.discountValue}% OFF` : `₹${product.offer.discountValue} OFF`} — {product.offer.displayText}
-          </p>
-        )}
         <div className="mt-1.5 flex items-center gap-3 text-xs text-slate-500">
           {product.minPrice != null ? (
             <span className="text-sm font-semibold text-slate-900">{formatCurrency(product.minPrice)}</span>
