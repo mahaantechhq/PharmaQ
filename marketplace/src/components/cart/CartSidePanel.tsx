@@ -88,20 +88,27 @@ export function CartSidePanel() {
 
       <div className="mt-4 border-t border-slate-100 pt-3">
         <div className="flex flex-col gap-1 text-xs">
-          <div className="flex justify-between text-slate-500">
-            <span>Total</span>
-            <span>{formatCurrency(summary.subtotal)}</span>
-          </div>
-          {summary.discountTotal > 0 && (
-            <div className="flex justify-between text-success-600">
-              <span>Discount</span>
-              <span>-{formatCurrency(summary.discountTotal)}</span>
+          {summary.discountTotal > 0 ? (
+            <>
+              <div className="flex justify-between text-slate-500">
+                <span>Total</span>
+                <span>{formatCurrency(summary.subtotal)}</span>
+              </div>
+              <div className="flex justify-between text-success-600">
+                <span>Discount</span>
+                <span>-{formatCurrency(summary.discountTotal)}</span>
+              </div>
+              <div className="flex justify-between border-t border-slate-100 pt-1 text-sm font-bold text-slate-900">
+                <span>After discount</span>
+                <span>{formatCurrency(summary.grandTotal)}</span>
+              </div>
+            </>
+          ) : (
+            <div className="flex justify-between text-sm font-bold text-slate-900">
+              <span>Total</span>
+              <span>{formatCurrency(summary.grandTotal)}</span>
             </div>
           )}
-          <div className="flex justify-between border-t border-slate-100 pt-1 text-sm font-bold text-slate-900">
-            <span>After discount</span>
-            <span>{formatCurrency(summary.grandTotal)}</span>
-          </div>
         </div>
 
         <div className="mt-3 flex items-center justify-between">
