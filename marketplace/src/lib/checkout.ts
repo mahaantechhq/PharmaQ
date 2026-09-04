@@ -18,7 +18,6 @@ export interface CartLine {
   businessName: string;
   quantity: number;
   unitPrice: number;
-  mrp: number;
   gstRate: number;
   lineTotal: number;
   lineTax: number;
@@ -105,7 +104,7 @@ export async function getCartSummary(buyerBusinessId: string): Promise<CartSumma
   // the two have no dependency on each other.
   const batchesPromise = supabase
     .from("product_batches")
-    .select("id, product_id, batch_number, stock_qty, selling_price, mrp, expiry_date")
+    .select("id, product_id, batch_number, stock_qty, selling_price, expiry_date")
     .in("product_id", productIds)
     .gt("stock_qty", 0)
     .order("expiry_date", { ascending: true });
@@ -119,13 +118,13 @@ export async function getCartSummary(buyerBusinessId: string): Promise<CartSumma
   const [{ data: batches }, offersByBusiness] = await Promise.all([batchesPromise, getEligibleOffersByBusiness(businessIds)]);
 
   const today = new Date().toISOString().slice(0, 10);
-  const bestBatchByProduct = new Map<string, { id: string; batch_number: string; selling_price: number; mrp: number }>();
+  const bestBatchByProduct = new Map<string, { id: string; batch_number: string; selling_price: number }>();
   const stockByProduct = new Map<string, number>();
   for (const b of batches ?? []) {
     if (b.expiry_date < today) continue;
     stockByProduct.set(b.product_id, (stockByProduct.get(b.product_id) ?? 0) + b.stock_qty);
     if (!bestBatchByProduct.has(b.product_id)) {
-      bestBatchByProduct.set(b.product_id, { id: b.id, batch_number: b.batch_number, selling_price: Number(b.selling_price), mrp: Number(b.mrp) });
+      bestBatchByProduct.set(b.product_id, { id: b.id, batch_number: b.batch_number, selling_price: Number(b.selling_price) });
     }
   }
 
@@ -147,7 +146,6 @@ export async function getCartSummary(buyerBusinessId: string): Promise<CartSumma
         businessName: product.businesses?.name ?? "Unknown supplier",
         quantity: c.quantity,
         unitPrice,
-        mrp: bestBatch?.mrp ?? unitPrice,
         gstRate: Number(product.gst_rate),
         lineTotal,
         lineTax: 0,
