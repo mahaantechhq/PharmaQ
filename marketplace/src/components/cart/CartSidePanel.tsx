@@ -3,7 +3,7 @@
 import { useState } from "react";
 import Image from "next/image";
 import Link from "next/link";
-import { Percent, X } from "lucide-react";
+import { X } from "lucide-react";
 import { useToast } from "@/components/ui/Toast";
 import { Button } from "@/components/ui/Button";
 import { removeCartItem } from "@/app/(site)/cart/actions";
@@ -61,13 +61,6 @@ export function CartSidePanel() {
               <p className="truncate text-xs font-semibold text-slate-500">{group.name}</p>
               <p className="text-xs font-semibold text-slate-700">{formatCurrency(group.total)}</p>
             </div>
-            {summary.appliedOffers
-              .filter((o) => o.businessId === businessId)
-              .map((offer) => (
-                <p key={offer.offerId} className="mb-1.5 flex items-center gap-1 text-[11px] font-medium text-accent-600">
-                  <Percent className="h-3 w-3" /> {offer.displayText} · -{formatCurrency(offer.discountAmount)}
-                </p>
-              ))}
             <div className="flex flex-col divide-y divide-slate-50">
               {group.lines.map((line) => (
                 <div key={line.cartItemId} className="flex items-center justify-between gap-2 py-2">
@@ -95,9 +88,6 @@ export function CartSidePanel() {
 
       <div className="mt-4 flex items-center justify-between border-t border-slate-100 pt-3">
         <div>
-          {summary.discountTotal > 0 && (
-            <p className="text-xs font-medium text-success-600">You saved {formatCurrency(summary.discountTotal)}</p>
-          )}
           <p className="text-lg font-bold text-slate-900">{formatCurrency(summary.grandTotal)}</p>
           <p className="text-xs text-slate-400">
             {summary.supplierCount} Distributor{summary.supplierCount !== 1 && "s"} · {summary.lines.length} Item{summary.lines.length !== 1 && "s"}
