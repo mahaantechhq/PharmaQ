@@ -70,9 +70,9 @@ export function CartSidePanel() {
                       disabled={pendingId === line.cartItemId}
                       onClick={() => handleRemove(line.cartItemId)}
                       aria-label={`Remove ${line.productName}`}
-                      className="flex h-6 w-6 items-center justify-center rounded-full text-danger-500 hover:bg-danger-50 disabled:opacity-50"
+                      className="flex h-7 w-7 items-center justify-center rounded-full text-danger-500 hover:bg-danger-50 disabled:opacity-50"
                     >
-                      <X className="h-3.5 w-3.5" />
+                      <X className="h-4 w-4" />
                     </button>
                   </div>
                 </div>
@@ -117,12 +117,12 @@ export function CartSidePanel() {
           )}
         </div>
 
-        <div className="mt-3 flex items-center justify-between">
-          <p className="text-sm text-slate-400">
+        <div className="mt-3 flex flex-col gap-2">
+          <p className="whitespace-nowrap text-sm text-slate-400">
             {summary.supplierCount} Distributor{summary.supplierCount !== 1 && "s"} · {summary.lines.length} Item{summary.lines.length !== 1 && "s"}
           </p>
-          <Link href="/cart">
-            <Button>View Cart</Button>
+          <Link href="/cart" className="w-full">
+            <Button className="w-full">View Cart</Button>
           </Link>
         </div>
       </div>
