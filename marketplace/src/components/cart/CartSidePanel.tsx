@@ -69,7 +69,6 @@ export function CartSidePanel() {
                     <p className="text-xs text-slate-400">Qty {line.quantity}</p>
                   </div>
                   <div className="flex shrink-0 items-center gap-2">
-                    <span className="text-xs font-medium text-slate-400">×{line.quantity}</span>
                     <span className="text-sm font-semibold text-slate-800">{formatCurrency(line.lineTotal)}</span>
                     <button
                       disabled={pendingId === line.cartItemId}
