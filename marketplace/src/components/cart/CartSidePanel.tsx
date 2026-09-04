@@ -51,21 +51,21 @@ export function CartSidePanel() {
 
   return (
     <div className="rounded-xl border border-slate-100 bg-white p-5">
-      <p className="mb-3 text-sm font-semibold text-slate-800">Your cart</p>
+      <p className="mb-3 text-base font-semibold text-slate-800">Your cart</p>
 
       <div className="flex flex-col gap-4">
         {Array.from(bySupplier.entries()).map(([businessId, group]) => (
           <div key={businessId}>
-            <p className="mb-1.5 truncate text-xs font-semibold text-slate-500">{group.name}</p>
+            <p className="mb-1.5 truncate text-sm font-semibold text-slate-500">{group.name}</p>
             <div className="flex flex-col divide-y divide-slate-50">
               {group.lines.map((line) => (
                 <div key={line.cartItemId} className="flex items-center justify-between gap-2 py-2">
                   <div className="min-w-0">
-                    <p className="truncate text-sm font-medium text-slate-700">{line.productName}</p>
-                    <p className="text-xs text-slate-400">Qty {line.quantity}</p>
+                    <p className="truncate text-base font-medium text-slate-700">{line.productName}</p>
+                    <p className="text-sm text-slate-400">Qty {line.quantity}</p>
                   </div>
                   <div className="flex shrink-0 items-center gap-2">
-                    <span className="text-sm font-semibold text-slate-800">{formatCurrency(line.lineTotal)}</span>
+                    <span className="text-base font-semibold text-slate-800">{formatCurrency(line.lineTotal)}</span>
                     <button
                       disabled={pendingId === line.cartItemId}
                       onClick={() => handleRemove(line.cartItemId)}
@@ -83,7 +83,7 @@ export function CartSidePanel() {
       </div>
 
       <div className="mt-4 border-t border-slate-100 pt-3">
-        <div className="flex flex-col gap-1 text-xs">
+        <div className="flex flex-col gap-1.5 text-sm">
           {summary.discountTotal > 0 ? (
             <>
               <div className="flex justify-between text-slate-500">
@@ -98,7 +98,7 @@ export function CartSidePanel() {
                 <span>Tax</span>
                 <span>{formatCurrency(summary.taxTotal)}</span>
               </div>
-              <div className="flex justify-between border-t border-slate-100 pt-1 text-sm font-bold text-slate-900">
+              <div className="flex justify-between border-t border-slate-100 pt-1.5 text-base font-bold text-slate-900">
                 <span>After discount</span>
                 <span>{formatCurrency(summary.grandTotal)}</span>
               </div>
@@ -109,7 +109,7 @@ export function CartSidePanel() {
                 <span>Tax</span>
                 <span>{formatCurrency(summary.taxTotal)}</span>
               </div>
-              <div className="flex justify-between text-sm font-bold text-slate-900">
+              <div className="flex justify-between text-base font-bold text-slate-900">
                 <span>Total</span>
                 <span>{formatCurrency(summary.grandTotal)}</span>
               </div>
@@ -118,7 +118,7 @@ export function CartSidePanel() {
         </div>
 
         <div className="mt-3 flex items-center justify-between">
-          <p className="text-xs text-slate-400">
+          <p className="text-sm text-slate-400">
             {summary.supplierCount} Distributor{summary.supplierCount !== 1 && "s"} · {summary.lines.length} Item{summary.lines.length !== 1 && "s"}
           </p>
           <Link href="/cart">
