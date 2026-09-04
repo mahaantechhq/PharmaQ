@@ -42,11 +42,10 @@ export function CartSidePanel() {
     );
   }
 
-  const bySupplier = new Map<string, { name: string; lines: CartLine[]; total: number }>();
+  const bySupplier = new Map<string, { name: string; lines: CartLine[] }>();
   for (const line of summary.lines) {
-    const group = bySupplier.get(line.businessId) ?? { name: line.businessName, lines: [], total: 0 };
+    const group = bySupplier.get(line.businessId) ?? { name: line.businessName, lines: [] };
     group.lines.push(line);
-    group.total += line.lineTotal;
     bySupplier.set(line.businessId, group);
   }
 
@@ -57,10 +56,7 @@ export function CartSidePanel() {
       <div className="flex flex-col gap-4">
         {Array.from(bySupplier.entries()).map(([businessId, group]) => (
           <div key={businessId}>
-            <div className="mb-1.5 flex items-center justify-between">
-              <p className="truncate text-xs font-semibold text-slate-500">{group.name}</p>
-              <p className="text-xs font-semibold text-slate-700">{formatCurrency(group.total)}</p>
-            </div>
+            <p className="mb-1.5 truncate text-xs font-semibold text-slate-500">{group.name}</p>
             <div className="flex flex-col divide-y divide-slate-50">
               {group.lines.map((line) => (
                 <div key={line.cartItemId} className="flex items-center justify-between gap-2 py-2">
@@ -98,16 +94,26 @@ export function CartSidePanel() {
                 <span>Discount</span>
                 <span>-{formatCurrency(summary.discountTotal)}</span>
               </div>
+              <div className="flex justify-between text-slate-500">
+                <span>Tax</span>
+                <span>{formatCurrency(summary.taxTotal)}</span>
+              </div>
               <div className="flex justify-between border-t border-slate-100 pt-1 text-sm font-bold text-slate-900">
                 <span>After discount</span>
                 <span>{formatCurrency(summary.grandTotal)}</span>
               </div>
             </>
           ) : (
-            <div className="flex justify-between text-sm font-bold text-slate-900">
-              <span>Total</span>
-              <span>{formatCurrency(summary.grandTotal)}</span>
-            </div>
+            <>
+              <div className="flex justify-between text-slate-500">
+                <span>Tax</span>
+                <span>{formatCurrency(summary.taxTotal)}</span>
+              </div>
+              <div className="flex justify-between text-sm font-bold text-slate-900">
+                <span>Total</span>
+                <span>{formatCurrency(summary.grandTotal)}</span>
+              </div>
+            </>
           )}
         </div>
 
