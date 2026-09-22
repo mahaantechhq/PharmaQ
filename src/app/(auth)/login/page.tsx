@@ -23,10 +23,27 @@ export default function LoginPage() {
     setLoading(true);
     setError(null);
 
-    const { error } = await supabase.auth.signInWithPassword({ email, password });
+    const { data, error } = await supabase.auth.signInWithPassword({ email, password });
 
     if (error) {
       setError(error.message);
+      setLoading(false);
+      return;
+    }
+
+    // This app is wholesaler-only -- a retailer's credentials working here
+    // too would let them land on a dashboard meant for the other side of
+    // the marketplace, not just the wrong URL.
+    const { data: owner } = await supabase
+      .from("business_owners")
+      .select("businesses(business_type)")
+      .eq("id", data.user.id)
+      .single();
+    const businessType = (owner as { businesses: { business_type: string | null } | null } | null)?.businesses?.business_type;
+
+    if (businessType === "retailer") {
+      await supabase.auth.signOut();
+      setError("This is a retailer account. Sign in at pharmaq.in instead.");
       setLoading(false);
       return;
     }
