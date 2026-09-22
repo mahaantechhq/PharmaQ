@@ -2,8 +2,7 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import { Check, X } from "lucide-react";
-import { Select } from "@/components/ui/Select";
+import { Check, X, ChevronDown } from "lucide-react";
 import { Input } from "@/components/ui/Input";
 import { useToast } from "@/components/ui/Toast";
 import { updatePaymentStatus } from "@/app/(dashboard)/orders/actions";
@@ -90,23 +89,26 @@ export function PaymentStatusCell({
   }
 
   const statusClasses: Record<PaymentStatus, string> = {
-    paid: "border-success-500 bg-success-50 text-success-600 focus:ring-success-50 focus:border-success-500",
-    unpaid: "border-danger-500 bg-danger-50 text-danger-600 focus:ring-danger-50 focus:border-danger-500",
-    partial: "border-warning-500 bg-warning-50 text-warning-600 focus:ring-warning-50 focus:border-warning-500",
+    paid: "border-success-500 bg-success-50 text-success-600",
+    unpaid: "border-danger-500 bg-danger-50 text-danger-600",
+    partial: "border-warning-500 bg-warning-50 text-warning-600",
   };
 
   return (
     <div className="flex flex-col gap-0.5">
-      <Select
-        value={status}
-        onChange={(e) => handleChange(e.target.value as PaymentStatus)}
-        disabled={loading}
-        className={`h-9 w-32 font-medium ${statusClasses[status]}`}
-      >
-        <option value="unpaid">Unpaid</option>
-        <option value="partial">Partial</option>
-        <option value="paid">Paid</option>
-      </Select>
+      <div className={`relative h-9 w-32 rounded-lg border ${statusClasses[status]}`}>
+        <select
+          value={status}
+          onChange={(e) => handleChange(e.target.value as PaymentStatus)}
+          disabled={loading}
+          className="h-full w-full cursor-pointer appearance-none bg-transparent pl-3 pr-8 text-sm font-medium focus:outline-none disabled:cursor-not-allowed"
+        >
+          <option value="unpaid">Unpaid</option>
+          <option value="partial">Partial</option>
+          <option value="paid">Paid</option>
+        </select>
+        <ChevronDown className="pointer-events-none absolute right-3 top-1/2 h-4 w-4 -translate-y-1/2" />
+      </div>
       {status === "partial" && (
         <button onClick={() => setEditingPartial(true)} className="text-left text-xs text-primary-600 hover:underline">
           ₹{initialAmountPaid} paid, edit
