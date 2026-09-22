@@ -55,6 +55,7 @@ export async function createBusiness(values: CreateBusinessFormValues) {
     p_state: parsed.state || null,
     p_pincode: parsed.pincode || null,
     p_business_type: parsed.business_type,
+    p_drug_license_expiry: parsed.drug_license_expiry || null,
   });
 
   if (provisionError) {
@@ -120,6 +121,7 @@ export async function updateBusinessProfile(businessId: string, ownerId: string,
         email: parsed.email || null,
         gstin: parsed.gstin || null,
         drug_license_no: parsed.drug_license_no || null,
+        drug_license_expiry: parsed.drug_license_expiry || null,
         address_line1: parsed.address_line1 || null,
         city: parsed.city || null,
         state: parsed.state || null,

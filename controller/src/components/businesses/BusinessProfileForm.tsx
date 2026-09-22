@@ -40,6 +40,7 @@ export function BusinessProfileForm({ business, owner }: { business: Business; o
       email: business.email ?? "",
       gstin: business.gstin ?? "",
       drug_license_no: business.drug_license_no ?? "",
+      drug_license_expiry: business.drug_license_expiry ?? "",
       address_line1: business.address_line1 ?? "",
       city: business.city ?? "",
       state: business.state ?? "",
@@ -117,6 +118,9 @@ export function BusinessProfileForm({ business, owner }: { business: Business; o
         </Field>
         <Field label="Drug license no." htmlFor="drug_license_no">
           <Input id="drug_license_no" {...register("drug_license_no")} />
+        </Field>
+        <Field label="Drug license expiry" htmlFor="drug_license_expiry">
+          <Input id="drug_license_expiry" type="date" {...register("drug_license_expiry")} />
         </Field>
         <Field label="Address" htmlFor="address_line1" className="sm:col-span-2">
           <Input id="address_line1" {...register("address_line1")} />

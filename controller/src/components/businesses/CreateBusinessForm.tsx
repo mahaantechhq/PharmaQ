@@ -93,6 +93,10 @@ export function CreateBusinessForm() {
             <Input id="drug_license_no" {...register("drug_license_no")} />
           </Field>
 
+          <Field label="Drug license expiry" htmlFor="drug_license_expiry">
+            <Input id="drug_license_expiry" type="date" {...register("drug_license_expiry")} />
+          </Field>
+
           <Field label="Address" htmlFor="address_line1">
             <Input id="address_line1" {...register("address_line1")} />
           </Field>

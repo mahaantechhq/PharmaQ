@@ -22,6 +22,7 @@ export interface Business {
   slug: string;
   gstin: string | null;
   drug_license_no: string | null;
+  drug_license_expiry: string | null;
   status: BusinessStatus;
   phone: string | null;
   email: string | null;
