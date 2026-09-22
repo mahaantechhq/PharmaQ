@@ -96,18 +96,18 @@ export function PaymentStatusCell({
 
   return (
     <div className="flex flex-col gap-0.5">
-      <div className={`relative h-9 w-32 rounded-lg border ${statusClasses[status]}`}>
+      <div className={`relative h-9 w-28 rounded-lg border ${statusClasses[status]}`}>
         <select
           value={status}
           onChange={(e) => handleChange(e.target.value as PaymentStatus)}
           disabled={loading}
-          className="h-full w-full cursor-pointer appearance-none bg-transparent pl-3 pr-8 text-sm font-medium focus:outline-none disabled:cursor-not-allowed"
+          className="h-full w-full cursor-pointer appearance-none bg-transparent pl-3 pr-6 text-sm font-medium focus:outline-none disabled:cursor-not-allowed"
         >
           <option value="unpaid">Unpaid</option>
           <option value="partial">Partial</option>
           <option value="paid">Paid</option>
         </select>
-        <ChevronDown className="pointer-events-none absolute right-3 top-1/2 h-4 w-4 -translate-y-1/2" />
+        <ChevronDown className="pointer-events-none absolute right-2 top-1/2 h-4 w-4 -translate-y-1/2" />
       </div>
       {status === "partial" && (
         <button onClick={() => setEditingPartial(true)} className="text-left text-xs text-primary-600 hover:underline">
