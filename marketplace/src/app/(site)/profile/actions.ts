@@ -31,4 +31,5 @@ export async function updateBusinessProfile(values: BusinessProfileFormValues) {
   if (error) throw new Error(error.message);
 
   revalidatePath("/profile");
+  revalidatePath("/", "layout");
 }
