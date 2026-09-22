@@ -2,8 +2,10 @@ import { Search, Check, ShieldCheck, TrendingUp, Pill, Stethoscope, Syringe, Pac
 import { Button } from "@/components/ui/Button";
 
 const CHECKLIST = [
-  "Digital Ordering — compare prices and order from multiple suppliers in one cart",
-  "Verified Suppliers — GST-ready invoicing from approved businesses only",
+  "Digital Ordering — Order directly from suppliers without the need for phone calls.",
+  "Verified Suppliers — Get GST-ready invoices from approved and trusted businesses.",
+  "Live Stock & Schemes — Check real-time stock availability, offers, and schemes before placing an order.",
+  "Wider Reach for Suppliers — Get more sales from new retailers and grow your customer base.",
 ];
 
 export function Hero() {
