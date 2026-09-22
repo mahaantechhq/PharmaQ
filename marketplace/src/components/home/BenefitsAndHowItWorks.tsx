@@ -1,4 +1,4 @@
-import { ShieldCheck, TrendingDown, Truck, Users, Wallet, Search, ShoppingCart, PackageCheck } from "lucide-react";
+import { ShieldCheck, TrendingDown, Truck, Users, Search, ShoppingCart, PackageCheck } from "lucide-react";
 
 const BENEFITS = [
   {
@@ -10,7 +10,6 @@ const BENEFITS = [
   { icon: TrendingDown, title: "Compare prices instantly", description: "See every supplier's price for the same product side by side." },
   { icon: Truck, title: "One cart, many suppliers", description: "Order from multiple businesses in a single checkout — we split it for you." },
   { icon: Users, title: "Built for pharma businesses", description: "GST-ready invoices, batch tracking, and credit terms designed for the trade." },
-  { icon: Wallet, title: "Wallet & credit control", description: "Track balances, credit limits, and every transaction from one dashboard." },
 ];
 
 const STEPS = [

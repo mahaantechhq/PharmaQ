@@ -15,7 +15,6 @@ const LINK_GROUPS = [
     title: "For businesses",
     links: [
       { label: "Your orders", href: "/orders" },
-      { label: "Wallet", href: "/wallet" },
       { label: "Business profile", href: "/profile" },
     ],
   },
