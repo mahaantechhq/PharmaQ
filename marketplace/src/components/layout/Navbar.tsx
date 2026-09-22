@@ -101,7 +101,7 @@ export function Navbar({
               </Dropdown>
             </>
           ) : (
-            <Link href="/login">
+            <Link href="/get-started">
               <button className="h-10 rounded-lg bg-primary-600 px-4 text-sm font-medium text-white hover:bg-primary-700">
                 Sign in
               </button>
