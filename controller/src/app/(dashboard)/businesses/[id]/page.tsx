@@ -69,7 +69,7 @@ export default async function BusinessDetailPage({ params }: { params: Promise<{
         </CardBody>
       </Card>
 
-      <AccessCodeCard code={accessCodeRow?.access_code ?? ""} />
+      {b.business_type === "retailer" && <AccessCodeCard code={accessCodeRow?.access_code ?? ""} />}
       <LinkedRetailersCard wholesalerBusinessId={b.id} retailers={linkedRetailers} />
     </div>
   );
