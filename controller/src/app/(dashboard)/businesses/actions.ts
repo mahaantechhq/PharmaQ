@@ -110,7 +110,7 @@ export async function updateBusinessProfile(businessId: string, ownerId: string,
   const parsed = businessProfileSchema.parse(values);
   const supabase = await createClient();
 
-  const [{ error }, { error: ownerError }] = await Promise.all([
+  const [{ error }, { data: ownerRows, error: ownerError }] = await Promise.all([
     supabase
       .from("businesses")
       .update({
@@ -130,11 +130,18 @@ export async function updateBusinessProfile(businessId: string, ownerId: string,
       .from("business_owners")
       .update({ full_name: parsed.ownerName })
       .eq("id", ownerId)
-      .eq("business_id", businessId),
+      .eq("business_id", businessId)
+      .select("id"),
   ]);
 
   if (error) throw new Error(error.message);
   if (ownerError) throw new Error(ownerError.message);
+  // RLS silently updates 0 rows instead of erroring when it blocks a write --
+  // without this check, a policy regression (like business_owners_admin_update
+  // going missing) fails invisibly: the form reports success but nothing changed.
+  if (!ownerRows || ownerRows.length === 0) {
+    throw new Error("Owner name was not updated -- check business_owners RLS policies");
+  }
 
   await logAudit({
     actorId: admin.adminId,
