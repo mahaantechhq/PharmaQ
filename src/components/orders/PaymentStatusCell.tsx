@@ -89,13 +89,19 @@ export function PaymentStatusCell({
     );
   }
 
+  const statusClasses: Record<PaymentStatus, string> = {
+    paid: "border-success-500 bg-success-50 text-success-600 focus:ring-success-50 focus:border-success-500",
+    unpaid: "border-danger-500 bg-danger-50 text-danger-600 focus:ring-danger-50 focus:border-danger-500",
+    partial: "border-warning-500 bg-warning-50 text-warning-600 focus:ring-warning-50 focus:border-warning-500",
+  };
+
   return (
     <div className="flex flex-col gap-0.5">
       <Select
         value={status}
         onChange={(e) => handleChange(e.target.value as PaymentStatus)}
         disabled={loading}
-        className="h-9 w-32"
+        className={`h-9 w-32 font-medium ${statusClasses[status]}`}
       >
         <option value="unpaid">Unpaid</option>
         <option value="partial">Partial</option>
