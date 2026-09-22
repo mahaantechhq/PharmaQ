@@ -1,4 +1,4 @@
-import { ShieldCheck, TrendingDown, Percent, Users, Search, ShoppingCart, PackageCheck } from "lucide-react";
+import { ShieldCheck, PackageSearch, Percent, Users, Search, ShoppingCart, PackageCheck } from "lucide-react";
 
 const BENEFITS = [
   {
@@ -6,7 +6,7 @@ const BENEFITS = [
     title: "Verified businesses only",
     description: "Every seller is onboarded and approved by the Pharma Q team before they can list a single product.",
   },
-  { icon: TrendingDown, title: "Compare prices instantly", description: "See every supplier's price for the same product side by side." },
+  { icon: PackageSearch, title: "Real-time stock availability", description: "See exactly how much stock each supplier has before you order — no surprises." },
   { icon: Percent, title: "New offers, schemes & discounts", description: "See live trade schemes and offers from your suppliers before you order." },
   { icon: Users, title: "Built for pharma businesses", description: "GST-ready invoices, batch tracking, and credit terms designed for the trade." },
 ];
