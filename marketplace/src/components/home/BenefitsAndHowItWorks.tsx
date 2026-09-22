@@ -1,14 +1,13 @@
-import { ShieldCheck, TrendingDown, Truck, Users, Search, ShoppingCart, PackageCheck } from "lucide-react";
+import { ShieldCheck, TrendingDown, Percent, Users, Search, ShoppingCart, PackageCheck } from "lucide-react";
 
 const BENEFITS = [
   {
     icon: ShieldCheck,
     title: "Verified businesses only",
     description: "Every seller is onboarded and approved by the Pharma Q team before they can list a single product.",
-    featured: true,
   },
   { icon: TrendingDown, title: "Compare prices instantly", description: "See every supplier's price for the same product side by side." },
-  { icon: Truck, title: "One cart, many suppliers", description: "Order from multiple businesses in a single checkout — we split it for you." },
+  { icon: Percent, title: "New offers, schemes & discounts", description: "See live trade schemes and offers from your suppliers before you order." },
   { icon: Users, title: "Built for pharma businesses", description: "GST-ready invoices, batch tracking, and credit terms designed for the trade." },
 ];
 
@@ -27,42 +26,18 @@ export function BenefitsAndHowItWorks() {
           <h2 className="mt-2 font-display text-2xl font-semibold text-slate-900 sm:text-3xl">Built for how pharma trade actually works</h2>
         </div>
         <div className="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-4">
-          {BENEFITS.map((b) =>
-            b.featured ? (
-              <div
-                key={b.title}
-                className="relative flex flex-col justify-between overflow-hidden rounded-2xl bg-gradient-to-br from-primary-700 to-primary-900 p-7 shadow-[var(--shadow-elevated)] sm:col-span-2 sm:row-span-2"
-              >
-                <div className="pointer-events-none absolute inset-0 bg-dot-grid opacity-25" />
-                <div className="pointer-events-none absolute -bottom-10 -right-10 h-56 w-56 rounded-full bg-accent-500/10 blur-2xl" />
-                <b.icon className="pointer-events-none absolute -bottom-8 -right-8 h-44 w-44 text-white/5" strokeWidth={1} />
-
-                <div className="relative flex items-center justify-between">
-                  <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-white/10 text-accent-400">
-                    <b.icon className="h-6 w-6" />
-                  </div>
-                  <span className="inline-flex items-center gap-1.5 rounded-full border border-white/15 bg-white/10 px-3 py-1 text-xs font-semibold text-primary-100">
-                    <span className="h-1.5 w-1.5 rounded-full bg-success-500" /> 100% reviewed
-                  </span>
-                </div>
-                <div className="relative mt-8">
-                  <p className="font-display text-xl font-semibold text-white">{b.title}</p>
-                  <p className="mt-2 max-w-xs text-sm leading-relaxed text-primary-100/90">{b.description}</p>
-                </div>
+          {BENEFITS.map((b) => (
+            <div
+              key={b.title}
+              className="rounded-2xl border border-slate-100 bg-white p-6 shadow-[var(--shadow-card)] transition-all duration-200 hover:-translate-y-1 hover:shadow-[var(--shadow-elevated)]"
+            >
+              <div className="flex h-11 w-11 items-center justify-center rounded-xl bg-primary-50 text-primary-600">
+                <b.icon className="h-5 w-5" />
               </div>
-            ) : (
-              <div
-                key={b.title}
-                className="rounded-2xl border border-slate-100 bg-white p-6 shadow-[var(--shadow-card)] transition-all duration-200 hover:-translate-y-1 hover:shadow-[var(--shadow-elevated)]"
-              >
-                <div className="flex h-11 w-11 items-center justify-center rounded-xl bg-primary-50 text-primary-600">
-                  <b.icon className="h-5 w-5" />
-                </div>
-                <p className="mt-4 text-sm font-semibold text-slate-800">{b.title}</p>
-                <p className="mt-1.5 text-xs leading-relaxed text-slate-500">{b.description}</p>
-              </div>
-            ),
-          )}
+              <p className="mt-4 text-sm font-semibold text-slate-800">{b.title}</p>
+              <p className="mt-1.5 text-xs leading-relaxed text-slate-500">{b.description}</p>
+            </div>
+          ))}
         </div>
       </section>
 
