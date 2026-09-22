@@ -14,6 +14,7 @@ import { Modal } from "@/components/ui/Modal";
 import { useToast } from "@/components/ui/Toast";
 import { updateBusinessProfile, updateBusinessOwnerPassword } from "@/app/(dashboard)/businesses/actions";
 import type { Business, BusinessOwner } from "@/lib/types/database";
+import { INDIA_STATES, INDIA_STATES_AND_CITIES } from "@/lib/india-states-cities";
 
 export function BusinessProfileForm({ business, owner }: { business: Business; owner: BusinessOwner }) {
   const router = useRouter();
@@ -27,6 +28,8 @@ export function BusinessProfileForm({ business, owner }: { business: Business; o
   const {
     register,
     handleSubmit,
+    watch,
+    setValue,
     formState: { errors, isSubmitting },
   } = useForm<BusinessProfileFormValues>({
     resolver: zodResolver(businessProfileSchema),
@@ -43,6 +46,9 @@ export function BusinessProfileForm({ business, owner }: { business: Business; o
       pincode: business.pincode ?? "",
     },
   });
+
+  const selectedState = watch("state");
+  const cities = selectedState ? INDIA_STATES_AND_CITIES[selectedState] ?? [] : [];
 
   const onSubmit = async (values: BusinessProfileFormValues) => {
     try {
@@ -115,11 +121,30 @@ export function BusinessProfileForm({ business, owner }: { business: Business; o
         <Field label="Address" htmlFor="address_line1" className="sm:col-span-2">
           <Input id="address_line1" {...register("address_line1")} />
         </Field>
-        <Field label="City" htmlFor="city">
-          <Input id="city" {...register("city")} />
-        </Field>
         <Field label="State" htmlFor="state">
-          <Input id="state" {...register("state")} />
+          <Select
+            id="state"
+            {...register("state", {
+              onChange: () => setValue("city", ""),
+            })}
+          >
+            <option value="">Select a state</option>
+            {INDIA_STATES.map((state) => (
+              <option key={state} value={state}>
+                {state}
+              </option>
+            ))}
+          </Select>
+        </Field>
+        <Field label="City" htmlFor="city">
+          <Select id="city" {...register("city")} disabled={!selectedState}>
+            <option value="">{selectedState ? "Select a city" : "Select a state first"}</option>
+            {cities.map((city) => (
+              <option key={city} value={city}>
+                {city}
+              </option>
+            ))}
+          </Select>
         </Field>
         <Field label="Pincode" htmlFor="pincode">
           <Input id="pincode" {...register("pincode")} />

@@ -13,6 +13,7 @@ import { Button } from "@/components/ui/Button";
 import { Modal } from "@/components/ui/Modal";
 import { useToast } from "@/components/ui/Toast";
 import { createBusiness } from "@/app/(dashboard)/businesses/actions";
+import { INDIA_STATES, INDIA_STATES_AND_CITIES } from "@/lib/india-states-cities";
 
 export function CreateBusinessForm() {
   const router = useRouter();
@@ -22,8 +23,13 @@ export function CreateBusinessForm() {
   const {
     register,
     handleSubmit,
+    watch,
+    setValue,
     formState: { errors, isSubmitting },
   } = useForm<CreateBusinessFormValues>({ resolver: zodResolver(createBusinessSchema) });
+
+  const selectedState = watch("state");
+  const cities = selectedState ? INDIA_STATES_AND_CITIES[selectedState] ?? [] : [];
 
   const onSubmit = async (values: CreateBusinessFormValues) => {
     try {
@@ -91,12 +97,32 @@ export function CreateBusinessForm() {
             <Input id="address_line1" {...register("address_line1")} />
           </Field>
 
-          <Field label="City" htmlFor="city">
-            <Input id="city" {...register("city")} />
+          <Field label="State" htmlFor="state">
+            <Select
+              id="state"
+              {...register("state", {
+                onChange: () => setValue("city", ""),
+              })}
+              defaultValue=""
+            >
+              <option value="">Select a state</option>
+              {INDIA_STATES.map((state) => (
+                <option key={state} value={state}>
+                  {state}
+                </option>
+              ))}
+            </Select>
           </Field>
 
-          <Field label="State" htmlFor="state">
-            <Input id="state" {...register("state")} />
+          <Field label="City" htmlFor="city">
+            <Select id="city" {...register("city")} defaultValue="" disabled={!selectedState}>
+              <option value="">{selectedState ? "Select a city" : "Select a state first"}</option>
+              {cities.map((city) => (
+                <option key={city} value={city}>
+                  {city}
+                </option>
+              ))}
+            </Select>
           </Field>
 
           <Field label="Pincode" htmlFor="pincode">
