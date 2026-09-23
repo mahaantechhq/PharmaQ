@@ -49,7 +49,7 @@ export function SupplierStatCard({
           <div className="flex max-h-80 flex-col divide-y divide-slate-50 overflow-y-auto">
             {items.map((item) => (
               <div key={item.name} className="flex items-center justify-between py-2.5 text-sm">
-                <span className="text-slate-700">{item.name}</span>
+                <span className="font-semibold text-slate-700">{item.name}</span>
                 <span className="text-slate-400">{item.count} product{item.count !== 1 ? "s" : ""}</span>
               </div>
             ))}
