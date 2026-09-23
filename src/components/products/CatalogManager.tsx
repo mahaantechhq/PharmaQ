@@ -2,13 +2,13 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import { Plus } from "lucide-react";
+import { Plus, Pencil, Check, X } from "lucide-react";
 import { Tabs } from "@/components/ui/Tabs";
 import { Badge } from "@/components/ui/Badge";
 import { Button } from "@/components/ui/Button";
 import { Input } from "@/components/ui/Input";
 import { useToast } from "@/components/ui/Toast";
-import { createCatalogEntry } from "@/app/(dashboard)/catalog/actions";
+import { createCatalogEntry, updateCatalogEntry } from "@/app/(dashboard)/catalog/actions";
 import type { Category, Brand } from "@/lib/types/database";
 
 interface CatalogManagerProps {
@@ -25,6 +25,9 @@ function MasterList({
 }) {
   const [value, setValue] = useState("");
   const [loading, setLoading] = useState(false);
+  const [editingId, setEditingId] = useState<string | null>(null);
+  const [editValue, setEditValue] = useState("");
+  const [editSaving, setEditSaving] = useState(false);
   const router = useRouter();
   const { toast } = useToast();
 
@@ -40,6 +43,31 @@ function MasterList({
       toast(err instanceof Error ? err.message : "Failed to add", "error");
     } finally {
       setLoading(false);
+    }
+  };
+
+  const startEdit = (item: { id: string; name: string }) => {
+    setEditingId(item.id);
+    setEditValue(item.name);
+  };
+
+  const cancelEdit = () => {
+    setEditingId(null);
+    setEditValue("");
+  };
+
+  const handleSaveEdit = async () => {
+    if (!editingId || !editValue.trim()) return;
+    setEditSaving(true);
+    try {
+      await updateCatalogEntry(table, editingId, editValue);
+      toast("Updated successfully", "success");
+      cancelEdit();
+      router.refresh();
+    } catch (err) {
+      toast(err instanceof Error ? err.message : "Failed to update", "error");
+    } finally {
+      setEditSaving(false);
     }
   };
 
@@ -61,12 +89,50 @@ function MasterList({
         <p className="py-8 text-center text-sm text-slate-400">Nothing here yet.</p>
       ) : (
         <div className="flex flex-wrap gap-2">
-          {items.map((item) => (
-            <Badge key={item.id} tone={item.is_global ? "primary" : "slate"} className="px-3 py-1.5 text-sm">
-              {item.name}
-              {!item.is_global && <span className="ml-1 text-[10px] text-slate-400">(custom)</span>}
-            </Badge>
-          ))}
+          {items.map((item) =>
+            editingId === item.id ? (
+              <div key={item.id} className="flex items-center gap-1 rounded-full border border-primary-200 bg-white pl-3 pr-1.5 py-1">
+                <input
+                  autoFocus
+                  value={editValue}
+                  onChange={(e) => setEditValue(e.target.value)}
+                  onKeyDown={(e) => {
+                    if (e.key === "Enter") handleSaveEdit();
+                    if (e.key === "Escape") cancelEdit();
+                  }}
+                  className="w-32 border-0 bg-transparent text-sm focus:outline-none"
+                />
+                <button
+                  onClick={handleSaveEdit}
+                  disabled={editSaving}
+                  className="flex h-6 w-6 items-center justify-center rounded-full text-success-600 hover:bg-success-50"
+                >
+                  <Check className="h-3.5 w-3.5" />
+                </button>
+                <button
+                  onClick={cancelEdit}
+                  disabled={editSaving}
+                  className="flex h-6 w-6 items-center justify-center rounded-full text-slate-400 hover:bg-slate-50"
+                >
+                  <X className="h-3.5 w-3.5" />
+                </button>
+              </div>
+            ) : (
+              <Badge key={item.id} tone={item.is_global ? "primary" : "slate"} className="gap-1.5 px-3 py-1.5 text-sm">
+                {item.name}
+                {!item.is_global && <span className="text-[10px] text-slate-400">(custom)</span>}
+                {!item.is_global && (
+                  <button
+                    onClick={() => startEdit(item)}
+                    aria-label={`Edit ${item.name}`}
+                    className="text-slate-400 hover:text-primary-600"
+                  >
+                    <Pencil className="h-3 w-3" />
+                  </button>
+                )}
+              </Badge>
+            ),
+          )}
         </div>
       )}
     </div>
