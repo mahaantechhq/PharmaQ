@@ -120,12 +120,11 @@ function MasterList({
             ) : (
               <Badge key={item.id} tone={item.is_global ? "primary" : "slate"} className="gap-1.5 px-3 py-1.5 text-sm">
                 {item.name}
-                {!item.is_global && <span className="text-[10px] text-slate-400">(custom)</span>}
                 {!item.is_global && (
                   <button
                     onClick={() => startEdit(item)}
                     aria-label={`Edit ${item.name}`}
-                    className="text-slate-400 hover:text-primary-600"
+                    className="text-primary-600 hover:text-primary-800"
                   >
                     <Pencil className="h-3 w-3" />
                   </button>
