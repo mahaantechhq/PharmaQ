@@ -258,7 +258,7 @@ async function resolveCatalogId(
 
   const { data, error } = await supabase
     .from(table)
-    .insert({ name, slug: `${slugify(name)}-${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 6)}`, created_by_business_id: businessId })
+    .insert({ name, slug: `${slugify(name)}-${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 6)}`, is_global: false, created_by_business_id: businessId })
     .select("id")
     .single();
   if (error || !data) return null;
