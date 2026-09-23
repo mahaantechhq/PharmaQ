@@ -253,7 +253,7 @@ export function ProductsExplorer({ products }: { products: ProductRow[] }) {
         </div>
       )}
 
-      <DataTable columns={columns} data={filtered} emptyLabel="No products found" pageSize={10} />
+      <DataTable columns={columns} data={filtered} emptyLabel="No products found" pageSize={50} />
 
       <Modal open={confirmDeleteOpen} onClose={() => setConfirmDeleteOpen(false)} title="Delete products" size="sm">
         <div className="flex gap-3">
