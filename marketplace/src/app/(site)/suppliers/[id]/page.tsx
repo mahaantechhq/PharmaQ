@@ -4,6 +4,7 @@ import { createClient } from "@/lib/supabase/server";
 import { requireCurrentBusiness } from "@/lib/supabase/require-business";
 import { getActiveOffersByBusiness } from "@/lib/offers";
 import { getLinkedWholesalerIds } from "@/lib/links";
+import { hasScheme } from "@/lib/format";
 import { SupplierStatCard } from "@/components/products/SupplierStatCard";
 import { CartSidePanel } from "@/components/cart/CartSidePanel";
 import { SupplierCatalog, type CatalogProduct } from "@/components/suppliers/SupplierCatalog";
@@ -24,7 +25,7 @@ export default async function SupplierProfilePage({ params }: SupplierProfilePag
   // only needs ctx.business.id (already known), same as the other three.
   // Running all four together instead of gating on the link check first
   // removes a full sequential round trip from every supplier page load.
-  const [linkedWholesalerIds, { data: business }, { data: products }, offersByBusiness] = await Promise.all([
+  const [linkedWholesalerIds, { data: business }, { data: products }, offersByBusiness, { data: schemeBatches }] = await Promise.all([
     getLinkedWholesalerIds(ctx.business.id),
     supabase.from("businesses").select("*").eq("id", id).eq("status", "approved").maybeSingle(),
     supabase
@@ -36,6 +37,11 @@ export default async function SupplierProfilePage({ params }: SupplierProfilePag
       .eq("status", "active")
       .order("created_at", { ascending: false }),
     getActiveOffersByBusiness([id]),
+    // Filtered by business_id (not a per-product .in() list), so this stays
+    // one cheap query regardless of catalog size -- just enough to know
+    // which products have a real scheme, so those can be shown first
+    // without pulling full stock/price for the whole catalog upfront.
+    supabase.from("product_batches").select("product_id, scheme").eq("business_id", id).gt("stock_qty", 0),
   ]);
 
   if (!linkedWholesalerIds.includes(id)) notFound();
@@ -43,7 +49,14 @@ export default async function SupplierProfilePage({ params }: SupplierProfilePag
 
   const offer = offersByBusiness.get(business.id) ?? null;
 
-  const allListings: CatalogProduct[] = (products ?? []).map((p: any) => ({
+  const productIdsWithScheme = new Set(
+    (schemeBatches ?? []).filter((b) => hasScheme(b.scheme)).map((b) => b.product_id as string),
+  );
+
+  const allListings: CatalogProduct[] = (products ?? [])
+    .slice()
+    .sort((a: any, b: any) => Number(productIdsWithScheme.has(b.id)) - Number(productIdsWithScheme.has(a.id)))
+    .map((p: any) => ({
     id: p.id,
     name: p.name,
     composition: p.composition,
