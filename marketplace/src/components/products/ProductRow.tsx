@@ -18,11 +18,13 @@ export function ProductRow({
   isLoggedIn,
   initialWishlisted = false,
   query,
+  highlighted = false,
 }: {
   product: ProductListing;
   isLoggedIn: boolean;
   initialWishlisted?: boolean;
   query?: string;
+  highlighted?: boolean;
 }) {
   const { summary, setSummary } = useCart();
   const cartLine = summary.lines.find((l) => l.productId === product.id);
@@ -85,7 +87,12 @@ export function ProductRow({
   };
 
   return (
-    <form onSubmit={handleAdd} className="relative flex items-center gap-4 border-b border-slate-100 px-4 py-4 last:border-b-0 sm:px-5">
+    <form
+      onSubmit={handleAdd}
+      className={`relative flex items-center gap-4 border-b border-slate-100 px-4 py-4 last:border-b-0 sm:px-5 ${
+        highlighted ? "bg-primary-50" : ""
+      }`}
+    >
       <div className="min-w-0 flex-1">
         <div className="flex flex-wrap items-center gap-2">
           <Link href={`/products/${product.id}`} className="truncate text-sm font-semibold text-slate-800 hover:text-primary-600">
@@ -135,6 +142,7 @@ export function ProductRow({
 
       <div className="relative shrink-0">
         <input
+          id={`qty-input-${product.id}`}
           type="number"
           min={1}
           max={product.totalStock || 1}

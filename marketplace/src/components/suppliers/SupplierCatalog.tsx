@@ -31,6 +31,7 @@ export function SupplierCatalog({
   const [brand, setBrand] = useState("");
   const [sort, setSort] = useState<"newest" | "price_low" | "price_high">("newest");
   const [page, setPage] = useState(1);
+  const [activeIndex, setActiveIndex] = useState(0);
   const [stockByProduct, setStockByProduct] = useState(initialPageStock.stockByProduct);
   const [wishlistedIds, setWishlistedIds] = useState(new Set(initialPageStock.wishlistedIds));
   const [loadingStock, setLoadingStock] = useState(false);
@@ -67,6 +68,28 @@ export function SupplierCatalog({
   useEffect(() => {
     setPage(1);
   }, [q, category, brand, sort]);
+
+  // Keyboard nav resets to the top result whenever the visible page changes
+  // underneath it -- otherwise the highlight could point past the end of a
+  // shorter result set, or sit on a row that's no longer first.
+  useEffect(() => {
+    setActiveIndex(0);
+  }, [q, category, brand, sort, page]);
+
+  const handleSearchKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
+    if (pageItems.length === 0) return;
+    if (e.key === "ArrowDown") {
+      e.preventDefault();
+      setActiveIndex((i) => Math.min(i + 1, pageItems.length - 1));
+    } else if (e.key === "ArrowUp") {
+      e.preventDefault();
+      setActiveIndex((i) => Math.max(i - 1, 0));
+    } else if (e.key === "Enter") {
+      e.preventDefault();
+      const active = pageItems[activeIndex];
+      if (active) document.getElementById(`qty-input-${active.id}`)?.focus();
+    }
+  };
 
   // Only stock/price/wishlist status needs a server round trip -- debounced
   // so rapid typing doesn't fire a request per keystroke, and only for
@@ -114,6 +137,7 @@ export function SupplierCatalog({
             type="search"
             value={q}
             onChange={(e) => setQ(e.target.value)}
+            onKeyDown={handleSearchKeyDown}
             placeholder="Search this supplier's products..."
             className="h-10 w-full rounded-lg pl-9 pr-3 text-sm text-slate-700 placeholder:text-slate-400 focus:outline-none"
           />
@@ -149,8 +173,15 @@ export function SupplierCatalog({
       ) : (
         <>
           <div className={`overflow-hidden rounded-xl border border-slate-100 bg-white transition-opacity ${loadingStock ? "opacity-60" : ""}`}>
-            {displayItems.map((p) => (
-              <ProductRow key={p.id} product={p} isLoggedIn={isLoggedIn} initialWishlisted={wishlistedIds.has(p.id)} query={q} />
+            {displayItems.map((p, i) => (
+              <ProductRow
+                key={p.id}
+                product={p}
+                isLoggedIn={isLoggedIn}
+                initialWishlisted={wishlistedIds.has(p.id)}
+                query={q}
+                highlighted={i === activeIndex}
+              />
             ))}
           </div>
 
