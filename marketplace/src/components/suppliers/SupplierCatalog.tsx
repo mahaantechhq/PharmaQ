@@ -84,20 +84,37 @@ export function SupplierCatalog({
     document.getElementById(`product-row-${active.id}`)?.scrollIntoView({ block: "nearest", behavior: "smooth" });
   }, [activeIndex, pageItems]);
 
-  const handleSearchKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
-    if (pageItems.length === 0) return;
-    if (e.key === "ArrowDown") {
-      e.preventDefault();
-      setActiveIndex((i) => Math.min(i + 1, pageItems.length - 1));
-    } else if (e.key === "ArrowUp") {
-      e.preventDefault();
-      setActiveIndex((i) => Math.max(i - 1, 0));
-    } else if (e.key === "Enter") {
-      e.preventDefault();
-      const active = pageItems[activeIndex];
-      if (active) document.getElementById(`qty-input-${active.id}`)?.focus();
-    }
-  };
+  // Listens on the whole document (not just the search box) so ↑/↓/Enter
+  // move the highlight even when nothing is focused yet -- but backs off
+  // when focus is already inside a row's own qty input or one of the
+  // filter <select>s, where those keys have their normal native meaning.
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (pageItems.length === 0) return;
+      const active = document.activeElement;
+      const tag = active?.tagName;
+      const isQtyInput = tag === "INPUT" && active?.id.startsWith("qty-input-");
+      if (tag === "SELECT" || isQtyInput) return;
+
+      if (e.key === "ArrowDown") {
+        e.preventDefault();
+        setActiveIndex((i) => Math.min(i + 1, pageItems.length - 1));
+      } else if (e.key === "ArrowUp") {
+        e.preventDefault();
+        setActiveIndex((i) => Math.max(i - 1, 0));
+      } else if (e.key === "Enter") {
+        e.preventDefault();
+        setActiveIndex((i) => {
+          const item = pageItems[i];
+          if (item) document.getElementById(`qty-input-${item.id}`)?.focus();
+          return i;
+        });
+      }
+    };
+
+    document.addEventListener("keydown", handleKeyDown);
+    return () => document.removeEventListener("keydown", handleKeyDown);
+  }, [pageItems]);
 
   // Only stock/price/wishlist status needs a server round trip -- debounced
   // so rapid typing doesn't fire a request per keystroke, and only for
@@ -145,7 +162,6 @@ export function SupplierCatalog({
             type="search"
             value={q}
             onChange={(e) => setQ(e.target.value)}
-            onKeyDown={handleSearchKeyDown}
             placeholder="Search this supplier's products..."
             className="h-10 w-full rounded-lg pl-9 pr-3 text-sm text-slate-700 placeholder:text-slate-400 focus:outline-none"
           />
