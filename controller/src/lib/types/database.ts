@@ -196,7 +196,7 @@ export interface BusinessCustomer {
 }
 
 export type CatalogItemStatus = "active" | "inactive";
-export type BannerPosition = "hero" | "category" | "sidebar";
+export type BannerPosition = "hero";
 
 export interface Banner {
   id: string;

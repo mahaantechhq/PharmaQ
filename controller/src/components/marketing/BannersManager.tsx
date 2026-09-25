@@ -253,8 +253,6 @@ export function BannersManager({ banners }: { banners: Banner[] }) {
             <Field label="Position" htmlFor="position" required>
               <Select id="position" {...register("position")}>
                 <option value="hero">Hero</option>
-                <option value="category">Category</option>
-                <option value="sidebar">Sidebar</option>
               </Select>
             </Field>
             <Field label="Sort order" htmlFor="sort_order">
