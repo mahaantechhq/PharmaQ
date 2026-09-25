@@ -3,6 +3,7 @@ import { Building2, ShieldCheck, MapPin, Package } from "lucide-react";
 
 export interface SupplierCardData {
   id: string;
+  slug: string;
   name: string;
   city: string | null;
   state: string | null;
@@ -12,7 +13,7 @@ export interface SupplierCardData {
 export function SupplierCard({ supplier }: { supplier: SupplierCardData }) {
   return (
     <Link
-      href={`/suppliers/${supplier.id}`}
+      href={`/suppliers/${supplier.slug}`}
       className="flex items-start gap-4 rounded-2xl border border-slate-100 bg-white p-5 shadow-[var(--shadow-card)] transition-colors hover:border-primary-200"
     >
       <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl bg-primary-50 text-primary-600">

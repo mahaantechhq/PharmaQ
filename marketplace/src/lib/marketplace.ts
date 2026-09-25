@@ -9,6 +9,7 @@ export interface ProductListing {
   categoryName: string | null;
   brandName: string | null;
   businessId: string;
+  businessSlug: string;
   businessName: string;
   businessCity: string | null;
   totalStock: number;

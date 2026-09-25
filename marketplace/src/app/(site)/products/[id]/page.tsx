@@ -21,7 +21,7 @@ export default async function ProductDetailPage({ params }: { params: Promise<{ 
   const [{ data: product }, linkedWholesalerIds, { data: batches }, { data: wishlistRow }] = await Promise.all([
     supabase
       .from("products")
-      .select("*, businesses:business_id(id, name, city, state), categories:category_id(name), brands:brand_id(name)")
+      .select("*, businesses:business_id(id, slug, name, city, state), categories:category_id(name), brands:brand_id(name)")
       .eq("id", id)
       .eq("status", "active")
       .maybeSingle(),
@@ -62,7 +62,7 @@ export default async function ProductDetailPage({ params }: { params: Promise<{ 
           <h1 className="text-2xl font-semibold text-slate-900">{product.name}</h1>
           {product.composition && <p className="mt-1 text-sm text-slate-500">{product.composition}</p>}
 
-          <Link href={`/suppliers/${business.id}`} className="mt-3 flex items-center gap-1.5 text-sm text-primary-600 hover:underline">
+          <Link href={`/suppliers/${business.slug}`} className="mt-3 flex items-center gap-1.5 text-sm text-primary-600 hover:underline">
             <MapPin className="h-4 w-4" /> Sold by {business.name} · {[business.city, business.state].filter(Boolean).join(", ")}
           </Link>
 

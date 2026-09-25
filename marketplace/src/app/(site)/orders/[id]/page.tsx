@@ -24,7 +24,7 @@ export default async function OrderDetailPage({ params }: { params: Promise<{ id
 
   const { data: supplierOrders } = await supabase
     .from("supplier_orders")
-    .select("*, businesses:supplier_business_id(name, city, state)")
+    .select("*, businesses:supplier_business_id(slug, name, city, state)")
     .eq("order_id", id);
 
   const supplierOrderIds = (supplierOrders ?? []).map((so) => so.id);
@@ -53,7 +53,7 @@ export default async function OrderDetailPage({ params }: { params: Promise<{ id
             <Card key={so.id}>
               <CardHeader
                 title={
-                  <Link href={`/suppliers/${so.supplier_business_id}`} className="hover:text-primary-600">
+                  <Link href={`/suppliers/${so.businesses?.slug ?? so.supplier_business_id}`} className="hover:text-primary-600">
                     {so.businesses?.name ?? "Unknown supplier"}
                   </Link>
                 }

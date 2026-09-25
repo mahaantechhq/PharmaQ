@@ -5,7 +5,7 @@ import { Search, SearchX, ChevronLeft, ChevronRight, Loader2 } from "lucide-reac
 import { Button } from "@/components/ui/Button";
 import { Select } from "@/components/ui/Select";
 import { ProductRow } from "@/components/products/ProductRow";
-import { getCatalogPageStock, type CatalogPageStock } from "@/app/(site)/suppliers/[id]/actions";
+import { getCatalogPageStock, type CatalogPageStock } from "@/app/(site)/suppliers/[slug]/actions";
 import type { ProductListing } from "@/lib/marketplace";
 
 export type CatalogProduct = ProductListing & { categoryId: string | null; brandId: string | null };

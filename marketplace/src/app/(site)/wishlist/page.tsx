@@ -16,7 +16,7 @@ export default async function WishlistPage() {
   const { data: products } = productIds.length
     ? await supabase
         .from("products")
-        .select("id, name, composition, pack_size, gst_rate, created_at, business_id, businesses:business_id(name, city), categories:category_id(name), brands:brand_id(name)")
+        .select("id, name, composition, pack_size, gst_rate, created_at, business_id, businesses:business_id(name, city, slug), categories:category_id(name), brands:brand_id(name)")
         .in("id", productIds)
         .in("business_id", linkedWholesalerIds)
         .eq("status", "active")
@@ -48,6 +48,7 @@ export default async function WishlistPage() {
     categoryName: p.categories?.name ?? null,
     brandName: p.brands?.name ?? null,
     businessId: p.business_id,
+    businessSlug: p.businesses?.slug ?? p.business_id,
     businessName: p.businesses?.name ?? "Unknown supplier",
     businessCity: p.businesses?.city ?? null,
     totalStock: stockByProduct.get(p.id)?.stock ?? 0,

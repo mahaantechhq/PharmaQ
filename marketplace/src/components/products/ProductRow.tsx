@@ -107,7 +107,7 @@ export function ProductRow({
           )}
         </div>
         <div className="mt-1 flex flex-wrap items-center gap-x-2 gap-y-1 text-xs">
-          <Link href={`/suppliers/${product.businessId}`} className="font-medium text-primary-600 hover:underline">
+          <Link href={`/suppliers/${product.businessSlug}`} className="font-medium text-primary-600 hover:underline">
             {product.businessName}
           </Link>
           {product.brandName && <span className="text-slate-600">{product.brandName}</span>}

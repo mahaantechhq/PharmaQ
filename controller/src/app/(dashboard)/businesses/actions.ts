@@ -44,7 +44,10 @@ export async function createBusiness(values: CreateBusinessFormValues) {
   const { data: businessId, error: provisionError } = await supabase.rpc("provision_business", {
     p_owner_id: authUser.user.id,
     p_name: parsed.name,
-    p_slug: `${slugify(parsed.name)}-${Date.now().toString(36)}`,
+    // Uniqueness (if this base slug is already taken) is handled inside
+    // provision_business itself, same way generate_business_access_code
+    // retries -- not appending a random suffix here keeps URLs readable.
+    p_slug: [slugify(parsed.name), parsed.city ? slugify(parsed.city) : null].filter(Boolean).join("-"),
     p_owner_name: parsed.ownerName,
     p_email: parsed.email,
     p_phone: parsed.phone || null,

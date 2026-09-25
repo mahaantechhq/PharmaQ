@@ -13,21 +13,29 @@ import { getCatalogPageStock } from "./actions";
 const PAGE_SIZE = 60;
 
 interface SupplierProfilePageProps {
-  params: Promise<{ id: string }>;
+  params: Promise<{ slug: string }>;
 }
 
 export default async function SupplierProfilePage({ params }: SupplierProfilePageProps) {
-  const { id } = await params;
+  const { slug } = await params;
   const supabase = await createClient();
-  const ctx = await requireCurrentBusiness(`/suppliers/${id}`);
+  const ctx = await requireCurrentBusiness(`/suppliers/${slug}`);
 
-  // The link check doesn't need to block before starting the rest -- it
-  // only needs ctx.business.id (already known), same as the other three.
-  // Running all four together instead of gating on the link check first
-  // removes a full sequential round trip from every supplier page load.
-  const [linkedWholesalerIds, { data: business }, { data: products }, offersByBusiness, { data: schemeBatches }] = await Promise.all([
+  // The business itself has to resolve first now -- everything else below
+  // is keyed off its id, not the url slug -- but this still only costs one
+  // extra sequential round trip since getLinkedWholesalerIds only needs
+  // ctx.business.id and can run alongside it.
+  const [{ data: business }, linkedWholesalerIds] = await Promise.all([
+    supabase.from("businesses").select("*").eq("slug", slug).eq("status", "approved").maybeSingle(),
     getLinkedWholesalerIds(ctx.business.id),
-    supabase.from("businesses").select("*").eq("id", id).eq("status", "approved").maybeSingle(),
+  ]);
+
+  if (!business) notFound();
+  if (!linkedWholesalerIds.includes(business.id)) notFound();
+
+  const id = business.id;
+
+  const [{ data: products }, offersByBusiness, { data: schemeBatches }] = await Promise.all([
     supabase
       .from("products")
       .select(
@@ -43,9 +51,6 @@ export default async function SupplierProfilePage({ params }: SupplierProfilePag
     // without pulling full stock/price for the whole catalog upfront.
     supabase.from("product_batches").select("product_id, scheme").eq("business_id", id).gt("stock_qty", 0),
   ]);
-
-  if (!linkedWholesalerIds.includes(id)) notFound();
-  if (!business) notFound();
 
   const offer = offersByBusiness.get(business.id) ?? null;
 
@@ -67,6 +72,7 @@ export default async function SupplierProfilePage({ params }: SupplierProfilePag
     categoryName: p.categories?.name ?? null,
     brandName: p.brands?.name ?? null,
     businessId: business.id,
+    businessSlug: business.slug,
     businessName: business.name,
     businessCity: business.city,
     totalStock: 0,

@@ -18,9 +18,9 @@ export default async function SearchPage({ searchParams }: SearchPageProps) {
 
   const { data: businesses } =
     linkedWholesalerIds.length === 0
-      ? { data: [] as { id: string; name: string; city: string | null; state: string | null }[] }
+      ? { data: [] as { id: string; slug: string; name: string; city: string | null; state: string | null }[] }
       : await (() => {
-          let query = supabase.from("businesses").select("id, name, city, state").eq("status", "approved").in("id", linkedWholesalerIds).order("name");
+          let query = supabase.from("businesses").select("id, slug, name, city, state").eq("status", "approved").in("id", linkedWholesalerIds).order("name");
           if (params.q) query = query.ilike("name", `%${params.q}%`);
           return query;
         })();
@@ -37,6 +37,7 @@ export default async function SearchPage({ searchParams }: SearchPageProps) {
 
   const suppliers: SupplierCardData[] = (businesses ?? []).map((b) => ({
     id: b.id,
+    slug: b.slug,
     name: b.name,
     city: b.city,
     state: b.state,
