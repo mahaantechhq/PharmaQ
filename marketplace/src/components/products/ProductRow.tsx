@@ -156,6 +156,9 @@ export function ProductRow({
             e.target.setCustomValidity("");
           }}
           onInvalid={(e) => (e.target as HTMLInputElement).setCustomValidity("Please enter a quantity!")}
+          onKeyDown={(e) => {
+            if (e.key === "ArrowUp" || e.key === "ArrowDown") e.preventDefault();
+          }}
           onBlur={() => {
             if (qty === "") return;
             const clamped = Math.min(Math.max(1, parseInt(qty, 10) || 1), product.totalStock || 1);
