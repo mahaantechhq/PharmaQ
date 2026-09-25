@@ -76,6 +76,14 @@ export function SupplierCatalog({
     setActiveIndex(0);
   }, [q, category, brand, sort, page]);
 
+  // Follows the highlight as arrow keys move it, so a row further down the
+  // page doesn't end up highlighted off-screen.
+  useEffect(() => {
+    const active = pageItems[activeIndex];
+    if (!active) return;
+    document.getElementById(`product-row-${active.id}`)?.scrollIntoView({ block: "nearest", behavior: "smooth" });
+  }, [activeIndex, pageItems]);
+
   const handleSearchKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
     if (pageItems.length === 0) return;
     if (e.key === "ArrowDown") {

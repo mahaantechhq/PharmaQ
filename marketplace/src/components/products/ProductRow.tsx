@@ -88,6 +88,7 @@ export function ProductRow({
 
   return (
     <form
+      id={`product-row-${product.id}`}
       onSubmit={handleAdd}
       className={`relative flex items-center gap-4 border-b border-slate-100 px-4 py-4 last:border-b-0 sm:px-5 ${
         highlighted ? "bg-primary-50" : ""
