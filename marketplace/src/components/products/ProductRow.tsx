@@ -99,9 +99,7 @@ export function ProductRow({
     >
       <div className="min-w-0 flex-1">
         <div className="flex flex-wrap items-center gap-2">
-          <Link href={`/products/${product.id}`} className="truncate text-sm font-semibold text-slate-800 hover:text-primary-600">
-            {highlightMatch(product.name, query)}
-          </Link>
+          <span className="truncate text-sm font-semibold text-slate-800">{highlightMatch(product.name, query)}</span>
           {cartLine && (
             <span className="flex shrink-0 items-center gap-1 rounded-full bg-success-50 px-2 py-0.5 text-[11px] font-semibold text-success-600">
               <Check className="h-3 w-3" /> Added
