@@ -58,6 +58,33 @@ export async function createBanner(values: BannerFormValues) {
   revalidatePath("/marketing/banners");
 }
 
+export async function updateBanner(bannerId: string, values: BannerFormValues) {
+  const admin = await getCurrentAdmin();
+  if (!admin) throw new Error("Not authenticated as super admin");
+
+  const parsed = bannerSchema.parse(values);
+  const supabase = await createClient();
+
+  const { error } = await supabase
+    .from("banners")
+    .update({
+      title: parsed.title,
+      image_url: parsed.image_url,
+      link_url: parsed.link_url || null,
+      position: parsed.position,
+      sort_order: parsed.sort_order,
+      status: parsed.status,
+      starts_at: parsed.starts_at || null,
+      ends_at: parsed.ends_at || null,
+    })
+    .eq("id", bannerId);
+
+  if (error) throw new Error(error.message);
+
+  await logAudit({ actorId: admin.adminId, action: "banner.update", entityType: "banner", entityId: bannerId, metadata: { title: parsed.title } });
+  revalidatePath("/marketing/banners");
+}
+
 export async function deleteBanner(bannerId: string) {
   const admin = await getCurrentAdmin();
   if (!admin) throw new Error("Not authenticated as super admin");

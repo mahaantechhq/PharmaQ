@@ -4,7 +4,7 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { Plus, Trash2, ImageOff, Upload, Loader2 } from "lucide-react";
+import { Plus, Trash2, Pencil, ImageOff, Upload, Loader2, Pause, Play } from "lucide-react";
 import { Button } from "@/components/ui/Button";
 import { Modal } from "@/components/ui/Modal";
 import { Field } from "@/components/ui/Field";
@@ -12,12 +12,16 @@ import { Input } from "@/components/ui/Input";
 import { Select } from "@/components/ui/Select";
 import { Badge } from "@/components/ui/Badge";
 import { useToast } from "@/components/ui/Toast";
+import { formatDate } from "@/lib/format";
 import { bannerSchema, type BannerFormValues } from "@/lib/validations/marketing";
-import { createBanner, deleteBanner, toggleBannerStatus, uploadBannerImage } from "@/app/(dashboard)/marketing/actions";
+import { createBanner, updateBanner, deleteBanner, toggleBannerStatus, uploadBannerImage } from "@/app/(dashboard)/marketing/actions";
 import type { Banner } from "@/lib/types/database";
+
+const EMPTY_DEFAULTS: BannerFormValues = { title: "", image_url: "", link_url: "", position: "hero", sort_order: 0, status: "active", starts_at: "", ends_at: "" };
 
 export function BannersManager({ banners }: { banners: Banner[] }) {
   const [open, setOpen] = useState(false);
+  const [editingBanner, setEditingBanner] = useState<Banner | null>(null);
   const [uploading, setUploading] = useState(false);
   const [preview, setPreview] = useState<string | null>(null);
   const router = useRouter();
@@ -32,10 +36,33 @@ export function BannersManager({ banners }: { banners: Banner[] }) {
     formState: { errors, isSubmitting },
   } = useForm<BannerFormValues>({
     resolver: zodResolver(bannerSchema),
-    defaultValues: { position: "hero", status: "active", sort_order: 0, image_url: "" },
+    defaultValues: EMPTY_DEFAULTS,
   });
 
   const imageUrl = watch("image_url");
+
+  const openCreate = () => {
+    setEditingBanner(null);
+    reset(EMPTY_DEFAULTS);
+    setPreview(null);
+    setOpen(true);
+  };
+
+  const openEdit = (banner: Banner) => {
+    setEditingBanner(banner);
+    reset({
+      title: banner.title,
+      image_url: banner.image_url,
+      link_url: banner.link_url ?? "",
+      position: banner.position,
+      sort_order: banner.sort_order,
+      status: banner.status,
+      starts_at: banner.starts_at ?? "",
+      ends_at: banner.ends_at ?? "",
+    });
+    setPreview(null);
+    setOpen(true);
+  };
 
   const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -57,14 +84,20 @@ export function BannersManager({ banners }: { banners: Banner[] }) {
 
   const onSubmit = async (values: BannerFormValues) => {
     try {
-      await createBanner(values);
-      toast("Banner created", "success");
-      reset();
+      if (editingBanner) {
+        await updateBanner(editingBanner.id, values);
+        toast("Banner updated", "success");
+      } else {
+        await createBanner(values);
+        toast("Banner created", "success");
+      }
+      reset(EMPTY_DEFAULTS);
       setPreview(null);
       setOpen(false);
+      setEditingBanner(null);
       router.refresh();
     } catch (err) {
-      toast(err instanceof Error ? err.message : "Failed to create banner", "error");
+      toast(err instanceof Error ? err.message : "Failed to save banner", "error");
     }
   };
 
@@ -82,6 +115,7 @@ export function BannersManager({ banners }: { banners: Banner[] }) {
   const handleToggle = async (banner: Banner) => {
     try {
       await toggleBannerStatus(banner.id, banner.status === "active" ? "inactive" : "active");
+      toast(banner.status === "active" ? "Banner paused" : "Banner resumed", "success");
       router.refresh();
     } catch (err) {
       toast(err instanceof Error ? err.message : "Failed to update", "error");
@@ -91,7 +125,7 @@ export function BannersManager({ banners }: { banners: Banner[] }) {
   return (
     <div>
       <div className="mb-4 flex justify-end">
-        <Button onClick={() => setOpen(true)}>
+        <Button onClick={openCreate}>
           <Plus className="h-4 w-4" /> Create banner
         </Button>
       </div>
@@ -117,23 +151,42 @@ export function BannersManager({ banners }: { banners: Banner[] }) {
               <div className="p-4">
                 <div className="mb-1 flex items-center justify-between gap-2">
                   <p className="truncate text-sm font-medium text-slate-800">{b.title}</p>
-                  <button onClick={() => handleDelete(b.id)} className="shrink-0 rounded-lg p-1 text-slate-400 hover:bg-danger-50 hover:text-danger-600">
-                    <Trash2 className="h-3.5 w-3.5" />
-                  </button>
+                  <div className="flex shrink-0 items-center gap-1">
+                    <button onClick={() => openEdit(b)} className="rounded-lg p-1 text-slate-400 hover:bg-primary-50 hover:text-primary-600">
+                      <Pencil className="h-3.5 w-3.5" />
+                    </button>
+                    <button
+                      onClick={() => handleToggle(b)}
+                      aria-label={b.status === "active" ? "Pause" : "Resume"}
+                      className="rounded-lg p-1 text-slate-400 hover:bg-warning-50 hover:text-warning-600"
+                    >
+                      {b.status === "active" ? <Pause className="h-3.5 w-3.5" /> : <Play className="h-3.5 w-3.5" />}
+                    </button>
+                    <button onClick={() => handleDelete(b.id)} className="rounded-lg p-1 text-slate-400 hover:bg-danger-50 hover:text-danger-600">
+                      <Trash2 className="h-3.5 w-3.5" />
+                    </button>
+                  </div>
                 </div>
-                <div className="flex items-center gap-2">
+                <div className="flex flex-wrap items-center gap-2">
                   <Badge tone="slate">{b.position}</Badge>
-                  <button onClick={() => handleToggle(b)}>
-                    <Badge tone={b.status === "active" ? "success" : "slate"}>{b.status}</Badge>
-                  </button>
+                  <Badge tone={b.status === "active" ? "success" : "slate"}>{b.status}</Badge>
                 </div>
+                {b.ends_at && <p className="mt-2 text-xs text-slate-400">Ends {formatDate(b.ends_at)}</p>}
               </div>
             </div>
           ))}
         </div>
       )}
 
-      <Modal open={open} onClose={() => setOpen(false)} title="Create banner" size="md">
+      <Modal
+        open={open}
+        onClose={() => {
+          setOpen(false);
+          setEditingBanner(null);
+        }}
+        title={editingBanner ? "Edit banner" : "Create banner"}
+        size="md"
+      >
         <form id="banner-form" onSubmit={handleSubmit(onSubmit)} className="flex flex-col gap-4">
           <Field label="Title" htmlFor="title" required error={errors.title?.message}>
             <Input id="title" {...register("title")} />
@@ -200,8 +253,10 @@ export function BannersManager({ banners }: { banners: Banner[] }) {
           </Field>
         </form>
         <div className="mt-4 flex justify-end gap-2">
-          <Button variant="outline" onClick={() => setOpen(false)}>Cancel</Button>
-          <Button form="banner-form" type="submit" loading={isSubmitting} disabled={uploading || !imageUrl}>Create banner</Button>
+          <Button variant="outline" onClick={() => { setOpen(false); setEditingBanner(null); }}>Cancel</Button>
+          <Button form="banner-form" type="submit" loading={isSubmitting} disabled={uploading || !imageUrl}>
+            {editingBanner ? "Save changes" : "Create banner"}
+          </Button>
         </div>
       </Modal>
     </div>
