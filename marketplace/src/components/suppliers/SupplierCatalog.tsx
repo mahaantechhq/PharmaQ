@@ -186,13 +186,21 @@ export function SupplierCatalog({
           />
         </div>
         <div className="flex gap-2">
-          <Select value={category} onChange={(e) => setCategory(e.target.value)} className="w-40">
+          <Select
+            value={category}
+            onChange={(e) => setCategory(e.target.value)}
+            className={`w-40 ${category ? "border-primary-400 ring-2 ring-primary-300" : ""}`}
+          >
             <option value="">All categories</option>
             {categories.map((c) => (
               <option key={c.id} value={c.id}>{c.name}</option>
             ))}
           </Select>
-          <Select value={brand} onChange={(e) => setBrand(e.target.value)} className="w-40">
+          <Select
+            value={brand}
+            onChange={(e) => setBrand(e.target.value)}
+            className={`w-40 ${brand ? "border-primary-400 ring-2 ring-primary-300" : ""}`}
+          >
             <option value="">All brands</option>
             {brands.map((b) => (
               <option key={b.id} value={b.id}>{b.name}</option>
