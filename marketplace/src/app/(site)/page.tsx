@@ -15,7 +15,7 @@ export default async function HomePage() {
     const banners = await getActiveHeroBanners();
     return (
       <div>
-        <LoggedInHero ownerName={ctx.owner.full_name} />
+        <LoggedInHero />
         <BannerCarousel banners={banners} />
       </div>
     );

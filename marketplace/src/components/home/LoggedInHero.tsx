@@ -5,10 +5,9 @@ import { useRouter } from "next/navigation";
 import { Search } from "lucide-react";
 import { Button } from "@/components/ui/Button";
 
-export function LoggedInHero({ ownerName }: { ownerName: string }) {
+export function LoggedInHero() {
   const router = useRouter();
   const inputRef = useRef<HTMLInputElement>(null);
-  const firstName = ownerName.split(" ")[0];
 
   const handleSearch = (e: React.FormEvent) => {
     e.preventDefault();
@@ -20,8 +19,7 @@ export function LoggedInHero({ ownerName }: { ownerName: string }) {
     <section className="relative overflow-hidden bg-gradient-to-br from-primary-700 to-primary-500">
       <div className="pointer-events-none absolute inset-0 bg-dot-grid opacity-30" />
       <div className="relative mx-auto flex max-w-3xl flex-col items-center px-4 py-4 text-center sm:px-6">
-        <h1 className="font-display text-lg font-semibold text-white sm:text-xl">Hi {firstName}, how can we help you today?</h1>
-        <form onSubmit={handleSearch} className="mt-3 flex w-full max-w-xl gap-2 rounded-2xl bg-white p-1.5 shadow-[var(--shadow-glow)]">
+        <form onSubmit={handleSearch} className="flex w-full max-w-xl gap-2 rounded-2xl bg-white p-1.5 shadow-[var(--shadow-glow)]">
           <div className="relative flex-1">
             <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
             <input
