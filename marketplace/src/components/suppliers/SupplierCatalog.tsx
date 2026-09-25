@@ -36,6 +36,7 @@ export function SupplierCatalog({
   const [wishlistedIds, setWishlistedIds] = useState(new Set(initialPageStock.wishlistedIds));
   const [loadingStock, setLoadingStock] = useState(false);
   const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const searchInputRef = useRef<HTMLInputElement>(null);
 
   // Filtering runs entirely in the browser against the already-loaded
   // catalog -- no network round trip, so it's instant on every keystroke.
@@ -159,6 +160,7 @@ export function SupplierCatalog({
         <div className="relative flex-1 rounded-xl border border-slate-200 bg-white p-1.5 shadow-[var(--shadow-card)]">
           <Search className="pointer-events-none absolute left-4 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
           <input
+            ref={searchInputRef}
             type="search"
             value={q}
             onChange={(e) => setQ(e.target.value)}
@@ -205,6 +207,7 @@ export function SupplierCatalog({
                 initialWishlisted={wishlistedIds.has(p.id)}
                 query={q}
                 highlighted={i === activeIndex}
+                onAdded={() => searchInputRef.current?.focus()}
               />
             ))}
           </div>

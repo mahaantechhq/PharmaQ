@@ -19,12 +19,14 @@ export function ProductRow({
   initialWishlisted = false,
   query,
   highlighted = false,
+  onAdded,
 }: {
   product: ProductListing;
   isLoggedIn: boolean;
   initialWishlisted?: boolean;
   query?: string;
   highlighted?: boolean;
+  onAdded?: () => void;
 }) {
   const { summary, setSummary } = useCart();
   const cartLine = summary.lines.find((l) => l.productId === product.id);
@@ -53,6 +55,7 @@ export function ProductRow({
       const newLine = updated.lines.find((l) => l.productId === product.id);
       setQty(newLine ? String(newLine.quantity) : String(quantity));
       toast(cartLine ? "Cart updated" : "Added to cart", "success");
+      onAdded?.();
     } catch (err) {
       toast(err instanceof Error ? err.message : "Failed to add to cart", "error");
     } finally {
