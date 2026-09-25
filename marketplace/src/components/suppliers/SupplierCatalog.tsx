@@ -85,25 +85,42 @@ export function SupplierCatalog({
     document.getElementById(`product-row-${active.id}`)?.scrollIntoView({ block: "nearest", behavior: "smooth" });
   }, [activeIndex, pageItems]);
 
-  // Listens on the whole document (not just the search box) so ↑/↓/Enter
-  // move the highlight even when nothing is focused yet -- but backs off
-  // when focus is already inside a row's own qty input or one of the
-  // filter <select>s, where those keys have their normal native meaning.
+  // Listens on the whole document (not just the search box) so ↑/↓ move the
+  // highlight even when nothing is focused yet, AND while focus is already
+  // inside a row's own qty input (its native up/down spin behavior is
+  // disabled in ProductRow specifically so these keys are free to mean
+  // "previous/next row" there too) -- only the filter <select>s keep their
+  // native arrow-key meaning. Enter still backs off inside a qty input so
+  // it submits that row's own form instead of re-focusing it.
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
       if (pageItems.length === 0) return;
       const active = document.activeElement;
       const tag = active?.tagName;
       const isQtyInput = tag === "INPUT" && active?.id.startsWith("qty-input-");
-      if (tag === "SELECT" || isQtyInput) return;
+      if (tag === "SELECT") return;
 
       if (e.key === "ArrowDown") {
         e.preventDefault();
-        setActiveIndex((i) => Math.min(i + 1, pageItems.length - 1));
+        setActiveIndex((i) => {
+          const next = Math.min(i + 1, pageItems.length - 1);
+          if (isQtyInput) {
+            const item = pageItems[next];
+            if (item) document.getElementById(`qty-input-${item.id}`)?.focus();
+          }
+          return next;
+        });
       } else if (e.key === "ArrowUp") {
         e.preventDefault();
-        setActiveIndex((i) => Math.max(i - 1, 0));
-      } else if (e.key === "Enter") {
+        setActiveIndex((i) => {
+          const next = Math.max(i - 1, 0);
+          if (isQtyInput) {
+            const item = pageItems[next];
+            if (item) document.getElementById(`qty-input-${item.id}`)?.focus();
+          }
+          return next;
+        });
+      } else if (e.key === "Enter" && !isQtyInput) {
         e.preventDefault();
         setActiveIndex((i) => {
           const item = pageItems[i];
