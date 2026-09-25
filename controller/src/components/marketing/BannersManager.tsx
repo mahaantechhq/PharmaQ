@@ -158,7 +158,11 @@ export function BannersManager({ banners }: { banners: Banner[] }) {
                     <button
                       onClick={() => handleToggle(b)}
                       aria-label={b.status === "active" ? "Pause" : "Resume"}
-                      className="rounded-lg p-1 text-slate-400 hover:bg-warning-50 hover:text-warning-600"
+                      className={
+                        b.status === "active"
+                          ? "rounded-lg p-1 text-danger-500 hover:bg-danger-50"
+                          : "rounded-lg p-1 text-success-600 hover:bg-success-50"
+                      }
                     >
                       {b.status === "active" ? <Pause className="h-3.5 w-3.5" /> : <Play className="h-3.5 w-3.5" />}
                     </button>
