@@ -19,6 +19,23 @@ import type { Banner } from "@/lib/types/database";
 
 const EMPTY_DEFAULTS: BannerFormValues = { title: "", image_url: "", link_url: "", position: "hero", sort_order: 0, status: "active", starts_at: "", ends_at: "" };
 
+// The stored status is just a manual on/off flag -- whether a banner is
+// actually showing right now also depends on its schedule, so the badge
+// needs to reflect the combination, not just b.status, or a banner can say
+// "active" while it's really expired or hasn't started yet.
+function getEffectiveStatus(banner: Banner): { label: string; tone: "success" | "slate" | "warning" | "danger" } {
+  if (banner.status === "inactive") return { label: "Paused", tone: "slate" };
+  const now = new Date();
+  // ends_at is a date-only value stored at midnight UTC of that day -- an
+  // "Ends Aug 5" banner should run through all of Aug 5, so it's only
+  // expired once we're past that whole day, not the instant it turns Aug 5.
+  const startOfToday = new Date();
+  startOfToday.setUTCHours(0, 0, 0, 0);
+  if (banner.ends_at && new Date(banner.ends_at) < startOfToday) return { label: "Expired", tone: "danger" };
+  if (banner.starts_at && new Date(banner.starts_at) > now) return { label: "Scheduled", tone: "warning" };
+  return { label: "Active", tone: "success" };
+}
+
 export function BannersManager({ banners }: { banners: Banner[] }) {
   const [open, setOpen] = useState(false);
   const [editingBanner, setEditingBanner] = useState<Banner | null>(null);
@@ -134,7 +151,9 @@ export function BannersManager({ banners }: { banners: Banner[] }) {
         <p className="py-8 text-center text-sm text-slate-400">No banners yet.</p>
       ) : (
         <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
-          {banners.map((b) => (
+          {banners.map((b) => {
+            const effective = getEffectiveStatus(b);
+            return (
             <div key={b.id} className="overflow-hidden rounded-xl border border-slate-100">
               <div className="flex h-32 items-center justify-center bg-slate-100">
                 {/* eslint-disable-next-line @next/next/no-img-element */}
@@ -173,12 +192,13 @@ export function BannersManager({ banners }: { banners: Banner[] }) {
                 </div>
                 <div className="flex flex-wrap items-center gap-2">
                   <Badge tone="slate">{b.position}</Badge>
-                  <Badge tone={b.status === "active" ? "success" : "slate"}>{b.status}</Badge>
+                  <Badge tone={effective.tone}>{effective.label}</Badge>
                 </div>
                 {b.ends_at && <p className="mt-2 text-xs text-slate-400">Ends {formatDate(b.ends_at)}</p>}
               </div>
             </div>
-          ))}
+            );
+          })}
         </div>
       )}
 
