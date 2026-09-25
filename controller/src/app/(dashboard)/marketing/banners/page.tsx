@@ -7,7 +7,7 @@ import type { Banner } from "@/lib/types/database";
 
 export default async function BannersPage() {
   const supabase = await createClient();
-  const { data: banners } = await supabase.from("banners").select("*").order("sort_order", { ascending: true });
+  const { data: banners } = await supabase.from("banners").select("*").order("created_at", { ascending: false });
 
   return (
     <div>
