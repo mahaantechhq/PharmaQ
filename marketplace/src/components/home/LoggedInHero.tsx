@@ -19,9 +19,9 @@ export function LoggedInHero({ ownerName }: { ownerName: string }) {
   return (
     <section className="relative overflow-hidden bg-gradient-to-br from-primary-700 to-primary-500">
       <div className="pointer-events-none absolute inset-0 bg-dot-grid opacity-30" />
-      <div className="relative mx-auto flex max-w-3xl flex-col items-center px-4 py-[68px] text-center sm:px-6">
-        <h1 className="font-display text-2xl font-semibold text-white sm:text-3xl">Hi {firstName}, how can we help you today?</h1>
-        <form onSubmit={handleSearch} className="mt-6 flex w-full max-w-xl gap-2 rounded-2xl bg-white p-2 shadow-[var(--shadow-glow)]">
+      <div className="relative mx-auto flex max-w-3xl flex-col items-center px-4 py-8 text-center sm:px-6">
+        <h1 className="font-display text-xl font-semibold text-white sm:text-2xl">Hi {firstName}, how can we help you today?</h1>
+        <form onSubmit={handleSearch} className="mt-4 flex w-full max-w-xl gap-2 rounded-2xl bg-white p-2 shadow-[var(--shadow-glow)]">
           <div className="relative flex-1">
             <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
             <input
