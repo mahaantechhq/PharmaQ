@@ -7,10 +7,6 @@ export function formatCurrency(value: number): string {
   }).format(value);
 }
 
-export function formatNumber(value: number): string {
-  return new Intl.NumberFormat("en-IN").format(value);
-}
-
 // Server components render on Vercel (UTC), so any date/time display needs
 // an explicit timeZone or it silently shows UTC instead of India time --
 // e.g. an order placed at 4:16pm IST would otherwise render as 10:46am.
