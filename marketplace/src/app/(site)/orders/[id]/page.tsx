@@ -69,11 +69,26 @@ export default async function OrderDetailPage({ params }: { params: Promise<{ id
                     </div>
                   ))}
                 </div>
-                {Number(so.discount_total) > 0 && (
-                  <p className="mb-4 text-xs font-medium text-success-600">
-                    Offer discount applied: -{formatCurrency(Number(so.discount_total))}
-                  </p>
-                )}
+                <div className="mb-4 flex flex-col gap-1.5 rounded-lg border border-slate-100 px-4 py-3 text-sm">
+                  <div className="flex justify-between text-slate-500">
+                    <span>Subtotal</span>
+                    <span>{formatCurrency(Number(so.subtotal))}</span>
+                  </div>
+                  {Number(so.discount_total) > 0 && (
+                    <div className="flex justify-between text-success-600">
+                      <span>Offer discount</span>
+                      <span>-{formatCurrency(Number(so.discount_total))}</span>
+                    </div>
+                  )}
+                  <div className="flex justify-between text-slate-500">
+                    <span>Tax</span>
+                    <span>{formatCurrency(Number(so.tax_total))}</span>
+                  </div>
+                  <div className="flex justify-between border-t border-slate-100 pt-1.5 font-semibold text-slate-900">
+                    <span>Total</span>
+                    <span>{formatCurrency(Number(so.grand_total))}</span>
+                  </div>
+                </div>
                 <StatusTimeline history={history} />
               </CardBody>
             </Card>
