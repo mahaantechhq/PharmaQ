@@ -20,6 +20,9 @@ export async function updateSession(request: NextRequest) {
           );
         },
       },
+      // See client.ts -- makes the auth cookie a session cookie (cleared on
+      // browser close) instead of surviving 400 days by default.
+      cookieOptions: { maxAge: undefined },
     },
   );
 

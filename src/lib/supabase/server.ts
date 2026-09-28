@@ -23,6 +23,11 @@ export async function createClient() {
           }
         },
       },
+      // @supabase/ssr defaults the auth cookie to a 400-day Max-Age, so it
+      // survives closing the browser entirely. Omitting maxAge makes it a
+      // true session cookie instead -- signed out only when the browser
+      // itself is closed, not on any fixed schedule while it stays open.
+      cookieOptions: { maxAge: undefined },
     },
   );
 }
