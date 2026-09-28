@@ -10,7 +10,7 @@ import type { ProductListing } from "@/lib/marketplace";
 
 export type CatalogProduct = ProductListing & { categoryId: string | null; brandId: string | null };
 
-const PAGE_SIZE = 60;
+const PAGE_SIZE = 20;
 const DEBOUNCE_MS = 250;
 
 export function SupplierCatalog({
