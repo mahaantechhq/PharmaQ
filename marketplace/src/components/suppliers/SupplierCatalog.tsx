@@ -85,20 +85,25 @@ export function SupplierCatalog({
     document.getElementById(`product-row-${active.id}`)?.scrollIntoView({ block: "nearest", behavior: "smooth" });
   }, [activeIndex, pageItems]);
 
-  // Listens on the whole document (not just the search box) so ↑/↓ move the
-  // highlight even when nothing is focused yet, AND while focus is already
-  // inside a row's own qty input (its native up/down spin behavior is
-  // disabled in ProductRow specifically so these keys are free to mean
-  // "previous/next row" there too) -- only the filter <select>s keep their
-  // native arrow-key meaning. Enter still backs off inside a qty input so
-  // it submits that row's own form instead of re-focusing it.
+  // Listens on the whole document (not just the search box) so ↑/↓ always
+  // move the highlight -- whether nothing is focused yet, focus is inside a
+  // row's own qty input (its native spin behavior is disabled in ProductRow
+  // so these keys are free to mean "previous/next row" there too), or focus
+  // is on a filter <select> (preventDefault stops it from cycling its own
+  // options instead). Enter still backs off inside a qty input so it
+  // submits that row's own form instead of re-focusing it.
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
       if (pageItems.length === 0) return;
       const active = document.activeElement;
       const tag = active?.tagName;
       const isQtyInput = tag === "INPUT" && active?.id.startsWith("qty-input-");
-      if (tag === "SELECT") return;
+      // Dropping focus off a filter <select> when arrows are used to move
+      // the row highlight instead -- otherwise it keeps its focus ring
+      // showing even though the highlight has clearly moved elsewhere.
+      if (tag === "SELECT" && (e.key === "ArrowDown" || e.key === "ArrowUp")) {
+        (active as HTMLElement).blur();
+      }
 
       if (e.key === "ArrowDown") {
         e.preventDefault();
