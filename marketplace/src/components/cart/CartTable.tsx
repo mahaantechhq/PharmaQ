@@ -25,6 +25,11 @@ export function CartTable() {
     setPlacing(true);
     try {
       const result = await placeOrder();
+      // placeOrder clears the cart server-side, but only returns the new
+      // order's id/number -- without this, the client-side CartContext
+      // (Navbar badge, side panel, "Added" badges on catalog rows) keeps
+      // showing the just-ordered items until a full page reload re-seeds it.
+      setSummary({ lines: [], subtotal: 0, discountTotal: 0, taxTotal: 0, grandTotal: 0, supplierCount: 0, appliedOffers: [] });
       toast(`Order ${result.orderNumber} placed successfully`, "success");
       router.push(`/orders/${result.orderId}`);
     } catch (err) {
