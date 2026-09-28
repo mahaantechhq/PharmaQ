@@ -21,7 +21,7 @@ export default async function OrderDetailPage({ params }: { params: Promise<{ id
   const [{ data: order }, { data: items }, { data: history }, { data: invoice }] = await Promise.all([
     supabase
       .from("supplier_orders")
-      .select("*, businesses:buyer_business_id(name, city, state, phone, email)")
+      .select("*, businesses:buyer_business_id(name, city, state, phone)")
       .eq("id", id)
       .eq("supplier_business_id", ctx.business.id)
       .single(),
@@ -116,7 +116,6 @@ export default async function OrderDetailPage({ params }: { params: Promise<{ id
               <p className="text-sm font-medium text-slate-800">{buyer?.name ?? "Unknown buyer"}</p>
               {buyer?.city && <p className="mt-1 text-sm text-slate-500">{buyer.city}, {buyer.state}</p>}
               {buyer?.phone && <p className="mt-1 text-sm text-slate-500">{buyer.phone}</p>}
-              {buyer?.email && <p className="text-sm text-slate-500">{buyer.email}</p>}
             </CardBody>
           </Card>
 
