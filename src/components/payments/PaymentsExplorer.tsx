@@ -70,7 +70,7 @@ export function PaymentsExplorer({ payments }: { payments: PaymentRow[] }) {
       header: "Payment",
       cell: ({ row }) => (
         <div className="flex flex-col gap-0.5">
-          <Badge tone={PAYMENT_TONE[row.original.paymentStatus]}>
+          <Badge tone={PAYMENT_TONE[row.original.paymentStatus]} className="w-16 justify-center">
             {row.original.paymentStatus.charAt(0).toUpperCase() + row.original.paymentStatus.slice(1)}
           </Badge>
           {row.original.paymentStatus === "partial" && (
