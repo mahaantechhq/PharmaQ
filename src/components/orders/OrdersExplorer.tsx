@@ -108,22 +108,6 @@ export function OrdersExplorer({ orders }: { orders: OrderRow[] }) {
       },
     },
     {
-      id: "deliveryStatus",
-      header: "Delivery Status",
-      cell: ({ row }) => {
-        const status = row.original.status;
-        const busy = pendingId === row.original.id;
-        if (["placed", "rejected", "cancelled"].includes(status)) return <span className="text-slate-300">—</span>;
-        const isDelivered = ["delivered", "completed", "returned"].includes(status);
-        if (isDelivered) return <Badge tone="success">Delivered</Badge>;
-        return (
-          <Button size="xs" onClick={() => handleTransition(row.original.id, "delivered", "Order marked as delivered")} loading={busy}>
-            <Check className="h-3 w-3" /> Deliver
-          </Button>
-        );
-      },
-    },
-    {
       id: "completionStatus",
       header: "Completion Status",
       cell: ({ row }) => {
