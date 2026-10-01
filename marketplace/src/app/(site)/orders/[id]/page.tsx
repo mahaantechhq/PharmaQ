@@ -3,8 +3,10 @@ import Link from "next/link";
 import { requireCurrentBusiness } from "@/lib/supabase/require-business";
 import { createClient } from "@/lib/supabase/server";
 import { Card, CardHeader, CardBody } from "@/components/ui/Card";
+import { StatusBadge } from "@/components/ui/StatusBadge";
+import { StatusTimeline } from "@/components/orders/StatusTimeline";
 import { formatCurrency, formatDate } from "@/lib/format";
-import type { SupplierOrderItem } from "@/lib/types/database";
+import type { OrderStatusHistory, SupplierOrderItem } from "@/lib/types/database";
 
 export default async function OrderDetailPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
@@ -26,9 +28,14 @@ export default async function OrderDetailPage({ params }: { params: Promise<{ id
     .eq("order_id", id);
 
   const supplierOrderIds = (supplierOrders ?? []).map((so) => so.id);
-  const { data: allItems } = supplierOrderIds.length
-    ? await supabase.from("supplier_order_items").select("*").in("supplier_order_id", supplierOrderIds)
-    : { data: [] as SupplierOrderItem[] };
+  const [{ data: allItems }, { data: allHistory }] = await Promise.all([
+    supplierOrderIds.length
+      ? supabase.from("supplier_order_items").select("*").in("supplier_order_id", supplierOrderIds)
+      : Promise.resolve({ data: [] as SupplierOrderItem[] }),
+    supplierOrderIds.length
+      ? supabase.from("order_status_history").select("*").in("supplier_order_id", supplierOrderIds)
+      : Promise.resolve({ data: [] as OrderStatusHistory[] }),
+  ]);
 
   return (
     <div className="mx-auto max-w-4xl px-4 py-8 sm:px-6">
@@ -40,6 +47,7 @@ export default async function OrderDetailPage({ params }: { params: Promise<{ id
       <div className="flex flex-col gap-6">
         {(supplierOrders ?? []).map((so: any) => {
           const items = (allItems ?? []).filter((i) => i.supplier_order_id === so.id);
+          const history = (allHistory ?? []).filter((h) => h.supplier_order_id === so.id);
 
           return (
             <Card key={so.id}>
@@ -50,6 +58,7 @@ export default async function OrderDetailPage({ params }: { params: Promise<{ id
                   </Link>
                 }
                 description={`${items.length} item${items.length !== 1 ? "s" : ""} · ${formatCurrency(Number(so.grand_total))}`}
+                action={<StatusBadge status={so.status} />}
               />
               <CardBody>
                 <div className="mb-4 flex flex-col divide-y divide-slate-50 rounded-lg border border-slate-100">
@@ -80,6 +89,7 @@ export default async function OrderDetailPage({ params }: { params: Promise<{ id
                     <span>{formatCurrency(Number(so.grand_total))}</span>
                   </div>
                 </div>
+                <StatusTimeline history={history} />
               </CardBody>
             </Card>
           );
