@@ -3,6 +3,7 @@ import { Package } from "lucide-react";
 import { requireCurrentBusiness } from "@/lib/supabase/require-business";
 import { createClient } from "@/lib/supabase/server";
 import { OrdersHero } from "@/components/orders/OrdersHero";
+import { Badge } from "@/components/ui/Badge";
 import { formatCurrency, formatDate } from "@/lib/format";
 
 export default async function OrdersPage({
@@ -56,7 +57,10 @@ export default async function OrdersPage({
                   className="flex items-center justify-between gap-4 rounded-xl border border-slate-100 bg-white p-5 shadow-[var(--shadow-card)] transition-shadow hover:shadow-[var(--shadow-card-hover)]"
                 >
                   <div>
-                    <p className="text-sm font-semibold text-slate-800">{o.order_number}</p>
+                    <div className="flex items-center gap-2">
+                      <p className="text-sm font-semibold text-slate-800">{o.order_number}</p>
+                      <Badge tone="info">Placed</Badge>
+                    </div>
                     <p className="text-xs text-slate-400">
                       {formatDate(o.created_at)} · {suppliers.length} supplier{suppliers.length !== 1 && "s"}
                     </p>
