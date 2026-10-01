@@ -1,7 +1,6 @@
 "use client";
 
 import { useState } from "react";
-import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { Heart, Package, Plus, Check, Gift, X } from "lucide-react";
 import { Button } from "@/components/ui/Button";
@@ -107,9 +106,6 @@ export function ProductRow({
           )}
         </div>
         <div className="mt-1 flex flex-wrap items-center gap-x-2 gap-y-1 text-xs">
-          <Link href={`/suppliers/${product.businessSlug}`} className="font-medium text-primary-600 hover:underline">
-            {product.businessName}
-          </Link>
           {product.brandName && <span className="text-slate-600">{product.brandName}</span>}
           {product.packSize && <span className="font-semibold text-slate-600">{product.packSize}</span>}
         </div>
