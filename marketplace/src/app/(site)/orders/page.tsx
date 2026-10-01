@@ -39,7 +39,7 @@ export default async function OrdersPage({
     <div>
       <OrdersHero ownerName={ctx.owner.full_name} />
 
-      <div className="mx-auto max-w-5xl px-4 py-8 sm:px-6">
+      <div className="mx-auto max-w-5xl px-4 pt-4 pb-8 sm:px-6">
         {(orders ?? []).length === 0 ? (
           <div className="flex flex-col items-center gap-2 py-24 text-slate-400">
             <Package className="h-8 w-8" />
