@@ -184,6 +184,7 @@ export function SupplierCatalog({
           <input
             ref={searchInputRef}
             type="search"
+            autoFocus
             value={q}
             onChange={(e) => setQ(e.target.value)}
             placeholder="Search this supplier's products..."
