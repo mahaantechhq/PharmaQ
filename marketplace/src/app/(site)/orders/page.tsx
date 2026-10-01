@@ -3,7 +3,6 @@ import { Package } from "lucide-react";
 import { requireCurrentBusiness } from "@/lib/supabase/require-business";
 import { createClient } from "@/lib/supabase/server";
 import { OrdersHero } from "@/components/orders/OrdersHero";
-import { StatusBadge } from "@/components/ui/StatusBadge";
 import { formatCurrency, formatDate } from "@/lib/format";
 
 export default async function OrdersPage({
@@ -61,11 +60,6 @@ export default async function OrdersPage({
                     <p className="text-xs text-slate-400">
                       {formatDate(o.created_at)} · {suppliers.length} supplier{suppliers.length !== 1 && "s"}
                     </p>
-                    <div className="mt-2 flex flex-wrap gap-1.5">
-                      {suppliers.map((s, i) => (
-                        <StatusBadge key={i} status={s.status as any} />
-                      ))}
-                    </div>
                   </div>
                   <span className="text-base font-semibold text-slate-900">{formatCurrency(Number(o.grand_total))}</span>
                 </Link>
