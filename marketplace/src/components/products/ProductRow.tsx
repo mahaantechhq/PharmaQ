@@ -106,7 +106,7 @@ export function ProductRow({
           )}
         </div>
         <div className="mt-1 flex flex-wrap items-center gap-x-2 gap-y-1 text-xs">
-          {product.brandName && <span className="text-slate-600">{product.brandName}</span>}
+          {product.brandName && <span className="font-medium text-primary-600">{product.brandName}</span>}
           {product.packSize && <span className="font-semibold text-slate-600">{product.packSize}</span>}
         </div>
         <div className="mt-1.5 flex items-center gap-3 text-xs text-slate-500">
