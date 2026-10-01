@@ -39,21 +39,21 @@ export default async function OrdersPage({
     <div>
       <OrdersHero ownerName={ctx.owner.full_name} />
 
-      <div className="mx-auto max-w-5xl px-4 py-8 sm:px-6">
+      <div className="mx-auto max-w-5xl px-4 py-6 sm:px-6">
         {(orders ?? []).length === 0 ? (
           <div className="flex flex-col items-center gap-2 py-24 text-slate-400">
             <Package className="h-8 w-8" />
             <p className="text-sm">{q ? "No orders match your search." : "You haven't placed any orders yet."}</p>
           </div>
         ) : (
-          <div className="flex flex-col gap-4">
+          <div className="flex flex-col gap-2.5">
             {(orders ?? []).map((o) => {
               const suppliers = groupsByOrder.get(o.id) ?? [];
               return (
                 <Link
                   key={o.id}
                   href={`/orders/${o.id}`}
-                  className="flex items-center justify-between gap-4 rounded-xl border border-slate-100 bg-white p-5 shadow-[var(--shadow-card)] transition-shadow hover:shadow-[var(--shadow-card-hover)]"
+                  className="flex items-center justify-between gap-4 rounded-xl border border-slate-100 bg-white px-5 py-3.5 shadow-[var(--shadow-card)] transition-shadow hover:shadow-[var(--shadow-card-hover)]"
                 >
                   <div>
                     <p className="text-sm font-semibold text-slate-800">{o.order_number}</p>
