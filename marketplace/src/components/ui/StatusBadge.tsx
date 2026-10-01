@@ -8,7 +8,10 @@ const STATUS_CONFIG: Record<SupplierOrderStatus, { label: string; tone: "slate" 
   invoiced: { label: "Invoiced", tone: "primary" },
   packed: { label: "Packed", tone: "warning" },
   shipped: { label: "Shipped", tone: "warning" },
-  delivered: { label: "Delivered", tone: "success" },
+  // business-admin no longer has a "Deliver" action -- any order already
+  // marked delivered before that was removed now just reads as "Accepted"
+  // here, since that's the furthest state the workflow still reaches.
+  delivered: { label: "Accepted", tone: "primary" },
   completed: { label: "Completed", tone: "success" },
   cancelled: { label: "Cancelled", tone: "slate" },
   returned: { label: "Returned", tone: "danger" },
