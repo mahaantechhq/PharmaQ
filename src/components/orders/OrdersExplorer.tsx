@@ -90,32 +90,30 @@ export function OrdersExplorer({ orders }: { orders: OrderRow[] }) {
       id: "completionStatus",
       header: "Completion Status",
       cell: ({ row }) => {
-        const status = row.original.status;
         const busy = pendingId === row.original.id;
-        if (status === "delivered") {
-          return (
-            <div className="flex gap-2">
-              <Button size="xs" onClick={() => handleTransition(row.original.id, "completed", "Order marked as completed")} loading={busy}>
-                <Check className="h-3 w-3" /> Complete
-              </Button>
-              <Button variant="danger" size="xs" onClick={() => handleTransition(row.original.id, "returned", "Order marked as returned")} loading={busy}>
-                <X className="h-3 w-3" /> Return
-              </Button>
-            </div>
-          );
-        }
-        if (status === "completed") {
-          return (
-            <div className="flex items-center gap-2">
-              <Badge tone="success">Completed</Badge>
-              <Button variant="danger" size="xs" onClick={() => handleTransition(row.original.id, "returned", "Order marked as returned")} loading={busy}>
-                <X className="h-3 w-3" /> Return
-              </Button>
-            </div>
-          );
-        }
-        if (status === "returned") return <Badge tone="danger">Returned</Badge>;
-        return <span className="text-slate-300">—</span>;
+        const isCompleted = row.original.status === "completed";
+        return (
+          <div className="flex gap-2">
+            <Button
+              size="xs"
+              variant={isCompleted ? "outline" : "primary"}
+              disabled={isCompleted}
+              onClick={() => handleTransition(row.original.id, "completed", "Order marked as completed")}
+              loading={busy}
+            >
+              <Check className="h-3 w-3" /> Complete
+            </Button>
+            <Button
+              size="xs"
+              variant={isCompleted ? "danger" : "outline"}
+              disabled={!isCompleted}
+              onClick={() => handleTransition(row.original.id, "placed", "Order marked as incomplete")}
+              loading={busy}
+            >
+              <X className="h-3 w-3" /> Incomplete
+            </Button>
+          </div>
+        );
       },
     },
   ];
