@@ -87,27 +87,6 @@ export function OrdersExplorer({ orders }: { orders: OrderRow[] }) {
       ),
     },
     {
-      id: "orderStatus",
-      header: "Order Status",
-      cell: ({ row }) => {
-        const status = row.original.status;
-        const busy = pendingId === row.original.id;
-        if (status === "placed") {
-          return (
-            <div className="flex gap-2">
-              <Button size="xs" onClick={() => handleTransition(row.original.id, "accepted", "Order accepted")} loading={busy}>
-                <Check className="h-3 w-3" /> Accept
-              </Button>
-              <Button variant="danger" size="xs" onClick={() => handleTransition(row.original.id, "rejected", "Order rejected")} loading={busy}>
-                <X className="h-3 w-3" /> Reject
-              </Button>
-            </div>
-          );
-        }
-        return <Badge tone={status === "rejected" ? "danger" : "success"}>{status === "rejected" ? "Rejected" : "Accepted"}</Badge>;
-      },
-    },
-    {
       id: "completionStatus",
       header: "Completion Status",
       cell: ({ row }) => {
