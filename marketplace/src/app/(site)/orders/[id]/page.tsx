@@ -47,7 +47,7 @@ export default async function OrderDetailPage({ params }: { params: Promise<{ id
       <div className="flex flex-col gap-6">
         {(supplierOrders ?? []).map((so: any) => {
           const items = (allItems ?? []).filter((i) => i.supplier_order_id === so.id);
-          const history = (allHistory ?? []).filter((h) => h.supplier_order_id === so.id);
+          const history = (allHistory ?? []).filter((h) => h.supplier_order_id === so.id && h.status === "placed");
 
           return (
             <Card key={so.id}>

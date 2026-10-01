@@ -23,9 +23,9 @@ export function OrdersHero({ ownerName }: { ownerName: string }) {
       <div className="pointer-events-none absolute -left-16 top-0 h-56 w-56 rounded-full bg-accent-500/20 blur-3xl animate-float" />
       <div className="pointer-events-none absolute -right-10 bottom-0 h-64 w-64 rounded-full bg-primary-300/20 blur-3xl animate-float-delay" />
 
-      <div className="relative mx-auto flex max-w-3xl flex-col items-center px-4 py-12 text-center sm:px-6">
-        <h1 className="font-display text-2xl font-semibold text-white sm:text-3xl">Hi {firstName}, here are your orders</h1>
-        <form onSubmit={handleSearch} className="mt-6 flex w-full max-w-xl gap-2 rounded-2xl bg-white p-2 shadow-[var(--shadow-glow)]">
+      <div className="relative mx-auto flex max-w-3xl flex-col items-center px-4 py-6 text-center sm:px-6">
+        <h1 className="font-display text-lg font-semibold text-white sm:text-xl">Hi {firstName}, here are your orders</h1>
+        <form onSubmit={handleSearch} className="mt-4 flex w-full max-w-xl gap-2 rounded-2xl bg-white p-1.5 shadow-[var(--shadow-glow)]">
           <div className="relative flex-1">
             <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
             <input
@@ -33,10 +33,10 @@ export function OrdersHero({ ownerName }: { ownerName: string }) {
               type="search"
               defaultValue={searchParams.get("q") ?? ""}
               placeholder="Search by order number..."
-              className="h-11 w-full rounded-xl pl-9 pr-3 text-sm text-slate-700 placeholder:text-slate-400 focus:outline-none"
+              className="h-9 w-full rounded-xl pl-9 pr-3 text-sm text-slate-700 placeholder:text-slate-400 focus:outline-none"
             />
           </div>
-          <Button type="submit" size="lg" className="rounded-xl">Search</Button>
+          <Button type="submit" className="rounded-xl">Search</Button>
         </form>
       </div>
     </section>
