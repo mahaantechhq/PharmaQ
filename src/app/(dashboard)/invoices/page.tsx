@@ -25,7 +25,7 @@ export default async function InvoicesPage() {
           .from("invoices")
           .select("*, supplier_orders(order_number, businesses:buyer_business_id(name))")
           .in("supplier_order_id", ids)
-          .order("invoice_date", { ascending: false })
+          .order("created_at", { ascending: false })
       : { data: [] };
 
   return (
